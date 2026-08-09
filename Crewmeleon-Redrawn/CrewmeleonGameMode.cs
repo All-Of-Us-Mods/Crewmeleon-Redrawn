@@ -6,6 +6,7 @@ using HarmonyLib;
 using InnerNet;
 using MiraAPI.GameModes;
 using MiraAPI.GameOptions;
+using MiraAPI.GameOptions.OptionTypes;
 using MiraAPI.HnsReimplemented.Options;
 using MiraAPI.Roles;
 using MiraAPI.Utilities;
@@ -39,14 +40,43 @@ public class ChameleonGameMode : AbstractGameMode
             players[0].RpcSetRole((RoleTypes) RoleId.Get<SeekerRole>(), false);
             return;
         }
+        
+        var gpOpts = OptionGroupSingleton<GameplayOptions>.Instance;
+        var setSeekers = new List<NetworkedPlayerInfo?> 
+                { gpOpts.Seeker1.GetPlayerValue(), gpOpts.Seeker2.GetPlayerValue(), gpOpts.Seeker3.GetPlayerValue() }
+            .Where(x => x != null).ToList();
+
         players = players.Randomize();
+        foreach (var sser in setSeekers)
+        {
+            var p = sser.Object;
+            players.Remove(p);
+        }
+        
         var seekers = new List<PlayerControl>();
+
+        var seekerCount = OptionGroupSingleton<GameplayOptions>.Instance.SeekersCount - setSeekers.Count;
         for (int i = 0;
-             i < Math.Clamp(OptionGroupSingleton<GameplayOptions>.Instance.SeekersCount, 1, players.Count - 1);
+             i < Math.Clamp(seekerCount, 0, players.Count - 1);
              i++)
         {
             seekers.Add(players[i]);
+            Logger<CrewmeleonRedrawnPlugin>.Instance.LogWarning($"Randomly assigned seeker to {players[i].Data.PlayerName}");
         }
+
+        foreach (var sser in setSeekers)
+        {
+            if (!seekers.Contains(sser.Object))
+            {
+                seekers.Add(sser.Object);
+                Logger<CrewmeleonRedrawnPlugin>.Instance.LogWarning($"Manually assigned seeker to {sser.PlayerName}");
+            }
+            else
+            {
+                Logger<CrewmeleonRedrawnPlugin>.Instance.LogError($"Manually assigning seeker to {sser.PlayerName} failed, they are set as a seeker multiple times!");
+            }
+        }
+        
         var hiders = players.Where(x => !seekers.Contains(x)).ToList();
         AssignRolesForTeam(hiders, (RoleTypes) RoleId.Get<HiderRole>());
         AssignRolesForTeam(seekers, (RoleTypes) RoleId.Get<SeekerRole>());
