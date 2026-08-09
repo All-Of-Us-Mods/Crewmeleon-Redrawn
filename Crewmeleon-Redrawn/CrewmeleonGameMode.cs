@@ -152,11 +152,6 @@ public class ChameleonGameMode : AbstractGameMode
     public override bool CanUseTasks(Console console) => false;
     public override bool ShouldShowSabotageMap(MapBehaviour map) => false;
     public override bool CanVent(Vent vent, NetworkedPlayerInfo playerInfo) => false;
-    public HideAndSeekTimerBar TimerBar;
-    public float TimeLeft;
-    public float MaxTime;
-    public TimerStage currentStage;
-    public float defaultSpeed;
 
     public override void HudUpdate(HudManager instance)
     {
