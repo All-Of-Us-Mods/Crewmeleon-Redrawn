@@ -104,4 +104,63 @@ public class ChameleonGameMode : AbstractGameMode
     public override bool CanUseTasks(Console console) => false;
     public override bool ShouldShowSabotageMap(MapBehaviour map) => false;
     public override bool CanVent(Vent vent, NetworkedPlayerInfo playerInfo) => false;
+    public HideAndSeekTimerBar TimerBar;
+    public float TimeLeft;
+    public float MaxTime;
+    public TimerStage currentStage;
+
+    public override void HudUpdate(HudManager instance)
+    {
+        if (TimerBar == null) return;
+        instance.TaskStuff.gameObject.SetActive(false);
+        TimeLeft -= Time.deltaTime;
+        TimerBar.UpdateTimer(TimeLeft, MaxTime);
+        if (TimeLeft <= 0 && currentStage != TimerStage.Revelation)
+        {
+            currentStage = (TimerStage)((uint)currentStage - 1);
+            switch (currentStage)
+            {
+                case TimerStage.Seeking:
+                    TimeLeft = OptionGroupSingleton<GameplayOptions>.Instance.SeekTime.Value;
+                    TimerBar.timerBarRenderer.material.SetColor("_Color", Palette.ImpostorRed);
+                    MaxTime = TimeLeft;
+                    break;
+                case TimerStage.Revelation:
+                    TimeLeft = OptionGroupSingleton<GameplayOptions>.Instance.RevelationTime.Value;
+                    MaxTime = TimeLeft;
+                    TimerBar.timerBarRenderer.material.SetColor("_Color", Color.yellow);
+                    break;
+            }
+        }
+        else if (TimeLeft <= 0 && currentStage == TimerStage.Revelation)
+        {
+            if (PlayerControl.LocalPlayer.IsHost()) GameManager.Instance.RpcEndGame(GameOverReason.HideAndSeek_CrewmatesByTimer, false);
+        }
+    }
+    //Using PostAssignRoles because Initialize doesn't get called, inlining maybe?
+    public override void PostAssignRoles(LogicRoleSelectionNormal ls)
+    {
+        ShipStatus.Instance.BreakEmergencyButton();
+
+        var instance = HudManager.Instance;
+        instance.CrewmatesKilled.gameObject.SetActive(true);
+        instance.TaskStuff.gameObject.SetActive(false);
+        TimerBar = UnityEngine.Object.Instantiate<HideAndSeekTimerBar>(GameManagerCreator.Instance.HideAndSeekManagerPrefab.TimerBarPrefab, instance.transform.parent);
+        TimerBar.timerBarRenderer.material.SetColor("_Color", Palette.CrewmateBlue);
+        var aspectPosition = TimerBar.gameObject.GetComponent<AspectPosition>();
+        aspectPosition.Alignment = AspectPosition.EdgeAlignments.Top;
+        aspectPosition.DistanceFromEdge = new Vector3(0, 0.5f, 0);
+        aspectPosition.AdjustPosition();
+        var opts = OptionGroupSingleton<GameplayOptions>.Instance;
+        TimeLeft = opts.HideTime.Value;
+        MaxTime = TimeLeft;
+        currentStage = TimerStage.Hiding;
+    }
+
+    public enum TimerStage
+    {
+        Revelation = 0,
+        Seeking = 1,
+        Hiding = 2,
+    }
 }
