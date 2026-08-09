@@ -20,6 +20,11 @@
         <PackageReference Include="AmongUs.GameLibs.Steam" Version="2026.6.5" PrivateAssets="all" />
         <PackageReference Include="Reactor" Version="2.5.1-ci.384" />
     </ItemGroup>
+    <ItemGroup>
+        <Reference Include="MiraAPI">
+            <HintPath>../packages.local\MiraAPI.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 
     <Target Name="Copy" AfterTargets="Build" Condition="'$(AmongUs)' != ''">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AmongUs)/BepInEx/plugins/" UseSymboliclinksIfPossible="true" />

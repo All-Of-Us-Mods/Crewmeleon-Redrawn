@@ -1,6 +1,9 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using MiraAPI;
+using MiraAPI.PluginLoading;
 using Reactor;
 using Reactor.Networking;
 using Reactor.Networking.Attributes;
@@ -10,9 +13,10 @@ namespace Crewmeleon_Redrawn;
 
 [BepInAutoPlugin]
 [BepInProcess("Among Us.exe")]
+[BepInDependency(MiraApiPlugin.Id)]
 [BepInDependency(ReactorPlugin.Id)]
 [ReactorModFlags(ModFlags.RequireOnAllClients)]
-public partial class CrewmeleonRedrawnPlugin : BasePlugin
+public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 {
     public Harmony Harmony { get; } = new(Id);
 
@@ -28,4 +32,11 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin
 
         return base.Unload();
     }
+
+    public ConfigFile GetConfigFile()
+    {
+        return Config;
+    }
+
+    public string OptionsTitleText => "Crewmeleon: Redrawn";
 }
