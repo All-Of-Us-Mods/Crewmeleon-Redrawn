@@ -61,10 +61,12 @@ public class ChameleonGameMode : AbstractGameMode
             {
                 return PlayerBodyTypes.Horse;
             }
+
             if (AprilFoolsMode.ShouldLongAround())
             {
                 return PlayerBodyTypes.Long;
             }
+
             return PlayerBodyTypes.Normal;
         }
 
@@ -110,6 +112,7 @@ public class ChameleonGameMode : AbstractGameMode
     public float TimeLeft;
     public float MaxTime;
     public TimerStage currentStage;
+    public float defaultSpeed;
 
     public override void HudUpdate(HudManager instance)
     {
@@ -118,6 +121,17 @@ public class ChameleonGameMode : AbstractGameMode
         instance.Chat.gameObject.SetActive(CanUseChat());
         TimeLeft -= Time.deltaTime;
         TimerBar.UpdateTimer(TimeLeft, MaxTime);
+        if (currentStage == TimerStage.Hiding)
+        {
+            if (PlayerControl.LocalPlayer.Data.Role is SeekerRole && PlayerControl.LocalPlayer.MyPhysics.Speed != 0)
+            {
+                defaultSpeed = PlayerControl.LocalPlayer.MyPhysics.Speed;
+                // surely there's a better way?
+                PlayerControl.LocalPlayer.moveable = false;
+                PlayerControl.LocalPlayer.NetTransform.Halt();
+                PlayerControl.LocalPlayer.MyPhysics.Speed = 0;
+            }
+        }
         if (TimeLeft <= 0 && currentStage != TimerStage.Revelation)
         {
             currentStage = (TimerStage)((uint)currentStage - 1);
@@ -129,6 +143,12 @@ public class ChameleonGameMode : AbstractGameMode
                     SoundManager.Instance.PlaySound(
                         GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX, false, 1);
                     MaxTime = TimeLeft;
+                    // unsure how it'd end up negative but it's just a precaution
+                    if (PlayerControl.LocalPlayer.Data.Role is SeekerRole && PlayerControl.LocalPlayer.MyPhysics.Speed <= 0)
+                    {
+                        PlayerControl.LocalPlayer.moveable = true;
+                        PlayerControl.LocalPlayer.MyPhysics.Speed = defaultSpeed;
+                    }
                     break;
                 case TimerStage.Revelation:
                     var players = Helpers.GetAlivePlayers().Where(x => !x.Data.Role.IsImpostor).ToList();
