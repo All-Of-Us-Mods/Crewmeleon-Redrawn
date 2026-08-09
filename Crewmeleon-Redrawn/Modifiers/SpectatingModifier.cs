@@ -142,6 +142,9 @@ public class SpectatingModifier : BaseModifier
         aspectPosition.Alignment = AspectPosition.EdgeAlignments.Right;
         aspectPosition.DistanceFromEdge = new Vector3(-3.5f, 0, 0);
         aspectPosition.AdjustPosition();
-        stopButton.transform.GetChild(1).GetComponent<TextMeshPro>().text = "Stop Spectating";
+        HudManager.Instance.StartCoroutine(Effects.ActionAfterDelay(0.05f, new System.Action(() =>
+        {
+            stopButton.transform.GetChild(1).GetComponent<TextMeshPro>().text = "Stop Spectating";
+        })));
     }
 }

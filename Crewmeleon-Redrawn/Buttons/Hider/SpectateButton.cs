@@ -11,7 +11,7 @@ public class SpectateButton : CustomActionButton
 {
     protected override void OnClick()
     {
-        PlayerControl.LocalPlayer.AddModifier<SpectatingModifier>();
+        if (SpectatingModifier.GetSpectateTargets().Count > 1) PlayerControl.LocalPlayer.AddModifier<SpectatingModifier>();
     }
 
     public override bool CanUse()
