@@ -18,4 +18,7 @@ public class GameplayOptions : AbstractOptionGroup
     public ModdedNumberOption SeekTime { get; } =
         new ModdedNumberOption("Seek Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds,
             halfIncrements: true);
+
+    public ModdedToggleOption InfectionMode { get; } =
+        new ModdedToggleOption("InfectionMode", false);
 }
