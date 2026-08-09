@@ -8,7 +8,7 @@ public class SeekerRole : ImpostorRole, ICustomRole
 {
     public string RoleName => "Seeker";
 
-    public string RoleDescription => "Find the hiders at all costs!";
+    public string RoleDescription => "Catch the chameleons at all costs!";
 
     public string RoleLongDescription => RoleDescription;
 

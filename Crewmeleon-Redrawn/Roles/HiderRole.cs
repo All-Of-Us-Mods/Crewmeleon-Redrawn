@@ -5,9 +5,9 @@ namespace Crewmeleon_Redrawn.Roles;
 
 public class HiderRole : CrewmateRole, ICustomRole
 {
-    public string RoleName => "Hider";
+    public string RoleName => "Chameleon";
 
-    public string RoleDescription => "Draw to camouflage yourself on the map!";
+    public string RoleDescription => "Camouflage to blend in with the map!";
 
     public string RoleLongDescription => RoleDescription;
 
