@@ -142,11 +142,7 @@ public class ChameleonGameMode : AbstractGameMode
     public override void OnPlayerDeath(PlayerControl player, bool assignGhostRole)
     {
         base.OnPlayerDeath(player, assignGhostRole);
-        HudManager.Instance.NotifyOfDeath();
-        var popup = GameManagerCreator.Instance.HideAndSeekManagerPrefab.DeathPopupPrefab;
-        deadPlayerCount++;
-        var item = UnityEngine.Object.Instantiate(popup, HudManager.Instance.transform.parent);
-        item.Show(player, deadPlayerCount);
+        NotifyOfDeath(player);
     }
     public override bool CanUseMapConsole(MapConsole console) => false;
     public override bool CanUseTasks(Console console) => false;
@@ -391,6 +387,15 @@ public class ChameleonGameMode : AbstractGameMode
             HudManager.Instance.PlayerCam.Target = player;
             yield return new WaitForSeconds(timePerPlayer);
         }
+    }
+
+    public void NotifyOfDeath(PlayerControl player, bool notDead = false)
+    {
+        HudManager.Instance.NotifyOfDeath();
+        var popup = GameManagerCreator.Instance.HideAndSeekManagerPrefab.DeathPopupPrefab;
+        deadPlayerCount++;
+        var item = UnityEngine.Object.Instantiate(popup, HudManager.Instance.transform.parent);
+        item.Show(player, deadPlayerCount);
     }
 
     public enum TimerStage
