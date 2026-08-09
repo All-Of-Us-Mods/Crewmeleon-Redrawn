@@ -65,7 +65,8 @@ public class ChameleonGameMode : AbstractGameMode
             }
             return PlayerBodyTypes.Normal;
         }
-        else if (AprilFoolsMode.ShouldHorseAround())
+
+        if (AprilFoolsMode.ShouldHorseAround())
         {
             if (player.Data.Role.IsImpostor)
             {
@@ -73,7 +74,8 @@ public class ChameleonGameMode : AbstractGameMode
             }
             return PlayerBodyTypes.Horse;
         }
-        else if (AprilFoolsMode.ShouldLongAround())
+
+        if (AprilFoolsMode.ShouldLongAround())
         {
             if (player.Data.Role.IsImpostor)
             {
@@ -81,14 +83,12 @@ public class ChameleonGameMode : AbstractGameMode
             }
             return PlayerBodyTypes.Long;
         }
-        else
+
+        if (player.Data.Role.IsImpostor)
         {
-            if (player.Data.Role.IsImpostor)
-            {
-                return PlayerBodyTypes.Seeker;
-            }
-            return PlayerBodyTypes.Normal;
+            return PlayerBodyTypes.Seeker;
         }
+        return PlayerBodyTypes.Normal;
     }
     private int deadPlayerCount;
     public override void OnPlayerDeath(PlayerControl player, bool assignGhostRole)
@@ -113,6 +113,7 @@ public class ChameleonGameMode : AbstractGameMode
     {
         if (TimerBar == null) return;
         instance.TaskStuff.gameObject.SetActive(false);
+        instance.Chat.gameObject.SetActive(CanUseChat());
         TimeLeft -= Time.deltaTime;
         TimerBar.UpdateTimer(TimeLeft, MaxTime);
         if (TimeLeft <= 0 && currentStage != TimerStage.Revelation)
@@ -138,10 +139,10 @@ public class ChameleonGameMode : AbstractGameMode
         }
     }
     //Using PostAssignRoles because Initialize doesn't get called, inlining maybe?
-    public override void PostAssignRoles(LogicRoleSelectionNormal ls)
+    public override void PostAssignRoles(LogicRoleSelectionNormal logic)
     {
         ShipStatus.Instance.BreakEmergencyButton();
-
+        var opts = OptionGroupSingleton<GameplayOptions>.Instance;
         var instance = HudManager.Instance;
         instance.CrewmatesKilled.gameObject.SetActive(true);
         instance.TaskStuff.gameObject.SetActive(false);
@@ -151,10 +152,21 @@ public class ChameleonGameMode : AbstractGameMode
         aspectPosition.Alignment = AspectPosition.EdgeAlignments.Top;
         aspectPosition.DistanceFromEdge = new Vector3(0, 0.5f, 0);
         aspectPosition.AdjustPosition();
-        var opts = OptionGroupSingleton<GameplayOptions>.Instance;
         TimeLeft = opts.HideTime.Value;
         MaxTime = TimeLeft;
         currentStage = TimerStage.Hiding;
+    }
+
+    private bool CanUseChat()
+    {
+        var opts = OptionGroupSingleton<ChatOptions>.Instance;
+        if (opts.ChatEnabled)
+        {
+            if (PlayerControl.LocalPlayer.Data.Role.IsImpostor && opts.SeekerCanSeeChat.Value) return true;
+            return true;
+        }
+
+        return false;
     }
 
     public enum TimerStage
