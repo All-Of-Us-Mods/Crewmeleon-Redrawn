@@ -1,6 +1,7 @@
 using System.Collections;
 using AmongUs.GameOptions;
 using Crewmeleon_Redrawn;
+using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
 using HarmonyLib;
 using InnerNet;
@@ -8,11 +9,15 @@ using MiraAPI.Events;
 using MiraAPI.Events.Vanilla.Gameplay;
 using MiraAPI.GameModes;
 using MiraAPI.GameOptions;
+using MiraAPI.GameOptions.OptionTypes;
 using MiraAPI.HnsReimplemented.Options;
+using MiraAPI.Modifiers;
 using MiraAPI.Roles;
 using MiraAPI.Utilities;
 using PowerTools;
 using Reactor.Utilities;
+using Reactor.Utilities.Extensions;
+using TMPro;
 using UnityEngine;
 using Object = System.Object;
 
@@ -28,6 +33,7 @@ public class ChameleonGameMode : AbstractGameMode
 
     public HideAndSeekTimerBar TimerBar;
     public HideAndSeekTimerBar TauntBar;
+    public TextMeshPro StageText;
     public float TimeLeft;
     public float MaxTime;
     public float TauntTimeLeft;
@@ -43,14 +49,43 @@ public class ChameleonGameMode : AbstractGameMode
             players[0].RpcSetRole((RoleTypes) RoleId.Get<SeekerRole>(), false);
             return;
         }
+        
+        var gpOpts = OptionGroupSingleton<GameplayOptions>.Instance;
+        var setSeekers = new List<NetworkedPlayerInfo?> 
+                { gpOpts.Seeker1.GetPlayerValue(), gpOpts.Seeker2.GetPlayerValue(), gpOpts.Seeker3.GetPlayerValue() }
+            .Where(x => x != null).ToList();
+
         players = players.Randomize();
+        foreach (var sser in setSeekers)
+        {
+            var p = sser.Object;
+            players.Remove(p);
+        }
+        
         var seekers = new List<PlayerControl>();
+
+        var seekerCount = OptionGroupSingleton<GameplayOptions>.Instance.SeekersCount - setSeekers.Count;
         for (int i = 0;
-             i < Math.Clamp(OptionGroupSingleton<GameplayOptions>.Instance.SeekersCount, 1, players.Count - 1);
+             i < Math.Clamp(seekerCount, 0, players.Count - 1);
              i++)
         {
             seekers.Add(players[i]);
+            Logger<CrewmeleonRedrawnPlugin>.Instance.LogWarning($"Randomly assigned seeker to {players[i].Data.PlayerName}");
         }
+
+        foreach (var sser in setSeekers)
+        {
+            if (!seekers.Contains(sser.Object))
+            {
+                seekers.Add(sser.Object);
+                Logger<CrewmeleonRedrawnPlugin>.Instance.LogWarning($"Manually assigned seeker to {sser.PlayerName}");
+            }
+            else
+            {
+                Logger<CrewmeleonRedrawnPlugin>.Instance.LogError($"Manually assigning seeker to {sser.PlayerName} failed, they are set as a seeker multiple times!");
+            }
+        }
+        
         var hiders = players.Where(x => !seekers.Contains(x)).ToList();
         AssignRolesForTeam(hiders, (RoleTypes) RoleId.Get<HiderRole>());
         AssignRolesForTeam(seekers, (RoleTypes) RoleId.Get<SeekerRole>());
@@ -77,11 +112,16 @@ public class ChameleonGameMode : AbstractGameMode
         TimerBar.timerBarRenderer.material.SetColor("_Color", Palette.CrewmateBlue);
         var aspectPosition = TimerBar.gameObject.GetComponent<AspectPosition>();
         aspectPosition.Alignment = AspectPosition.EdgeAlignments.Top;
-        aspectPosition.DistanceFromEdge = new Vector3(0, 0.5f, 0);
+        aspectPosition.DistanceFromEdge = new Vector3(0, 0.35f, 0);
         aspectPosition.AdjustPosition();
         TimeLeft = gameplayOpts.HideTime.Value;
         MaxTime = TimeLeft;
         currentStage = TimerStage.Hiding;
+        StageText = UnityEngine.Object.Instantiate(TimerBar.timeText, TimerBar.transform);
+        StageText.GetComponent<TextTranslatorTMP>().Destroy();
+        StageText.transform.position += new Vector3(1.5f, 0, 0);
+        StageText.text = $"{currentStage.ToString().ToUpper()} TIME";
+        StageText.alignment = TextAlignmentOptions.Right;
         
         var tauntingOptions = OptionGroupSingleton<TauntingOptions>.Instance;
         if (tauntingOptions.TauntingEnabled)
@@ -91,10 +131,16 @@ public class ChameleonGameMode : AbstractGameMode
             TauntBar.timerBarRenderer.material.SetColor("_Color", Color.yellow);
             var aspectPosition2 = TauntBar.gameObject.GetComponent<AspectPosition>();
             aspectPosition2.Alignment = AspectPosition.EdgeAlignments.Top;
-            aspectPosition2.DistanceFromEdge = new Vector3(0, 1f, 0);
+            aspectPosition2.DistanceFromEdge = new Vector3(0, 0.75f, 0);
             aspectPosition2.AdjustPosition();
             TauntMaxTime = tauntingOptions.TauntCooldown.Value;
             TauntTimeLeft = tauntingOptions.TauntCooldown.Value;
+            var text = UnityEngine.Object.Instantiate(TauntBar.timeText, TauntBar.transform);
+            text.GetComponent<TextTranslatorTMP>().Destroy();
+            text.transform.position += new Vector3(1.5f, 0, 0);
+            text.text = "NEXT TAUNT";
+            text.alignment = TextAlignmentOptions.Right;
+            TauntBar.transform.localScale *= 0.7f;
         }
     }
     public override PlayerBodyTypes GetBodyType(PlayerControl player)
@@ -198,6 +244,7 @@ public class ChameleonGameMode : AbstractGameMode
                     Coroutines.Start(CoReveal(players));
                     break;
             }
+            StageText.text = $"{currentStage.ToString().ToUpper()} TIME";
         }
         else if (TimeLeft <= 0 && currentStage == TimerStage.Revelation)
         {
@@ -381,6 +428,9 @@ public class ChameleonGameMode : AbstractGameMode
 
     private IEnumerator CoReveal(List<PlayerControl> players)
     {
+        if (PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>()) PlayerControl.LocalPlayer.RemoveModifier<SpectatingModifier>();
+        
+        HudManager.Instance.ShadowQuad.enabled = false;
         float timePerPlayer = TimeLeft / players.Count;
         foreach (var player in players)
         {
