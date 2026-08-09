@@ -16,6 +16,8 @@ using MiraAPI.Roles;
 using MiraAPI.Utilities;
 using PowerTools;
 using Reactor.Utilities;
+using Reactor.Utilities.Extensions;
+using TMPro;
 using UnityEngine;
 using Object = System.Object;
 
@@ -31,6 +33,7 @@ public class ChameleonGameMode : AbstractGameMode
 
     public HideAndSeekTimerBar TimerBar;
     public HideAndSeekTimerBar TauntBar;
+    public TextMeshPro StageText;
     public float TimeLeft;
     public float MaxTime;
     public float TauntTimeLeft;
@@ -109,11 +112,16 @@ public class ChameleonGameMode : AbstractGameMode
         TimerBar.timerBarRenderer.material.SetColor("_Color", Palette.CrewmateBlue);
         var aspectPosition = TimerBar.gameObject.GetComponent<AspectPosition>();
         aspectPosition.Alignment = AspectPosition.EdgeAlignments.Top;
-        aspectPosition.DistanceFromEdge = new Vector3(0, 0.5f, 0);
+        aspectPosition.DistanceFromEdge = new Vector3(0, 0.35f, 0);
         aspectPosition.AdjustPosition();
         TimeLeft = gameplayOpts.HideTime.Value;
         MaxTime = TimeLeft;
         currentStage = TimerStage.Hiding;
+        StageText = UnityEngine.Object.Instantiate(TimerBar.timeText, TimerBar.transform);
+        StageText.GetComponent<TextTranslatorTMP>().Destroy();
+        StageText.transform.position += new Vector3(1.5f, 0, 0);
+        StageText.text = $"{currentStage.ToString().ToUpper()} TIME";
+        StageText.alignment = TextAlignmentOptions.Right;
         
         var tauntingOptions = OptionGroupSingleton<TauntingOptions>.Instance;
         if (tauntingOptions.TauntingEnabled)
@@ -123,10 +131,16 @@ public class ChameleonGameMode : AbstractGameMode
             TauntBar.timerBarRenderer.material.SetColor("_Color", Color.yellow);
             var aspectPosition2 = TauntBar.gameObject.GetComponent<AspectPosition>();
             aspectPosition2.Alignment = AspectPosition.EdgeAlignments.Top;
-            aspectPosition2.DistanceFromEdge = new Vector3(0, 1f, 0);
+            aspectPosition2.DistanceFromEdge = new Vector3(0, 0.75f, 0);
             aspectPosition2.AdjustPosition();
             TauntMaxTime = tauntingOptions.TauntCooldown.Value;
             TauntTimeLeft = tauntingOptions.TauntCooldown.Value;
+            var text = UnityEngine.Object.Instantiate(TauntBar.timeText, TauntBar.transform);
+            text.GetComponent<TextTranslatorTMP>().Destroy();
+            text.transform.position += new Vector3(1.5f, 0, 0);
+            text.text = "NEXT TAUNT";
+            text.alignment = TextAlignmentOptions.Right;
+            TauntBar.transform.localScale *= 0.7f;
         }
     }
     public override PlayerBodyTypes GetBodyType(PlayerControl player)
@@ -234,6 +248,7 @@ public class ChameleonGameMode : AbstractGameMode
                     Coroutines.Start(CoReveal(players));
                     break;
             }
+            StageText.text = $"{currentStage.ToString().ToUpper()} TIME";
         }
         else if (TimeLeft <= 0 && currentStage == TimerStage.Revelation)
         {

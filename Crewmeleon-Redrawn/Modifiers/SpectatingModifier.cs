@@ -61,13 +61,13 @@ public class SpectatingModifier : BaseModifier
     private IEnumerator CoEnd()
     {
         yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.clear, Color.black, 0.3f));
+        SpectateControls.gameObject.Destroy();
         yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.2f));
         var buttonsParent = HudManager.Instance.transform.FindChild("Buttons");
         var bottomRight = buttonsParent.FindChild("BottomRight");
         HudManager.Instance.StartCoroutine(Effects.Slide2D(bottomRight, bottomRight.transform.localPosition, bottomRight.transform.localPosition - Vector3.down * 10, 0.75f));
         var bottomLeft = buttonsParent.FindChild("BottomLeft");
         HudManager.Instance.StartCoroutine(Effects.Slide2D(bottomLeft, bottomLeft.transform.localPosition, bottomLeft.transform.localPosition - Vector3.down * 10, 0.75f));
-        SpectateControls.gameObject.Destroy();
     }
 
     private void CreateControls()

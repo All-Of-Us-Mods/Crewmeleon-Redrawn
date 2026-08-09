@@ -27,6 +27,7 @@
     </ItemGroup>
     <ItemGroup>
       <EmbeddedResource Include="Resources/Sounds/*.wav" />
+        <EmbeddedResource Include="Resources/Sprites/Buttons/*.png" />
     </ItemGroup>
 
     <Target Name="Copy" AfterTargets="Build" Condition="'$(AmongUs)' != ''">

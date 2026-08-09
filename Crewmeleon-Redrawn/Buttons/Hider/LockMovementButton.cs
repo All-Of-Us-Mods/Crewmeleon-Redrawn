@@ -13,6 +13,7 @@ public class LockMovementButton : CustomActionButton
         PlayerControl.LocalPlayer.NetTransform.Halt();
         
         OverrideName(PlayerControl.LocalPlayer.CanMove ? "Lock Movement" : "Unlock Movement");
+        OverrideSprite(PlayerControl.LocalPlayer.CanMove ? Assets.LockButton.LoadAsset() : Assets.UnlockButton.LoadAsset());
     }
 
     public override bool CanUse()
@@ -29,5 +30,5 @@ public class LockMovementButton : CustomActionButton
 
     public override float Cooldown => 0;
 
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+    public override LoadableAsset<Sprite> Sprite => Assets.LockButton;
 }
