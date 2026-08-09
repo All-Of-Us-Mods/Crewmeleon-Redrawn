@@ -1,7 +1,5 @@
 using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
-using MiraAPI.Utilities;
-using Reactor.Utilities;
 
 namespace Crewmeleon_Redrawn;
 
@@ -14,6 +12,6 @@ public class ChatOptions : AbstractOptionGroup
     public ModdedToggleOption SeekerCanSeeChat { get; } =
         new ModdedToggleOption("Seeker Can See Chat", true)
         {
-            Visible = (() => OptionGroupSingleton<ChatOptions>.Instance.SeekerCanSeeChat.Value),
+            Visible = () => OptionGroupSingleton<ChatOptions>.Instance.ChatEnabled.Value,
         };
 }
