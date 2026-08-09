@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Crewmeleon_Redrawn.Roles;
 
-public class SeekerRole : CrewmateRole, ICustomRole
+public class SeekerRole : ImpostorRole, ICustomRole
 {
     public string RoleName => "Seeker";
 
@@ -18,6 +18,7 @@ public class SeekerRole : CrewmateRole, ICustomRole
 
     public CustomRoleConfiguration Configuration => new(this)
     {
-        RoleHintType = RoleHintType.None
+        RoleHintType = RoleHintType.None,
+        CanUseVent = false
     };
 }
