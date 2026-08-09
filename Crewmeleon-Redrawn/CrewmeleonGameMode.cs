@@ -22,20 +22,27 @@ public class ChameleonGameMode : AbstractGameMode
     public override string Description => "You can run, but you can't hide!";
     public override Color Color { get; } = new Color32(150, 255, 90, 255);
     public override bool CanReport(DeadBody body) => false;
-    public override bool ShowGameModeIntroCutscene => true;
+    public override bool ShowGameModeIntroCutscene => false;
     public override bool GameModeBodyTypeOverride => true;
     public override bool ShowNormalGameSettings => false;
 
+    public HideAndSeekTimerBar TimerBar;
+    public HideAndSeekTimerBar TauntBar;
+    public float TimeLeft;
+    public float MaxTime;
+    public float TauntTimeLeft;
+    public float TauntMaxTime;
+    public TimerStage currentStage;
+    public float defaultSpeed;
     public override void AssignRoles(out bool runOriginal, LogicRoleSelectionNormal instance)
     {
         runOriginal = false;
         var players = PlayerControl.AllPlayerControls.ToArray().ToList();
         if (players.Count == 1)
         {
-            players[0].RpcSetRole((RoleTypes)RoleId.Get<SeekerRole>(), false);
+            players[0].RpcSetRole((RoleTypes) RoleId.Get<SeekerRole>(), false);
             return;
         }
-
         players = players.Randomize();
         var seekers = new List<PlayerControl>();
         for (int i = 0;
@@ -44,24 +51,52 @@ public class ChameleonGameMode : AbstractGameMode
         {
             seekers.Add(players[i]);
         }
-
         var hiders = players.Where(x => !seekers.Contains(x)).ToList();
-        AssignRolesForTeam(hiders, (RoleTypes)RoleId.Get<HiderRole>());
-        AssignRolesForTeam(seekers, (RoleTypes)RoleId.Get<SeekerRole>());
+        AssignRolesForTeam(hiders, (RoleTypes) RoleId.Get<HiderRole>());
+        AssignRolesForTeam(seekers, (RoleTypes) RoleId.Get<SeekerRole>());
     }
-
-    public static void AssignRolesForTeam(
+    private static void AssignRolesForTeam(
         List<PlayerControl> players,
         RoleTypes role)
     {
         foreach (var p in players)
         {
             p.RpcSetRole(role, false);
-            PluginSingleton<CrewmeleonRedrawnPlugin>.Instance.Log.LogMessage(
-                $"Set {p.Data.PlayerName}'s role to be: {role.ToDisplayString()}");
+            PluginSingleton<CrewmeleonRedrawnPlugin>.Instance.Log.LogMessage($"Set {p.Data.PlayerName}'s role to be: {role.ToDisplayString()}");
         }
     }
-
+    //Using PostAssignRoles because Initialize doesn't get called, inlining maybe?
+    public override void PostAssignRoles(LogicRoleSelectionNormal logic)
+    {
+        ShipStatus.Instance.BreakEmergencyButton();
+        var gameplayOpts = OptionGroupSingleton<GameplayOptions>.Instance;
+        var instance = HudManager.Instance;
+        instance.CrewmatesKilled.gameObject.SetActive(true);
+        instance.TaskStuff.gameObject.SetActive(false);
+        TimerBar = UnityEngine.Object.Instantiate<HideAndSeekTimerBar>(GameManagerCreator.Instance.HideAndSeekManagerPrefab.TimerBarPrefab, instance.transform.parent);
+        TimerBar.timerBarRenderer.material.SetColor("_Color", Palette.CrewmateBlue);
+        var aspectPosition = TimerBar.gameObject.GetComponent<AspectPosition>();
+        aspectPosition.Alignment = AspectPosition.EdgeAlignments.Top;
+        aspectPosition.DistanceFromEdge = new Vector3(0, 0.5f, 0);
+        aspectPosition.AdjustPosition();
+        TimeLeft = gameplayOpts.HideTime.Value;
+        MaxTime = TimeLeft;
+        currentStage = TimerStage.Hiding;
+        
+        var tauntingOptions = OptionGroupSingleton<TauntingOptions>.Instance;
+        if (tauntingOptions.TauntingEnabled)
+        {
+            TauntBar = UnityEngine.Object.Instantiate<HideAndSeekTimerBar>(
+                GameManagerCreator.Instance.HideAndSeekManagerPrefab.TimerBarPrefab, instance.transform.parent);
+            TauntBar.timerBarRenderer.material.SetColor("_Color", Color.yellow);
+            var aspectPosition2 = TauntBar.gameObject.GetComponent<AspectPosition>();
+            aspectPosition2.Alignment = AspectPosition.EdgeAlignments.Top;
+            aspectPosition2.DistanceFromEdge = new Vector3(0, 1f, 0);
+            aspectPosition2.AdjustPosition();
+            TauntMaxTime = tauntingOptions.TauntCooldown.Value;
+            TauntTimeLeft = tauntingOptions.TauntCooldown.Value;
+        }
+    }
     public override PlayerBodyTypes GetBodyType(PlayerControl player)
     {
         if (player == null || player.Data == null || player.Data.Role == null)
@@ -85,7 +120,6 @@ public class ChameleonGameMode : AbstractGameMode
             {
                 return PlayerBodyTypes.Normal;
             }
-
             return PlayerBodyTypes.Horse;
         }
 
@@ -95,7 +129,6 @@ public class ChameleonGameMode : AbstractGameMode
             {
                 return PlayerBodyTypes.LongSeeker;
             }
-
             return PlayerBodyTypes.Long;
         }
 
@@ -103,12 +136,9 @@ public class ChameleonGameMode : AbstractGameMode
         {
             return PlayerBodyTypes.Seeker;
         }
-
         return PlayerBodyTypes.Normal;
     }
-
     private int deadPlayerCount;
-
     public override void OnPlayerDeath(PlayerControl player, bool assignGhostRole)
     {
         base.OnPlayerDeath(player, assignGhostRole);
@@ -118,7 +148,6 @@ public class ChameleonGameMode : AbstractGameMode
         var item = UnityEngine.Object.Instantiate(popup, HudManager.Instance.transform.parent);
         item.Show(player, deadPlayerCount);
     }
-
     public override bool CanUseMapConsole(MapConsole console) => false;
     public override bool CanUseTasks(Console console) => false;
     public override bool ShouldShowSabotageMap(MapBehaviour map) => false;
@@ -147,7 +176,6 @@ public class ChameleonGameMode : AbstractGameMode
                 PlayerControl.LocalPlayer.MyPhysics.Speed = 0;
             }
         }
-
         if (TimeLeft <= 0 && currentStage != TimerStage.Revelation)
         {
             currentStage = (TimerStage)((uint)currentStage - 1);
@@ -160,13 +188,11 @@ public class ChameleonGameMode : AbstractGameMode
                         GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX, false, 1);
                     MaxTime = TimeLeft;
                     // unsure how it'd end up negative but it's just a precaution
-                    if (PlayerControl.LocalPlayer.Data.Role is SeekerRole &&
-                        PlayerControl.LocalPlayer.MyPhysics.Speed <= 0)
+                    if (PlayerControl.LocalPlayer.Data.Role is SeekerRole && PlayerControl.LocalPlayer.MyPhysics.Speed <= 0)
                     {
                         PlayerControl.LocalPlayer.moveable = true;
                         PlayerControl.LocalPlayer.MyPhysics.Speed = defaultSpeed;
                     }
-
                     break;
                 case TimerStage.Revelation:
                     var players = Helpers.GetAlivePlayers().Where(x => !x.Data.Role.IsImpostor).ToList();
@@ -175,7 +201,6 @@ public class ChameleonGameMode : AbstractGameMode
                         TimeLeft = 0;
                         return;
                     }
-
                     TimeLeft = players.Count * 5;
                     MaxTime = TimeLeft;
                     TimerBar.timerBarRenderer.material.SetColor("_Color", Color.yellow);
@@ -185,29 +210,19 @@ public class ChameleonGameMode : AbstractGameMode
         }
         else if (TimeLeft <= 0 && currentStage == TimerStage.Revelation)
         {
-            if (PlayerControl.LocalPlayer.IsHost())
-                GameManager.Instance.RpcEndGame(GameOverReason.HideAndSeek_CrewmatesByTimer, false);
+            if (PlayerControl.LocalPlayer.IsHost()) GameManager.Instance.RpcEndGame(GameOverReason.HideAndSeek_CrewmatesByTimer, false);
         }
-    }
-
-    //Using PostAssignRoles because Initialize doesn't get called, inlining maybe?
-    public override void PostAssignRoles(LogicRoleSelectionNormal logic)
-    {
-        ShipStatus.Instance.BreakEmergencyButton();
-        var opts = OptionGroupSingleton<GameplayOptions>.Instance;
-        var instance = HudManager.Instance;
-        instance.CrewmatesKilled.gameObject.SetActive(true);
-        instance.TaskStuff.gameObject.SetActive(false);
-        TimerBar = UnityEngine.Object.Instantiate<HideAndSeekTimerBar>(
-            GameManagerCreator.Instance.HideAndSeekManagerPrefab.TimerBarPrefab, instance.transform.parent);
-        TimerBar.timerBarRenderer.material.SetColor("_Color", Palette.CrewmateBlue);
-        var aspectPosition = TimerBar.gameObject.GetComponent<AspectPosition>();
-        aspectPosition.Alignment = AspectPosition.EdgeAlignments.Top;
-        aspectPosition.DistanceFromEdge = new Vector3(0, 0.5f, 0);
-        aspectPosition.AdjustPosition();
-        TimeLeft = opts.HideTime.Value;
-        MaxTime = TimeLeft;
-        currentStage = TimerStage.Hiding;
+        if (TauntBar == null) return;
+        TauntTimeLeft -= Time.deltaTime;
+        TauntBar.UpdateTimer(TauntTimeLeft, TauntMaxTime);
+        if (TauntTimeLeft <= 0)
+        {
+            TauntTimeLeft = TauntMaxTime;
+            foreach (var playerControl in Helpers.GetAlivePlayers().Where(x => !x.AmOwner))
+            {
+                AudioSource.PlayClipAtPoint(GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideCountdownSFX, playerControl.GetTruePosition(), 0.1f);
+            }
+        }
     }
 
     private bool CanUseChat()
@@ -388,5 +403,5 @@ public class ChameleonGameMode : AbstractGameMode
         Revelation = 0,
         Seeking = 1,
         Hiding = 2,
-    } 
+    }
 }

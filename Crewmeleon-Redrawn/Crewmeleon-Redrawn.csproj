@@ -25,6 +25,9 @@
             <HintPath>../packages.local\MiraAPI.dll</HintPath>
         </Reference>
     </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="Resources/Sounds/*.wav" />
+    </ItemGroup>
 
     <Target Name="Copy" AfterTargets="Build" Condition="'$(AmongUs)' != ''">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AmongUs)/BepInEx/plugins/" UseSymboliclinksIfPossible="true" />
