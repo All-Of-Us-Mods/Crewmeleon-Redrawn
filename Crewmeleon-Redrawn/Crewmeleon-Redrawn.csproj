@@ -25,6 +25,12 @@
             <HintPath>../packages.local\MiraAPI.dll</HintPath>
         </Reference>
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Utilities\" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="Utilities\SpriteUtils.cs" />
+    </ItemGroup>
 
     <Target Name="Copy" AfterTargets="Build" Condition="'$(AmongUs)' != ''">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AmongUs)/BepInEx/plugins/" UseSymboliclinksIfPossible="true" />

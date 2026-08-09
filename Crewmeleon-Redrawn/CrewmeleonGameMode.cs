@@ -173,7 +173,7 @@ public class ChameleonGameMode : AbstractGameMode
         var opts = OptionGroupSingleton<ChatOptions>.Instance;
         if (opts.ChatEnabled)
         {
-            if (PlayerControl.LocalPlayer.Data.Role.IsImpostor && opts.SeekerCanSeeChat.Value) return true;
+            if (PlayerControl.LocalPlayer.Data.Role.IsImpostor) return opts.SeekerCanSeeChat.Value;
             return true;
         }
 
