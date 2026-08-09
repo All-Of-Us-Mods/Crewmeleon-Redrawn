@@ -1,6 +1,7 @@
 using System.Collections;
 using AmongUs.GameOptions;
 using Crewmeleon_Redrawn;
+using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
 using HarmonyLib;
 using InnerNet;
@@ -10,6 +11,7 @@ using MiraAPI.GameModes;
 using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
 using MiraAPI.HnsReimplemented.Options;
+using MiraAPI.Modifiers;
 using MiraAPI.Roles;
 using MiraAPI.Utilities;
 using PowerTools;
@@ -415,6 +417,9 @@ public class ChameleonGameMode : AbstractGameMode
 
     private IEnumerator CoReveal(List<PlayerControl> players)
     {
+        if (PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>()) PlayerControl.LocalPlayer.RemoveModifier<SpectatingModifier>();
+        
+        HudManager.Instance.ShadowQuad.enabled = false;
         float timePerPlayer = TimeLeft / players.Count;
         foreach (var player in players)
         {
