@@ -1,3 +1,4 @@
+using MiraAPI.Patches.Stubs;
 using MiraAPI.Roles;
 using UnityEngine;
 
@@ -17,6 +18,6 @@ public class SeekerRole : CrewmateRole, ICustomRole
 
     public CustomRoleConfiguration Configuration => new(this)
     {
-        RoleHintType = RoleHintType.TaskHint
+        RoleHintType = RoleHintType.None
     };
 }

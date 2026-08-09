@@ -17,6 +17,6 @@ public class HiderRole : CrewmateRole, ICustomRole
 
     public CustomRoleConfiguration Configuration => new(this)
     {
-        RoleHintType = RoleHintType.TaskHint
+        RoleHintType = RoleHintType.None
     };
 }

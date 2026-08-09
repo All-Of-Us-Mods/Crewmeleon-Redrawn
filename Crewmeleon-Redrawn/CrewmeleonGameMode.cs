@@ -1,3 +1,4 @@
+using System.Collections;
 using AmongUs.GameOptions;
 using Crewmeleon_Redrawn;
 using Crewmeleon_Redrawn.Roles;
@@ -10,6 +11,7 @@ using MiraAPI.Roles;
 using MiraAPI.Utilities;
 using Reactor.Utilities;
 using UnityEngine;
+using Object = System.Object;
 
 public class ChameleonGameMode : AbstractGameMode
 {
@@ -124,12 +126,21 @@ public class ChameleonGameMode : AbstractGameMode
                 case TimerStage.Seeking:
                     TimeLeft = OptionGroupSingleton<GameplayOptions>.Instance.SeekTime.Value;
                     TimerBar.timerBarRenderer.material.SetColor("_Color", Palette.ImpostorRed);
+                    SoundManager.Instance.PlaySound(
+                        GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX, false, 1);
                     MaxTime = TimeLeft;
                     break;
                 case TimerStage.Revelation:
-                    TimeLeft = OptionGroupSingleton<GameplayOptions>.Instance.RevelationTime.Value;
+                    var players = Helpers.GetAlivePlayers().Where(x => !x.Data.Role.IsImpostor).ToList();
+                    if (players.Count == 0)
+                    {
+                        TimeLeft = 0;
+                        return;
+                    }
+                    TimeLeft = players.Count * 5;
                     MaxTime = TimeLeft;
                     TimerBar.timerBarRenderer.material.SetColor("_Color", Color.yellow);
+                    Coroutines.Start(CoReveal(players));
                     break;
             }
         }
@@ -167,6 +178,16 @@ public class ChameleonGameMode : AbstractGameMode
         }
 
         return false;
+    }
+
+    private IEnumerator CoReveal(List<PlayerControl> players)
+    {
+        float timePerPlayer = TimeLeft / players.Count;
+        foreach (var player in players)
+        {
+            HudManager.Instance.PlayerCam.Target = player;
+            yield return new WaitForSeconds(timePerPlayer);
+        }
     }
 
     public enum TimerStage

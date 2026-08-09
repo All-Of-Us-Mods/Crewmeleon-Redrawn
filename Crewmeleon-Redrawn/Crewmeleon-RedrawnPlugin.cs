@@ -11,7 +11,7 @@ using Reactor.Utilities;
 
 namespace Crewmeleon_Redrawn;
 
-[BepInAutoPlugin]
+[BepInAutoPlugin("dev.allofus.crewmeleon", "Crewmeleon: Redrawn", "1.0.0")]
 [BepInProcess("Among Us.exe")]
 [BepInDependency(MiraApiPlugin.Id)]
 [BepInDependency(ReactorPlugin.Id)]

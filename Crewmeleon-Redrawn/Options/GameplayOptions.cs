@@ -18,8 +18,4 @@ public class GameplayOptions : AbstractOptionGroup
     public ModdedNumberOption SeekTime { get; } =
         new ModdedNumberOption("Seek Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds,
             halfIncrements: true);
-    
-    public ModdedNumberOption RevelationTime { get; } =
-        new ModdedNumberOption("Revelation Time", 20, 10, 60, 10, "0", "0", MiraNumberSuffixes.Seconds,
-            halfIncrements: true);
 }
