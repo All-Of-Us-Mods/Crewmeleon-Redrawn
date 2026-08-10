@@ -22,6 +22,9 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
     // the frame art's transparent window is 844 of its 959px width; scaling by the inverse makes
     // that window line up with the zoom view rather than the art's outer edge
     private const float FrameInnerFraction = 844f / 959f;
+
+    // the art hangs slightly low because of its bottom shadow
+    private const float FrameOffsetY = -0.037f;
     private const float ZoomStep = 1.25f;
     private readonly FloatRange ZoomRange = new (0.3f, 3f);
     public Camera Camera => _zoomCamera;
@@ -38,8 +41,13 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         _zoomCamera = gameObject.AddComponent<Camera>();
         _zoomCamera.orthographic = true;
         _zoomCamera.orthographicSize = 1f;
-        _zoomCamera.clearFlags = mainCam.clearFlags;
-        _zoomCamera.backgroundColor = mainCam.backgroundColor;
+        // the main camera clears to a transparent background, which left the render texture
+        // partly see-through; clear opaque so the zoom view is solid
+        _zoomCamera.clearFlags = CameraClearFlags.SolidColor;
+
+        var background = mainCam.backgroundColor;
+        background.a = 1f;
+        _zoomCamera.backgroundColor = background;
         _zoomCamera.nearClipPlane = mainCam.nearClipPlane;
         _zoomCamera.farClipPlane = mainCam.farClipPlane;
         _zoomCamera.cullingMask = mainCam.cullingMask & ~LayerMask.GetMask("UI");
@@ -56,12 +64,16 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         displayObj.GetComponent<Collider>().Destroy();
         
         _zoomRend = displayObj.GetComponent<MeshRenderer>();
-        _zoomRend.material = new Material(Shader.Find("Sprites/Default")) { mainTexture = _camRenderTex };
+
+        // Sprites/Default is a blended shader, so the quad composited against the world behind it
+        // no matter how opaque the render texture was; Unlit/Texture ignores alpha outright
+        var zoomShader = Shader.Find("Unlit/Texture") ?? Shader.Find("Sprites/Default");
+        _zoomRend.material = new Material(zoomShader) { mainTexture = _camRenderTex };
         _zoomRend.sortingOrder = short.MaxValue - 1;
 
         var frameObj = new GameObject("ZoomCamFrame") { layer = LayerMask.NameToLayer("UI") };
         frameObj.transform.SetParent(mainCam.transform, false);
-        frameObj.transform.localPosition = new Vector3(0, 0, 4.9f);
+        frameObj.transform.localPosition = new Vector3(0, FrameOffsetY, 4.9f);
 
         _zoomFrame = frameObj.AddComponent<SpriteRenderer>();
         _zoomFrame.sprite = CrewmeleonAssets.ZoomFrame.LoadAsset();
