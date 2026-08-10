@@ -18,7 +18,7 @@ public class PaintButton : CustomActionButton
         }
         else
         {
-            OverrideName("Stop");
+            OverrideName("Stop Painting");
             PlayerControl.LocalPlayer.RpcAddModifier<PaintingModifier>();
         }
     }

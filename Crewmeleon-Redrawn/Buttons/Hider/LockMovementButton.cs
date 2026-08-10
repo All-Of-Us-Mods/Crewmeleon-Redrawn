@@ -1,5 +1,7 @@
+using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
 using MiraAPI.Hud;
+using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
 using UnityEngine;
 
@@ -22,7 +24,7 @@ public class LockMovementButton : CustomActionButton
 
     public override bool Enabled(RoleBehaviour? role)
     {
-        return role is HiderRole;
+        return role is HiderRole && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
     }
 
     public override string Name => "Lock Movement";

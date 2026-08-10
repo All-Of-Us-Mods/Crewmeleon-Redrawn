@@ -26,6 +26,9 @@
         <Reference Include="MiraAPI">
             <HintPath>../packages.local\MiraAPI.dll</HintPath>
         </Reference>
+        <Reference Include="ReactUI">
+            <HintPath>../packages.local\ReactUI.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <Target Name="Copy" AfterTargets="Build" Condition="'$(AmongUs)' != ''">

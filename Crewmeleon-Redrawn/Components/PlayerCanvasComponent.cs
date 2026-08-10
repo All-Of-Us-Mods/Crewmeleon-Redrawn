@@ -1,11 +1,13 @@
 using Crewmeleon_Redrawn.Buttons.Hider;
 using Crewmeleon_Redrawn.Modifiers;
+using Crewmeleon_Redrawn.Utilities;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using Reactor.Networking.Rpc;
 using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
+using Reactor.Utilities.Extensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -15,15 +17,13 @@ namespace Crewmeleon_Redrawn.Components;
 public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 {
     public PlayerControl Player { get; set; }
-    public Color BrushColor = Color.black;
+    public static BrushSettings Brush => BrushStore.Local;
     
-    private static readonly Color OutlineColor = Color.white;
+    private const float CursorRingThickness = 3f;
 
-    private readonly IntRange _brushRadiusRange = new(1, 15);
-    private int _brushRadius = 3;
     private SpriteRenderer _playerRend;
     private SpriteRenderer _canvasRend;
-    private SpriteRenderer _outlineRend;
+    private SpriteRenderer _brushCursor;
     private Texture2D _texture;
     private HashSet<Vector2Int> _unpaintablePixels;
     private Vector2Int? _lastPixel;
@@ -75,53 +75,10 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             _unpaintablePixels.Add(new Vector2Int(x, y));
         }
 
-        _outlineRend = CreateOutlineRenderer(playerSprite, pivot);
-
         _strokes = [];
         _pendingPixels = [];
-
+        
         gameObject.SetActive(false);
-    }
-
-    private SpriteRenderer CreateOutlineRenderer(Sprite playerSprite, Vector2 pivot)
-    {
-        var outlinePixels = new Color[_texture.width * _texture.height];
-        Array.Fill(outlinePixels, Color.clear);
-
-        for (var y = 0; y < _texture.height; y++)
-        for (var x = 0; x < _texture.width; x++)
-        {
-            if (IsPaintable(x, y) && IsOnPaintableBorder(x, y))
-            {
-                outlinePixels[y * _texture.width + x] = OutlineColor;
-            }
-        }
-
-        var outlineTexture = new Texture2D(_texture.width, _texture.height, TextureFormat.RGBA32, false)
-        {
-            filterMode = FilterMode.Point
-        };
-        outlineTexture.SetPixels(new Il2CppStructArray<Color>(outlinePixels));
-        outlineTexture.Apply();
-
-        var outlineObj = new GameObject("PaintAreaOutline");
-        outlineObj.transform.SetParent(transform, false);
-
-        var rend = outlineObj.AddComponent<SpriteRenderer>();
-        rend.sortingLayerID = _playerRend.sortingLayerID;
-        rend.sortingOrder = _canvasRend.sortingOrder + 1;
-        rend.sprite = Sprite.Create(outlineTexture, playerSprite.rect, pivot, playerSprite.pixelsPerUnit);
-        rend.enabled = false;
-
-        return rend;
-    }
-
-    private bool IsOnPaintableBorder(int x, int y)
-    {
-        return !IsPaintable(x - 1, y)
-            || !IsPaintable(x + 1, y)
-            || !IsPaintable(x, y - 1)
-            || !IsPaintable(x, y + 1);
     }
 
     public void Enable()
@@ -140,28 +97,29 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     private void Update()
     {
-        if (!Player || !_playerRend || !_canvasRend || !_outlineRend || !_texture)
+        if (!Player || !_playerRend || !_canvasRend || !_texture)
             return;
 
-        _playerRend.flipX = _canvasRend.flipX = _outlineRend.flipX = Player.cosmetics.FlipX;
+        _playerRend.flipX = _canvasRend.flipX = Player.cosmetics.FlipX;
 
-        var painting = Player.AmOwner && Player.HasModifier<PaintingModifier>();
-
-        if (_outlineRend.enabled != painting)
+        if (!Player.AmOwner || !Player.HasModifier<PaintingModifier>())
         {
-            _outlineRend.enabled = painting;
+            ShowBrushCursor(false);
+            return;
         }
 
-        if (!painting) return;
-
         HandleBrushRadiusScroll();
+        UpdateBrushCursor();
 
         // couldn't have done it in the button itself because buttons dont have update only fixed update
-        if (Input.GetMouseButtonDown(0) && CustomButtonSingleton<PickColorButton>.Instance.WaitingForClick)
+        if (CustomButtonSingleton<PickColorButton>.Instance.ShouldCommitPick())
         {
             Coroutines.Start(CustomButtonSingleton<PickColorButton>.Instance.CoPickColor(this));
             return;
         }
+
+        // dragging to pick a colour must not lay down a stroke
+        if (CustomButtonSingleton<PickColorButton>.Instance.IsPicking) return;
 
         if (!Input.GetMouseButton(0) 
             || !TryGetPixelAtMouse(out var x, out var y) 
@@ -183,12 +141,64 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
         else
         {
-            _pendingColor = BrushColor;
+            _pendingColor = Brush.Color;
             PaintCircle(x, y, _pendingColor);
         }
 
         _lastPixel = new Vector2Int(x, y);
         _texture.Apply();
+    }
+
+    private void UpdateBrushCursor()
+    {
+        if (!_brushCursor) CreateBrushCursor();
+
+        if (CustomButtonSingleton<PickColorButton>.Instance.IsPicking
+            || !TryGetWorldMouse(out var worldMouse))
+        {
+            ShowBrushCursor(false);
+            return;
+        }
+
+        ShowBrushCursor(true);
+
+        // PaintCircle covers a disc of Brush.Radius texture pixels, and the canvas renders scaled down
+        var paintedDiameter = (Brush.Radius * 2 + 1)
+                              / _canvasRend.sprite.pixelsPerUnit
+                              * _canvasRend.transform.lossyScale.x;
+        var scale = paintedDiameter / CircleSprite.DrawnDiameterFraction;
+
+        _brushCursor.transform.position = new Vector3(worldMouse.x, worldMouse.y, _canvasRend.transform.position.z - 0.01f);
+        _brushCursor.transform.localScale = new Vector3(scale, scale, 1f);
+        _brushCursor.color = Brush.Color;
+    }
+
+    private void CreateBrushCursor()
+    {
+        var cursorObj = new GameObject("BrushCursor") { layer = gameObject.layer };
+
+        _brushCursor = cursorObj.AddComponent<SpriteRenderer>();
+        _brushCursor.sprite = CircleSprite.CreateRing(CursorRingThickness);
+        _brushCursor.sortingLayerID = _canvasRend.sortingLayerID;
+        _brushCursor.sortingOrder = _canvasRend.sortingOrder + 1;
+
+        cursorObj.SetActive(false);
+    }
+
+    private void ShowBrushCursor(bool show)
+    {
+        if (_brushCursor && _brushCursor.gameObject.activeSelf != show)
+            _brushCursor.gameObject.SetActive(show);
+    }
+
+    private void OnDisable()
+    {
+        ShowBrushCursor(false);
+    }
+
+    private void OnDestroy()
+    {
+        if (_brushCursor) _brushCursor.gameObject.Destroy();
     }
 
     private void HandleBrushRadiusScroll()
@@ -198,7 +208,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         var scrollWheel = Input.GetAxis("Mouse ScrollWheel");
         if (scrollWheel == 0) return;
 
-        _brushRadius = Mathf.Clamp(_brushRadius + (scrollWheel > 0 ? 1 : -1), _brushRadiusRange.min, _brushRadiusRange.max);
+        Brush.Radius += scrollWheel > 0 ? 1 : -1;
     }
 
     private void EndStroke()
@@ -229,11 +239,10 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         _texture.Apply();
     }
 
-    private bool TryGetPixelAtMouse(out int x, out int y)
+    private static bool TryGetWorldMouse(out Vector2 worldMouse)
     {
-        x = y = 0;
+        worldMouse = default;
 
-        Vector2 worldMouse;
         var zoom = ZoomCameraController.Instance;
 
         if (zoom != null && zoom.IsActive)
@@ -251,11 +260,19 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
                 camPos.x + (u - 0.5f) * cam.orthographicSize * 2f * cam.aspect,
                 camPos.y + (v - 0.5f) * cam.orthographicSize * 2f
             );
+
+            return true;
         }
-        else
-        {
-            worldMouse = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
-        }
+
+        worldMouse = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
+        return true;
+    }
+
+    private bool TryGetPixelAtMouse(out int x, out int y)
+    {
+        x = y = 0;
+
+        if (!TryGetWorldMouse(out var worldMouse)) return false;
 
         Vector2 localMouse = transform.InverseTransformPoint(worldMouse);
 
@@ -282,7 +299,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     private void PaintCircle(int cx, int cy, Color color)
     {
-        var r = _brushRadius;
+        var r = Brush.Radius;
         for (var dx = -r; dx <= r; dx++)
         for (var dy = -r; dy <= r; dy++)
         {
