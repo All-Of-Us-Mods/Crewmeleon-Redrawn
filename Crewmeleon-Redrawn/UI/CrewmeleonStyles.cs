@@ -162,20 +162,28 @@ public static class CrewmeleonStyles
             BorderRadius = 6,
             BorderWidth = 2,
             BorderColor = Outline,
+            Padding = new S.EdgeValues(2),
             Overflow = S.Overflow.Hidden,
             Cursor = S.CursorType.Pointer,
         };
         s[".strip"] = new S.Style { Width = S.StyleValue.Percent(100), Height = S.StyleValue.Percent(100) };
 
         // ── Brush preview ────────────────────────────────────────
-        s[".preview"] = new S.Style
+        s[".preview-frame"] = new S.Style
         {
-            Width = S.StyleValue.Px(48),
-            Height = S.StyleValue.Px(48),
+            Width = S.StyleValue.Px(52),
+            Height = S.StyleValue.Px(52),
             BorderRadius = 8,
             BorderWidth = 2,
             BorderColor = Outline,
+            Padding = new S.EdgeValues(2),
             FlexShrink = 0,
+        };
+        s[".preview"] = new S.Style
+        {
+            Width = S.StyleValue.Percent(100),
+            Height = S.StyleValue.Percent(100),
+            BorderRadius = 6,
         };
 
         // ── Keybinds ─────────────────────────────────────────────

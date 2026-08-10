@@ -22,14 +22,21 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
             return;
         }
 
-        writer.WritePacked((uint)data.Value.Pixels.Length);
-        foreach (var pixel in data.Value.Pixels)
-        {
-            writer.Write((ushort)pixel.x);
-            writer.Write((ushort)pixel.y);
-        }
+        var stroke = data.Value;
 
-        writer.Write(data.Value.Color);
+        writer.WritePacked((uint)stroke.Points.Length);
+        if (stroke.Points.Length == 0) return;
+
+        writer.Write(stroke.Brush.Color);
+        writer.Write(stroke.Brush.Radius);
+        writer.Write(stroke.Brush.Opacity);
+        writer.Write(stroke.Brush.Hardness);
+
+        foreach (var point in stroke.Points)
+        {
+            writer.Write((ushort)point.x);
+            writer.Write((ushort)point.y);
+        }
     }
 
     public override PaintStroke? Read(MessageReader reader)
@@ -38,19 +45,22 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
         if (count == 0U)
         {
             Logger<CrewmeleonRedrawnPlugin>.Error("Could not read stroke RPC data.");
-            return new PaintStroke([], Color.clear);
+            return null;
         }
 
-        var pixels = new Vector2[count];
+        var brush = new BrushStamp(
+            reader.ReadColor32(),
+            reader.ReadByte(),
+            reader.ReadByte(),
+            reader.ReadByte());
 
+        var points = new Vector2Int[count];
         for (var i = 0; i < count; i++)
         {
-            pixels[i] = new Vector2(reader.ReadUInt16(), reader.ReadUInt16());
+            points[i] = new Vector2Int(reader.ReadUInt16(), reader.ReadUInt16());
         }
 
-        var color = (Color)reader.ReadColor32();
-
-        return new PaintStroke(pixels, color);
+        return new PaintStroke(brush, points);
     }
 
     public override void Handle(PlayerControl innerNetObject, PaintStroke? data)

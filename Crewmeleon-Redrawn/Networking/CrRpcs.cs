@@ -3,4 +3,5 @@
 public enum CrRpcs : uint
 {
     SendStroke,
+    UndoStroke,
 }

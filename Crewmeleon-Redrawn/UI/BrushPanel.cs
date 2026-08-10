@@ -118,7 +118,7 @@ public static class BrushPanel
         return Div(ClassName("section"),
             Text("BRUSH", ClassName("section-title")),
             Div(ClassName("row gap-10"),
-                Image(BrushTextures.BrushPreview(brush), ClassName("preview")),
+                Div(ClassName("preview-frame"), Image(BrushTextures.BrushPreview(brush), ClassName("preview"))),
                 Div(ClassName("grow gap-6"),
                     SliderRow("Size", brush.Radius, v => brush.Radius = Mathf.RoundToInt(v), $"{brush.Radius}px",
                         BrushSettings.MinRadius, BrushSettings.MaxRadius, step: 1f),
@@ -154,7 +154,8 @@ public static class BrushPanel
             Text("KEYBINDS", ClassName("section-title")),
             Keybind("Left Click", "Paint"),
             Keybind("Scroll", "Zoom in / out"),
-            Keybind("Ctrl + Scroll", "Brush size")
+            Keybind("Ctrl + Scroll", "Brush size"),
+            Keybind("Ctrl + Z", "Undo last stroke")
         );
     }
 

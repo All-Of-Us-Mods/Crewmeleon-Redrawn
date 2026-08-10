@@ -28,8 +28,9 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private HashSet<Vector2Int> _unpaintablePixels;
     private Vector2Int? _lastPixel;
     private List<PaintStroke> _strokes;
-    private List<Vector2> _pendingPixels;
-    private Color _pendingColor;
+    private List<Vector2Int> _pendingPoints;
+    private BrushStamp _pendingBrush;
+    private Il2CppStructArray<Color32> _buffer;
 
     private void Start()
     {
@@ -50,10 +51,10 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             filterMode = FilterMode.Point // removes outline
         };
 
-        // il2cpp BS to clear a texture lmao
-        var clearPixels = new Color[source.width * source.height];
-        Array.Fill(clearPixels, Color.clear);
-        _texture.SetPixels(new Il2CppStructArray<Color>(clearPixels)); 
+        // kept around so strokes can be alpha-blended and the whole canvas replayed on undo
+        _buffer = new Il2CppStructArray<Color32>(source.width * source.height);
+        ClearBuffer();
+        _texture.SetPixels32(_buffer);
         _texture.Apply();
 
         var overlayObj = new GameObject("Canvas");
@@ -76,7 +77,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
 
         _strokes = [];
-        _pendingPixels = [];
+        _pendingPoints = [];
         
         gameObject.SetActive(false);
     }
@@ -121,31 +122,39 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         // dragging to pick a colour must not lay down a stroke
         if (CustomButtonSingleton<PickColorButton>.Instance.IsPicking) return;
 
-        if (!Input.GetMouseButton(0) 
-            || !TryGetPixelAtMouse(out var x, out var y) 
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
+        {
+            UndoLocalStroke();
+            return;
+        }
+
+        if (!Input.GetMouseButton(0)
+            || !TryGetPixelAtMouse(out var x, out var y)
             || !IsPaintable(x, y))
         {
-            if (_lastPixel.HasValue)
-            {
-                EndStroke();
-                _pendingPixels.Clear();
-            }
+            if (_lastPixel.HasValue) EndStroke();
 
             _lastPixel = null;
             return;
         }
 
-        if (_lastPixel.HasValue)
+        var point = new Vector2Int(x, y);
+
+        if (!_lastPixel.HasValue)
         {
-            PaintLine(_lastPixel.Value, x, y, _pendingColor);
+            _pendingBrush = BrushStamp.From(Brush);
+            _pendingPoints.Clear();
+            _pendingPoints.Add(point);
+            StampCircle(point, _pendingBrush);
         }
-        else
+        else if (_lastPixel.Value != point)
         {
-            _pendingColor = Brush.Color;
-            PaintCircle(x, y, _pendingColor);
+            _pendingPoints.Add(point);
+            StampLine(_lastPixel.Value, point, _pendingBrush);
         }
 
-        _lastPixel = new Vector2Int(x, y);
+        _lastPixel = point;
+        _texture.SetPixels32(_buffer);
         _texture.Apply();
     }
 
@@ -213,30 +222,61 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     private void EndStroke()
     {
-        var pixels = _pendingPixels.ToArray();
+        if (_pendingPoints.Count == 0) return;
 
-        // have to split into multiple chunks cus too much data. TODO: optimize and make this not scuffed
-        for (var offset = 0; offset < pixels.Length; offset += 500)
-        {
-            var chunk = pixels.Skip(offset).Take(500).ToArray();
-            var stroke = new PaintStroke(chunk, _pendingColor);
-            _strokes.Add(stroke);
+        var stroke = new PaintStroke(_pendingBrush, _pendingPoints.ToArray());
+        _pendingPoints.Clear();
 
-            Rpc<RpcSendStroke>.Instance.Send(PlayerControl.LocalPlayer, stroke, true);
-        }
-
-        _pendingPixels.Clear();
+        _strokes.Add(stroke);
+        Rpc<RpcSendStroke>.Instance.Send(PlayerControl.LocalPlayer, stroke, true);
     }
 
     public void ApplyStroke(PaintStroke stroke)
     {
         _strokes.Add(stroke);
-        foreach (var pixel in stroke.Pixels)
-        {
-            _texture.SetPixel((int)pixel.x, (int)pixel.y, stroke.Color);
-        }
+        Rasterize(stroke);
 
+        _texture.SetPixels32(_buffer);
         _texture.Apply();
+    }
+
+    private void UndoLocalStroke()
+    {
+        if (_strokes.Count == 0) return;
+
+        UndoStroke();
+        Rpc<RpcUndoStroke>.Instance.Send(PlayerControl.LocalPlayer, true);
+    }
+
+    /// <summary>Drops the last stroke and replays the rest — the canvas holds no per-stroke history.</summary>
+    public void UndoStroke()
+    {
+        if (_strokes.Count == 0) return;
+
+        _strokes.RemoveAt(_strokes.Count - 1);
+
+        ClearBuffer();
+        foreach (var stroke in _strokes) Rasterize(stroke);
+
+        _texture.SetPixels32(_buffer);
+        _texture.Apply();
+    }
+
+    private void Rasterize(PaintStroke stroke)
+    {
+        if (stroke.Points.Length == 0) return;
+
+        StampCircle(stroke.Points[0], stroke.Brush);
+        for (var i = 1; i < stroke.Points.Length; i++)
+        {
+            StampLine(stroke.Points[i - 1], stroke.Points[i], stroke.Brush);
+        }
+    }
+
+    private void ClearBuffer()
+    {
+        var clear = new Color32(0, 0, 0, 0);
+        for (var i = 0; i < _buffer.Length; i++) _buffer[i] = clear;
     }
 
     private static bool TryGetWorldMouse(out Vector2 worldMouse)
@@ -297,35 +337,56 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             !_unpaintablePixels.Contains(new Vector2Int(x, y));
     }
 
-    private void PaintCircle(int cx, int cy, Color color)
+    private void StampCircle(Vector2Int center, BrushStamp brush)
     {
-        var r = Brush.Radius;
+        var r = brush.Radius;
         for (var dx = -r; dx <= r; dx++)
         for (var dy = -r; dy <= r; dy++)
         {
             if (dx * dx + dy * dy > r * r) continue;
-            int px = cx + dx, py = cy + dy;
+
+            int px = center.x + dx, py = center.y + dy;
             if (!IsPaintable(px, py)) continue;
-            _texture.SetPixel(px, py, color);
-            _pendingPixels.Add(new Vector2Int(px, py));
+
+            var alpha = brush.AlphaAt(Mathf.Sqrt(dx * dx + dy * dy));
+            if (alpha <= 0f) continue;
+
+            Blend(py * _texture.width + px, brush.Color, alpha);
         }
     }
 
-    private void PaintLine(Vector2Int lastPixel, int x1, int y1, Color color)
+    private void StampLine(Vector2Int from, Vector2Int to, BrushStamp brush)
     {
-        int dx = Mathf.Abs(x1 - lastPixel.x), sx = lastPixel.x < x1 ? 1 : -1;
-        int dy = -Mathf.Abs(y1 - lastPixel.y), sy = lastPixel.y < y1 ? 1 : -1;
+        int dx = Mathf.Abs(to.x - from.x), sx = from.x < to.x ? 1 : -1;
+        int dy = -Mathf.Abs(to.y - from.y), sy = from.y < to.y ? 1 : -1;
         var err = dx + dy;
 
         while (true)
         {
-            PaintCircle(lastPixel.x, lastPixel.y, color);
-            if (lastPixel.x == x1 && lastPixel.y == y1) break;
+            StampCircle(from, brush);
+            if (from.x == to.x && from.y == to.y) break;
             var e2 = 2 * err;
-            if (e2 >= dy) { err += dy; lastPixel.x += sx; }
+            if (e2 >= dy) { err += dy; from.x += sx; }
             if (e2 > dx) continue;
             err += dx;
-            lastPixel.y += sy;
+            from.y += sy;
         }
+    }
+
+    private void Blend(int index, Color32 color, float alpha)
+    {
+        if (index < 0 || index >= _buffer.Length) return;
+
+        var dst = _buffer[index];
+        var dstAlpha = dst.a / 255f;
+        var outAlpha = alpha + dstAlpha * (1f - alpha);
+        if (outAlpha <= 0f) return;
+
+        // straight alpha, so a soft edge over an existing stroke doesn't darken it
+        _buffer[index] = new Color32(
+            (byte) Mathf.RoundToInt((color.r * alpha + dst.r * dstAlpha * (1f - alpha)) / outAlpha),
+            (byte) Mathf.RoundToInt((color.g * alpha + dst.g * dstAlpha * (1f - alpha)) / outAlpha),
+            (byte) Mathf.RoundToInt((color.b * alpha + dst.b * dstAlpha * (1f - alpha)) / outAlpha),
+            (byte) Mathf.RoundToInt(outAlpha * 255f));
     }
 }
