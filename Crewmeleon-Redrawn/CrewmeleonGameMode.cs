@@ -44,9 +44,9 @@ public class ChameleonGameMode : AbstractGameMode
     private static bool AmImpostor => PlayerControl.LocalPlayer.Data.Role.IsImpostor;
     private static bool CanUseChat => ChatOpts.ChatEnabled && (!AmImpostor || ChatOpts.SeekerCanSeeChat.Value);
 
-    private static GameplayOptions GameplayOpts => OptionGroupSingleton<GameplayOptions>.Instance;
-    private static TauntingOptions TauntingOpts => OptionGroupSingleton<TauntingOptions>.Instance;
-    private static ChatOptions ChatOpts => OptionGroupSingleton<ChatOptions>.Instance;
+    public static GameplayOptions GameplayOpts => OptionGroupSingleton<GameplayOptions>.Instance;
+    public static TauntingOptions TauntingOpts => OptionGroupSingleton<TauntingOptions>.Instance;
+    public static ChatOptions ChatOpts => OptionGroupSingleton<ChatOptions>.Instance;
 
     public enum TimerStage
     {
@@ -83,7 +83,7 @@ public class ChameleonGameMode : AbstractGameMode
         
         var seekers = new List<PlayerControl>();
 
-        var seekerCount = OptionGroupSingleton<GameplayOptions>.Instance.SeekersCount - setSeekers.Count;
+        var seekerCount = GameplayOpts.SeekersCount - setSeekers.Count;
         for (int i = 0; i < Math.Clamp(seekerCount, 0, players.Count - 1); i++)
         {
             seekers.Add(players[i]);
