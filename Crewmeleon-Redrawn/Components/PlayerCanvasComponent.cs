@@ -58,6 +58,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private int _kernelRadius = -1;
     private byte _kernelHardness;
     private BrushShape _kernelShape;
+    private BrushMask? _kernelMask;
+    private bool _kernelMirrored;
 
     // only the touched region is uploaded each frame instead of all 34k pixels
     private int _dirtyMinX, _dirtyMinY, _dirtyMaxX, _dirtyMaxY;
@@ -199,7 +201,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         if (!_lastPixel.HasValue)
         {
-            _pendingBrush = BrushStamp.From(Brush);
+            _pendingBrush = BrushStamp.From(Brush, _canvasRend.flipX);
             _pendingPoints.Clear();
             _pendingPoints.Add(point);
 
@@ -393,11 +395,15 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     /// </summary>
     private void EnsureKernel(BrushStamp brush)
     {
-        if (_kernelRadius == brush.Radius && _kernelHardness == brush.Hardness && _kernelShape == brush.Shape) return;
+        if (_kernelRadius == brush.Radius && _kernelHardness == brush.Hardness
+            && _kernelShape == brush.Shape && ReferenceEquals(_kernelMask, brush.Mask)
+            && _kernelMirrored == brush.Mirrored) return;
 
         _kernelRadius = brush.Radius;
         _kernelHardness = brush.Hardness;
         _kernelShape = brush.Shape;
+        _kernelMask = brush.Mask;
+        _kernelMirrored = brush.Mirrored;
 
         var r = brush.Radius;
         var size = 2 * r + 1;
@@ -406,8 +412,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         for (var dy = -r; dy <= r; dy++)
         for (var dx = -r; dx <= r; dx++)
         {
-            var offset = brush.NormalizedOffset(dx, dy);
-            _kernel[(dy + r) * size + (dx + r)] = offset > 1f ? 0f : brush.FalloffFromNormalized(offset);
+            _kernel[(dy + r) * size + (dx + r)] = brush.WeightAt(dx, dy);
         }
     }
 

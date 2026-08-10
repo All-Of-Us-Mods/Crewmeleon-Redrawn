@@ -33,6 +33,17 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
         writer.Write(stroke.Brush.Hardness);
         writer.Write((byte)stroke.Brush.Shape);
 
+        // a custom tip is self-contained in the stroke, so receivers never depend on having seen
+        // the brush registered beforehand
+        if (stroke.Brush.Shape == BrushShape.Custom)
+        {
+            writer.Write(stroke.Brush.Mirrored);
+
+            var encoded = stroke.Brush.Mask?.Encode() ?? [];
+            writer.WritePacked((uint)encoded.Length);
+            writer.Write(encoded);
+        }
+
         foreach (var point in stroke.Points)
         {
             writer.Write((short)point.x);
@@ -55,6 +66,15 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
             reader.ReadByte(),
             reader.ReadByte(),
             (BrushShape)reader.ReadByte());
+
+        if (brush.Shape == BrushShape.Custom)
+        {
+            var mirrored = reader.ReadBoolean();
+            var length = (int)reader.ReadPackedUInt32();
+            var encoded = reader.ReadBytes(length);
+            brush = new BrushStamp(brush.Color, brush.Radius, brush.Opacity, brush.Hardness,
+                brush.Shape, BrushMask.Decode(encoded), mirrored);
+        }
 
         var points = new Vector2Int[count];
         for (var i = 0; i < count; i++)

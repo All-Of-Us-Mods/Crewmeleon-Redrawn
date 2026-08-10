@@ -6,20 +6,30 @@ namespace Crewmeleon_Redrawn.Components;
 /// The brush settings a stroke was drawn with, quantised for the wire. Travels with the stroke so
 /// every client rasterises it identically.
 /// </summary>
-public readonly struct BrushStamp(Color32 color, byte radius, byte opacity, byte hardness, BrushShape shape)
+public readonly struct BrushStamp(Color32 color, byte radius, byte opacity, byte hardness, BrushShape shape, BrushMask? mask = null, bool mirrored = false)
 {
     public Color32 Color => color;
     public byte Radius => radius;
     public byte Opacity => opacity;
     public byte Hardness => hardness;
     public BrushShape Shape => shape;
+    public BrushMask? Mask => mask;
 
-    public static BrushStamp From(BrushSettings brush) => new(
+    /// <summary>
+    /// The canvas is drawn mirrored when the player faces left. The position is already mapped
+    /// into texture space, but an asymmetric tip has to be mirrored too or it renders reversed.
+    /// Baked into the stroke so replay doesn't depend on which way the painter happens to face.
+    /// </summary>
+    public bool Mirrored => mirrored;
+
+    public static BrushStamp From(BrushSettings brush, bool mirrored = false) => new(
         brush.Color,
         (byte) brush.Radius,
         (byte) Mathf.RoundToInt(brush.Opacity * 255f),
         (byte) Mathf.RoundToInt(brush.Hardness * 255f),
-        brush.Shape);
+        brush.Shape,
+        brush.Mask,
+        mirrored);
 
     /// <summary>Alpha at <paramref name="distance"/> pixels from the stamp centre.</summary>
     public float AlphaAt(float distance) => FalloffAt(distance) * (opacity / 255f);
@@ -47,14 +57,25 @@ public readonly struct BrushStamp(Color32 color, byte radius, byte opacity, byte
         return 1f - Mathf.InverseLerp(hardness01, 1f, normalized);
     }
 
-    /// <summary>Distance metric for the shape: radial for a circle, Chebyshev for a square.</summary>
-    public float NormalizedOffset(int dx, int dy)
+    /// <summary>
+    /// Coverage weight for a pixel offset from the stamp centre. A custom tip supplies its own
+    /// shape and softness, so hardness doesn't apply to it.
+    /// </summary>
+    public float WeightAt(int dx, int dy)
     {
-        if (radius <= 0) return 0f;
+        if (radius <= 0) return 1f;
 
-        return shape == BrushShape.Square
+        if (shape == BrushShape.Custom)
+        {
+            var nx = (mirrored ? -dx : dx) / (float) radius;
+            return mask?.Sample(nx, dy / (float) radius) ?? 0f;
+        }
+
+        var offset = shape == BrushShape.Square
             ? Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) / (float) radius
             : Mathf.Sqrt(dx * dx + dy * dy) / radius;
+
+        return offset > 1f ? 0f : FalloffFromNormalized(offset);
     }
 }
 

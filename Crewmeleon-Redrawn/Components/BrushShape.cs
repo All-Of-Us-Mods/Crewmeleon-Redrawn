@@ -4,4 +4,5 @@ public enum BrushShape : byte
 {
     Circle,
     Square,
+    Custom,
 }

@@ -140,21 +140,29 @@ public static class BrushTextures
             var light = (x / CheckerSquare + y / CheckerSquare) % 2 == 0;
             var background = light ? new Color(0.24f, 0.26f, 0.27f) : new Color(0.17f, 0.19f, 0.20f);
 
-            var dx = x - center;
-            var dy = y - center;
-
             // preset swatches always fill the tile, so shape and softness are comparable
-            var offset = preset.Shape == BrushShape.Square
-                ? Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) / extent
-                : Mathf.Sqrt(dx * dx + dy * dy) / extent;
+            var nx = (x - center) / extent;
+            var ny = (y - center) / extent;
 
-            if (offset > 1f)
+            float alpha;
+            if (preset.Shape == BrushShape.Custom)
             {
-                pixels[i] = background;
-                continue;
+                alpha = (preset.Mask?.Sample(nx, ny) ?? 0f) * preset.Opacity;
             }
+            else
+            {
+                var offset = preset.Shape == BrushShape.Square
+                    ? Mathf.Max(Mathf.Abs(nx), Mathf.Abs(ny))
+                    : Mathf.Sqrt(nx * nx + ny * ny);
 
-            var alpha = stamp.FalloffFromNormalized(offset) * preset.Opacity;
+                if (offset > 1f)
+                {
+                    pixels[i] = background;
+                    continue;
+                }
+
+                alpha = stamp.FalloffFromNormalized(offset) * preset.Opacity;
+            }
             pixels[i] = Color.Lerp(background, Color.white, Mathf.Clamp01(alpha));
         }
 

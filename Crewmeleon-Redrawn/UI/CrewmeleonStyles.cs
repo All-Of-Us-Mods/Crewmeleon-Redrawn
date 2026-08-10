@@ -236,6 +236,34 @@ public static class CrewmeleonStyles
             Hover = new S.Style { BorderColor = Outline },
         };
 
+#if CUSTOM_BRUSHES
+        // ── Brush creator ────────────────────────────────────────
+        s[".creator-canvas"] = new S.Style
+        {
+            Width = S.StyleValue.Px(BrushCreator.CanvasPx),
+            Height = S.StyleValue.Px(BrushCreator.CanvasPx),
+            BorderRadius = 8,
+            BorderWidth = 2,
+            BorderColor = Outline,
+            Padding = new S.EdgeValues(2),
+            AlignSelf = S.AlignSelf.Center,
+            Cursor = S.CursorType.Pointer,
+        };
+        s[".creator-img"] = new S.Style
+        {
+            Width = S.StyleValue.Percent(100),
+            Height = S.StyleValue.Percent(100),
+            BorderRadius = 5,
+        };
+        s[".creator-mode"] = new S.Style { FontSize = 11, FontWeight = 700, Color = Accent };
+        s[".btn-small"] = new S.Style
+        {
+            Padding = new S.EdgeValues(6, 10),
+            FontSize = 11,
+            FlexGrow = 1,
+        };
+#endif
+
         // ── Keybinds ─────────────────────────────────────────────
         s[".keybind-row"] = new S.Style
         {

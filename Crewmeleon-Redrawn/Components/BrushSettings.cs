@@ -17,6 +17,9 @@ public class BrushSettings
 
     public BrushShape Shape { get; set; } = BrushShape.Circle;
 
+    /// <summary>Only meaningful when <see cref="Shape"/> is Custom.</summary>
+    public BrushMask? Mask { get; set; }
+
     public float Hue
     {
         get => hue;
