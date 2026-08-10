@@ -150,6 +150,9 @@ public static class CrewmeleonStyles
 
             // hard dark ring outside the white one, so the marker survives on a white centre
             BoxShadow = new S.BoxShadow { Blur = 0, Spread = 1.5f, Color = "rgba(0,0,0,0.9)" },
+
+            // draw order comes from depth, not sibling order, so the wheel image would cover this
+            ZIndex = 50,
         };
 
         // ── Value strip ──────────────────────────────────────────

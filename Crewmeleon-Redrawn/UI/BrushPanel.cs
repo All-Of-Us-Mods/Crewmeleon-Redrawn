@@ -69,7 +69,9 @@ public static class BrushPanel
     private static VNode Wheel(BrushSettings brush)
     {
         var angle = brush.Hue * 2f * Mathf.PI;
-        var reach = brush.Saturation * (WheelPx / 2f - 1f);
+
+        // stop at the inner edge of the baked outline, where the colour actually ends
+        var reach = brush.Saturation * (WheelPx / 2f - 1f) * BrushTextures.WheelColorFraction;
 
         // screen space is top-down, so the marker's Y is subtracted rather than added
         var markerX = WheelPx / 2f + Mathf.Cos(angle) * reach - MarkerPx / 2f;
@@ -94,7 +96,7 @@ public static class BrushPanel
         var dy = 0.5f - normalized.y;
 
         brush.Hue = Mathf.Repeat(Mathf.Atan2(dy, dx) / (2f * Mathf.PI), 1f);
-        brush.Saturation = Mathf.Sqrt(dx * dx + dy * dy) * 2f;
+        brush.Saturation = Mathf.Sqrt(dx * dx + dy * dy) * 2f / BrushTextures.WheelColorFraction;
     }
 
     /// <summary>Value runs on the gradient itself rather than a slider, so it previews the result.</summary>

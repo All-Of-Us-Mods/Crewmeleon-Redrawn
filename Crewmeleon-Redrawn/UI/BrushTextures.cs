@@ -7,6 +7,15 @@ namespace Crewmeleon_Redrawn.UI;
 public static class BrushTextures
 {
     public const int WheelSize = 256;
+    public const float WheelRingWidth = 7f;
+
+    /// <summary>
+    /// Fraction of the wheel's radius that actually carries colour — the remainder is the baked
+    /// white outline. Saturation maps across this, not the full radius.
+    /// </summary>
+    public static float WheelColorFraction =>
+        (WheelSize / 2f - 1f - WheelRingWidth) / (WheelSize / 2f - 1f);
+
     public const int StripWidth = 256;
     public const int StripHeight = 16;
     public const int PreviewSize = 72;
@@ -110,6 +119,10 @@ public static class BrushTextures
         var center = (WheelSize - 1) / 2f;
         var outer = WheelSize / 2f - 1f;
 
+        // baked rather than a CSS border: layout doesn't inset for borders, so the image would
+        // simply paint over one drawn on the wrapper
+        var ringInner = outer - WheelRingWidth;
+
         for (var i = 0; i < pixels.Length; i++)
         {
             // texture rows run bottom-up, which already matches the maths orientation
@@ -123,8 +136,16 @@ public static class BrushTextures
                 continue;
             }
 
-            var hue = Mathf.Repeat(Mathf.Atan2(dy, dx) / (2f * Mathf.PI), 1f);
-            var color = Color.HSVToRGB(hue, Mathf.Clamp01(distance / outer), 1f);
+            Color color;
+            if (distance >= ringInner)
+            {
+                color = Color.white;
+            }
+            else
+            {
+                var hue = Mathf.Repeat(Mathf.Atan2(dy, dx) / (2f * Mathf.PI), 1f);
+                color = Color.HSVToRGB(hue, Mathf.Clamp01(distance / ringInner), 1f);
+            }
 
             // feather the last pixel so the rim isn't a hard staircase
             color.a = Mathf.Clamp01(outer - distance);
