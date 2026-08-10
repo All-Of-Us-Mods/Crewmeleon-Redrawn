@@ -1,148 +1,137 @@
 using Crewmeleon_Redrawn.Buttons.Hider;
 using Crewmeleon_Redrawn.Components;
 using Crewmeleon_Redrawn.Modifiers;
-using Crewmeleon_Redrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using ReactUI.Core;
+using ReactUI.Hooks;
+using ReactUI.Input;
 using UnityEngine;
 using S = ReactUI.Style;
 using static ReactUI.UI;
+using C = Crewmeleon_Redrawn.UI.CrewmeleonStyles;
 
 namespace Crewmeleon_Redrawn.UI;
 
 /// <summary>
-/// Brush controls shown while the local player is painting.
+/// Brush controls, shown while the local player is painting.
 /// </summary>
 public static class BrushPanel
 {
-    private const string Background = "#1a1a2eE8";
-    private const string Panel = "#2d2a33";
-    private const string Muted = "#a0a0a0";
-    private const string Accent = "#7c3aed";
-
     private static readonly Func<VNode> Root = Component(RenderRoot);
 
     public static VNode Render() => Root();
 
     private static VNode RenderRoot()
     {
-        var (posX, setPosX) = UseState(24f);
-        var (posY, setPosY) = UseState(120f);
+        var (posX, setPosX) = UseState(28f);
+        var (posY, setPosY) = UseState(140f);
 
-        // re-render every frame so slider drags and eyedropper picks show immediately
-        Scheduler.ScheduleRender(ReactUI.Hooks.HooksRuntime.Current.ComponentId);
+        // slider drags and eyedropper picks mutate the brush outside React, so redraw every frame
+        Scheduler.ScheduleRender(HooksRuntime.Current.ComponentId);
 
         if (!IsPainting()) return Div();
 
+        InputSystem.RegisterDraggable(
+            HooksRuntime.Current.ComponentId,
+            () => posX, () => posY, setPosX, setPosY);
+
         var brush = BrushStore.Local;
 
-        var capturedX = posX;
-        var capturedY = posY;
-        ReactUI.Input.InputSystem.RegisterDraggable(
-            ReactUI.Hooks.HooksRuntime.Current.ComponentId,
-            () => capturedX, () => capturedY, setPosX, setPosY);
+        var inner = Div(ClassName("panel-inner"),
+            TitleBar(),
+            Div(ClassName("panel-body"),
+                ColorSection(brush),
+                BrushSection(brush)
+            )
+        );
 
-        return Div(new S.Style
+        return Div(ClassName("panel-outer", new S.Style
         {
-            Position = S.PositionType.Absolute,
             Inset = new S.EdgeValues(posY, float.NaN, float.NaN, posX),
-            Width = 260,
-            Background = Background,
-            BorderRadius = 14,
-            BorderColor = "#ffffff15",
-            BorderWidth = 1,
-            BoxShadow = new S.BoxShadow { Blur = 12, Color = "rgba(0,0,0,0.5)" },
-            Padding = new S.EdgeValues(16),
-            Gap = 12,
-            Cursor = S.CursorType.Pointer,
-        },
-            Header(brush),
-            HueRow(brush),
-            SliderRow("Saturation", brush.Saturation, v => brush.Saturation = v),
-            SliderRow("Value", brush.Value, v => brush.Value = v),
-            SliderRow("Opacity", brush.Opacity, v => brush.Opacity = v),
-            SliderRow("Hardness", brush.Hardness, v => brush.Hardness = v),
-            SliderRow($"Size  {brush.Radius}px", (brush.Radius - BrushSettings.MinRadius) / (float) (BrushSettings.MaxRadius - BrushSettings.MinRadius),
-                v => brush.Radius = Mathf.RoundToInt(Mathf.Lerp(BrushSettings.MinRadius, BrushSettings.MaxRadius, v))),
+        }),
+            inner,
+            Div(ClassName("footer-anchor"), Footer())
+        );
+    }
+
+    private static VNode TitleBar()
+    {
+        return Div(ClassName("title-bar"),
+            Text("Brush", ClassName("title-text")),
+            Text("drag to move", ClassName("title-hint"))
+        );
+    }
+
+    private static VNode ColorSection(BrushSettings brush)
+    {
+        return Div(ClassName("section"),
+            Text("COLOUR", ClassName("section-title")),
+            Div(ClassName("row gap-10"),
+                Div(ClassName("swatch-well"),
+                    Div(ClassName("swatch", new S.Style
+                    {
+                        Background = ToHex(brush.Color),
+                        Opacity = Mathf.Max(brush.Opacity, 0.08f),
+                    }))
+                ),
+                Div(ClassName("grow gap-6"),
+                    Image(BrushTextures.HueStrip, ClassName("hue-strip")),
+                    Slider(brush.Hue, v => brush.Hue = v, 0f, 1f, ClassName("slider-control"))
+                )
+            ),
+            SliderRow("Saturation", brush.Saturation, v => brush.Saturation = v, Percent(brush.Saturation)),
+            SliderRow("Value", brush.Value, v => brush.Value = v, Percent(brush.Value)),
+            Div(ClassName("divider")),
             EyedropperButton()
         );
     }
 
-    private static VNode Header(BrushSettings brush)
+    private static VNode BrushSection(BrushSettings brush)
     {
-        return Div(new S.Style
-        {
-            FlexDirection = S.FlexDirection.Row,
-            AlignItems = S.AlignItems.Center,
-            Gap = 10,
-        },
-            Div(new S.Style
-            {
-                Width = S.StyleValue.Px(34),
-                Height = S.StyleValue.Px(34),
-                Background = ToHex(brush.Color),
-                BorderRadius = 8,
-                BorderWidth = 1,
-                BorderColor = "#ffffff30",
-                Opacity = brush.Opacity,
-            }),
-            Text("Brush", new S.Style { FontSize = 17, FontWeight = 700, Color = "#e0e0e0", FlexGrow = 1 })
+        var sizeNormalized = (brush.Radius - BrushSettings.MinRadius)
+                             / (float) (BrushSettings.MaxRadius - BrushSettings.MinRadius);
+
+        return Div(ClassName("section"),
+            Text("BRUSH", ClassName("section-title")),
+            SliderRow("Size", sizeNormalized,
+                v => brush.Radius = Mathf.RoundToInt(Mathf.Lerp(BrushSettings.MinRadius, BrushSettings.MaxRadius, v)),
+                $"{brush.Radius}px"),
+            SliderRow("Opacity", brush.Opacity, v => brush.Opacity = v, Percent(brush.Opacity)),
+            SliderRow("Hardness", brush.Hardness, v => brush.Hardness = v, Percent(brush.Hardness))
         );
     }
 
-    private static VNode HueRow(BrushSettings brush)
+    private static VNode SliderRow(string label, float value, Action<float> onChange, string display)
     {
-        return Div(new S.Style { Gap = 4 },
-            Label("Hue"),
-            Image(BrushTextures.HueStrip, new S.Style
-            {
-                Height = S.StyleValue.Px(10),
-                BorderRadius = 5,
-            }),
-            Slider(brush.Hue, v => brush.Hue = v, 0f, 1f, SliderStyle())
+        return Div(ClassName("setting-row-slider"),
+            Text(label, ClassName("text-label")),
+            Div(ClassName("grow"),
+                Slider(value, onChange, 0f, 1f, ClassName("slider-control"))
+            ),
+            Text(display, ClassName("text-value"))
         );
     }
-
-    private static VNode SliderRow(string label, float value, Action<float> onChange)
-    {
-        return Div(new S.Style { Gap = 4 },
-            Label(label),
-            Slider(value, onChange, 0f, 1f, SliderStyle())
-        );
-    }
-
-    private static VNode Label(string text) =>
-        Text(text, new S.Style { FontSize = 12, Color = Muted });
-
-    private static S.Style SliderStyle() => new()
-    {
-        Height = S.StyleValue.Px(18),
-        Background = Panel,
-        BorderRadius = 9,
-        Cursor = S.CursorType.Pointer,
-    };
 
     private static VNode EyedropperButton()
     {
         var picker = CustomButtonSingleton<PickColorButton>.Instance;
         var picking = picker.IsPicking;
 
-        return Button(picking ? "Picking…" : "Pick from screen", picker.BeginPick, new S.Style
-        {
-            Padding = new S.EdgeValues(8, 14),
-            Background = picking ? "#3d3a43" : Accent,
-            Color = "#ffffff",
-            BorderRadius = 8,
-            FontSize = 13,
-            FontWeight = 600,
-            AlignItems = S.AlignItems.Center,
-            JustifyContent = S.JustifyContent.Center,
-            Cursor = S.CursorType.Pointer,
-            Hover = new S.Style { Background = picking ? "#3d3a43" : "#6d28d9" },
-            Transitions = new[] { new S.Transition { Property = "background", Duration = 0.15f, Easing = S.EasingType.Ease } },
-        });
+        return Button(
+            picking ? "Click to sample…" : "Pick from screen",
+            picker.BeginPick,
+            ClassName(picking ? "btn btn-busy" : "btn btn-accent"));
     }
+
+    private static VNode Footer()
+    {
+        return Div(ClassName("footer"),
+            Text("Ctrl + scroll resizes the brush", ClassName("footer-text"))
+        );
+    }
+
+    private static string Percent(float value) => $"{Mathf.RoundToInt(value * 100)}%";
 
     private static bool IsPainting()
     {

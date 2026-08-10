@@ -29,6 +29,7 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
         Harmony.PatchAll();
         ReactorCredits.Register<CrewmeleonRedrawnPlugin>(location => location is ReactorCredits.Location.MainMenu);
 
+        CrewmeleonStyles.Register();
         ReactUI.UI.Render(BrushPanel.Render);
     }
 
