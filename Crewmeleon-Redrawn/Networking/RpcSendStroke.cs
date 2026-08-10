@@ -16,6 +16,8 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
 
     public override void Write(MessageWriter writer, StrokeChunk data)
     {
+        var startLength = writer.Length;
+
         writer.Write(data.IsFirst);
         writer.Write(data.IsFinal);
 
@@ -45,10 +47,14 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
             writer.Write((short)point.x);
             writer.Write((short)point.y);
         }
+
+        PaintNetStats.RecordSent(writer.Length - startLength, data.Points.Length, data.IsFirst, data.IsFinal);
     }
 
     public override StrokeChunk Read(MessageReader reader)
     {
+        var startPosition = reader.Position;
+
         var isFirst = reader.ReadBoolean();
         var isFinal = reader.ReadBoolean();
 
@@ -78,6 +84,8 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
         {
             points[i] = new Vector2Int(reader.ReadInt16(), reader.ReadInt16());
         }
+
+        PaintNetStats.RecordReceived(reader.Position - startPosition, isFinal);
 
         return new StrokeChunk(isFirst, isFinal, brush, points);
     }

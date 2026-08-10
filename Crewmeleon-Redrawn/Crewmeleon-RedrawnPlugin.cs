@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using Crewmeleon_Redrawn.Components;
@@ -34,6 +34,7 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 
         CrewmeleonStyles.Register();
         ReactUI.UI.Render(BrushPanel.Render);
+        ReactUI.UI.Render(NetDebugPanel.Render);
     }
 
     public override bool Unload()
