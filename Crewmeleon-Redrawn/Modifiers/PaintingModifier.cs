@@ -1,4 +1,5 @@
 using System.Collections;
+using Crewmeleon_Redrawn.Components;
 using Crewmeleon_Redrawn.Utilities;
 using MiraAPI.Modifiers;
 using Reactor.Utilities;
@@ -20,12 +21,16 @@ public class PaintingModifier : BaseModifier
         Player.moveable = false;
         Player.NetTransform.Halt();
 
+        if (Player.AmOwner) ZoomCameraController.Instance?.ToggleDisplay(true);
+
         RefreshButtonsDeferred();
     }
 
     public override void OnDeactivate()
     {
         Player.moveable = wasMoveable;
+
+        if (Player.AmOwner) ZoomCameraController.Instance?.ToggleDisplay(false);
 
         RefreshButtonsDeferred();
 
