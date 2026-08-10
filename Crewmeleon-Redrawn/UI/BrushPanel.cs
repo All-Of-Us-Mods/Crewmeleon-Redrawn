@@ -18,6 +18,9 @@ namespace Crewmeleon_Redrawn.UI;
 /// </summary>
 public static class BrushPanel
 {
+    public const float WheelPx = 116f;
+    public const float MarkerPx = 11f;
+
     private static readonly Func<VNode> Root = Component(RenderRoot);
 
     public static VNode Render() => Root();
@@ -68,46 +71,79 @@ public static class BrushPanel
         return Div(ClassName("section"),
             Text("COLOUR", ClassName("section-title")),
             Div(ClassName("row gap-10"),
-                Div(ClassName("swatch-well"),
-                    Div(ClassName("swatch", new S.Style
-                    {
-                        Background = ToHex(brush.Color),
-                        Opacity = Mathf.Max(brush.Opacity, 0.08f),
-                    }))
-                ),
+                Wheel(brush),
                 Div(ClassName("grow gap-6"),
-                    Image(BrushTextures.HueStrip, ClassName("hue-strip")),
-                    Slider(brush.Hue, v => brush.Hue = v, 0f, 1f, ClassName("slider-control"))
+                    Div(ClassName("swatch-well"),
+                        Div(ClassName("swatch", new S.Style
+                        {
+                            Background = ToHex(brush.Color),
+                            Opacity = Mathf.Max(brush.Opacity, 0.08f),
+                        }))
+                    ),
+                    Text(ToHex(brush.Color), ClassName("hex-text"))
                 )
             ),
-            SliderRow("Saturation", brush.Saturation, v => brush.Saturation = v, Percent(brush.Saturation)),
             SliderRow("Value", brush.Value, v => brush.Value = v, Percent(brush.Value)),
             Div(ClassName("divider")),
             EyedropperButton()
         );
     }
 
+    private static VNode Wheel(BrushSettings brush)
+    {
+        var angle = brush.Hue * 2f * Mathf.PI;
+        var reach = brush.Saturation * (WheelPx / 2f - 1f);
+
+        // screen space is top-down, so the marker's Y is subtracted rather than added
+        var markerX = WheelPx / 2f + Mathf.Cos(angle) * reach - MarkerPx / 2f;
+        var markerY = WheelPx / 2f - Mathf.Sin(angle) * reach - MarkerPx / 2f;
+
+        return PointerArea(p => ApplyWheelPointer(brush, p), ClassName("wheel-wrap"),
+            Image(BrushTextures.ColorWheel, ClassName("wheel")),
+            Div(ClassName("wheel-marker", new S.Style
+            {
+                Inset = new S.EdgeValues(markerY, float.NaN, float.NaN, markerX),
+                Background = ToHex(brush.Color),
+            }))
+        );
+    }
+
+    /// <summary>Maps a normalized pointer position on the wheel to hue (angle) and saturation (radius).</summary>
+    private static void ApplyWheelPointer(BrushSettings brush, Vector2 normalized)
+    {
+        var dx = normalized.x - 0.5f;
+
+        // pointer space is top-down, the wheel texture is not
+        var dy = 0.5f - normalized.y;
+
+        brush.Hue = Mathf.Repeat(Mathf.Atan2(dy, dx) / (2f * Mathf.PI), 1f);
+        brush.Saturation = Mathf.Sqrt(dx * dx + dy * dy) * 2f;
+    }
+
     private static VNode BrushSection(BrushSettings brush)
     {
-        var sizeNormalized = (brush.Radius - BrushSettings.MinRadius)
-                             / (float) (BrushSettings.MaxRadius - BrushSettings.MinRadius);
-
         return Div(ClassName("section"),
             Text("BRUSH", ClassName("section-title")),
-            SliderRow("Size", sizeNormalized,
-                v => brush.Radius = Mathf.RoundToInt(Mathf.Lerp(BrushSettings.MinRadius, BrushSettings.MaxRadius, v)),
-                $"{brush.Radius}px"),
+            SliderRow("Size", brush.Radius, v => brush.Radius = Mathf.RoundToInt(v), $"{brush.Radius}px",
+                BrushSettings.MinRadius, BrushSettings.MaxRadius, step: 1f),
             SliderRow("Opacity", brush.Opacity, v => brush.Opacity = v, Percent(brush.Opacity)),
             SliderRow("Hardness", brush.Hardness, v => brush.Hardness = v, Percent(brush.Hardness))
         );
     }
 
-    private static VNode SliderRow(string label, float value, Action<float> onChange, string display)
+    private static VNode SliderRow(
+        string label,
+        float value,
+        Action<float> onChange,
+        string display,
+        float min = 0f,
+        float max = 1f,
+        float step = 0f)
     {
         return Div(ClassName("setting-row-slider"),
             Text(label, ClassName("text-label")),
             Div(ClassName("grow"),
-                Slider(value, onChange, 0f, 1f, ClassName("slider-control"))
+                Slider(value, onChange, min, max, ClassName("slider-control"), step)
             ),
             Text(display, ClassName("text-value"))
         );

@@ -125,7 +125,39 @@ public static class CrewmeleonStyles
             Padding = new S.EdgeValues(2),
             FlexShrink = 0,
         };
-        s[".hue-strip"] = new S.Style { Height = S.StyleValue.Px(10), BorderRadius = 5 };
+        s[".hex-text"] = new S.Style
+        {
+            FontSize = 11,
+            FontWeight = 700,
+            Color = TextMuted,
+            TextAlign = S.TextAlign.Center,
+        };
+
+        // ── Colour wheel ─────────────────────────────────────────
+        s[".wheel-wrap"] = new S.Style
+        {
+            Position = S.PositionType.Relative,
+            Width = S.StyleValue.Px(BrushPanel.WheelPx),
+            Height = S.StyleValue.Px(BrushPanel.WheelPx),
+            FlexShrink = 0,
+        };
+        s[".wheel"] = new S.Style
+        {
+            Width = S.StyleValue.Px(BrushPanel.WheelPx),
+            Height = S.StyleValue.Px(BrushPanel.WheelPx),
+            BorderRadius = BrushPanel.WheelPx / 2f,
+            Cursor = S.CursorType.Pointer,
+        };
+        s[".wheel-marker"] = new S.Style
+        {
+            Position = S.PositionType.Absolute,
+            Width = S.StyleValue.Px(BrushPanel.MarkerPx),
+            Height = S.StyleValue.Px(BrushPanel.MarkerPx),
+            BorderRadius = BrushPanel.MarkerPx / 2f,
+            BorderWidth = 2,
+            BorderColor = "#ffffff",
+            BoxShadow = new S.BoxShadow { Blur = 3, Color = "rgba(0,0,0,0.55)" },
+        };
 
         // ── Buttons ──────────────────────────────────────────────
         s[".btn"] = new S.Style
