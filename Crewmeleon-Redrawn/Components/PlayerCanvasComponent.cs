@@ -65,8 +65,20 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private int _dirtyMinX, _dirtyMinY, _dirtyMaxX, _dirtyMaxY;
     private bool _dirty;
 
-    private void Start()
+    private bool _initialized;
+
+    private void Start() => EnsureInitialized();
+
+    /// <summary>
+    /// Unity only runs Start on an active object and not until the next frame, but role
+    /// assignment arrives on an RPC and touches the canvas immediately. Throwing there kills the
+    /// connection, so setup has to be callable on demand.
+    /// </summary>
+    private void EnsureInitialized()
     {
+        if (_initialized) return;
+        _initialized = true;
+
         var playerSprite = CrewmeleonAssets.PlayerSprite.LoadAsset();
         var source = playerSprite.texture;
         source.filterMode = FilterMode.Point; // removes outline
@@ -120,6 +132,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     public void Enable()
     {
+        EnsureInitialized();
+
         gameObject.SetActive(true);
         _playerRend.material = Player.cosmetics.bodySprites[0].BodySprite.material;
         Player.cosmetics.Visible = false;
@@ -128,13 +142,15 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     public void Disable()
     {
+        if (!_initialized) return;
+
         Player.cosmetics.lockVisible = false;
         gameObject.SetActive(false);
     }
 
     private void Update()
     {
-        if (!Player || !_playerRend || !_canvasRend || !_texture)
+        if (!_initialized || !Player || !_playerRend || !_canvasRend || !_texture)
             return;
 
         _playerRend.flipX = _canvasRend.flipX = Player.cosmetics.FlipX;
@@ -282,6 +298,28 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         Brush.Radius += scrollWheel > 0 ? 1 : -1;
     }
 
+    // a long drag is far past the packet limit in one message, so the path goes out in pieces
+    // and the receiver composites only once the final piece lands
+    private const int PointsPerChunk = 120;
+
+    private static void SendStroke(BrushStamp brush, Vector2Int[] points)
+    {
+        var local = PlayerControl.LocalPlayer;
+
+        Rpc<RpcSendStroke>.Instance.Send(local,
+            new StrokeChunk(true, points.Length == 0, brush, []), true);
+
+        for (var offset = 0; offset < points.Length; offset += PointsPerChunk)
+        {
+            var take = Mathf.Min(PointsPerChunk, points.Length - offset);
+            var chunk = new Vector2Int[take];
+            Array.Copy(points, offset, chunk, 0, take);
+
+            Rpc<RpcSendStroke>.Instance.Send(local,
+                new StrokeChunk(false, offset + take >= points.Length, brush, chunk), true);
+        }
+    }
+
     /// <summary>Commits an in-progress stroke, for input that interrupts a drag.</summary>
     private void FinishAnyStroke()
     {
@@ -293,16 +331,39 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     {
         if (_pendingPoints.Count == 0) return;
 
-        var stroke = new PaintStroke(_pendingBrush, _pendingPoints.ToArray());
+        var points = _pendingPoints.ToArray();
         _pendingPoints.Clear();
         ClearStrokeState();
 
-        _strokes.Add(stroke);
-        Rpc<RpcSendStroke>.Instance.Send(PlayerControl.LocalPlayer, stroke, true);
+        _strokes.Add(new PaintStroke(_pendingBrush, points));
+        SendStroke(_pendingBrush, points);
+    }
+
+    private BrushStamp _remoteBrush;
+    private readonly List<Vector2Int> _remotePoints = [];
+
+    public void BeginRemoteStroke(BrushStamp brush)
+    {
+        EnsureInitialized();
+
+        _remoteBrush = brush;
+        _remotePoints.Clear();
+    }
+
+    public void AppendRemoteStroke(Vector2Int[] points) => _remotePoints.AddRange(points);
+
+    public void FinishRemoteStroke()
+    {
+        if (_remotePoints.Count == 0) return;
+
+        ApplyStroke(new PaintStroke(_remoteBrush, _remotePoints.ToArray()));
+        _remotePoints.Clear();
     }
 
     public void ApplyStroke(PaintStroke stroke)
     {
+        EnsureInitialized();
+
         _strokes.Add(stroke);
         Rasterize(stroke);
 
@@ -320,6 +381,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     /// <summary>Drops the last stroke and replays the rest — the canvas holds no per-stroke history.</summary>
     public void UndoStroke()
     {
+        EnsureInitialized();
+
         if (_strokes.Count == 0) return;
 
         _strokes.RemoveAt(_strokes.Count - 1);

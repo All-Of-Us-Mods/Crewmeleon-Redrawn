@@ -89,3 +89,16 @@ public readonly struct PaintStroke(BrushStamp brush, Vector2Int[] points)
     public BrushStamp Brush => brush;
     public Vector2Int[] Points => points;
 }
+
+/// <summary>
+/// One packet of a stroke. A full path can run past the message size limit, so the brush goes out
+/// in the opening chunk and the points follow; the receiver composites when <see cref="IsFinal"/>
+/// arrives.
+/// </summary>
+public readonly struct StrokeChunk(bool isFirst, bool isFinal, BrushStamp brush, Vector2Int[] points)
+{
+    public bool IsFirst => isFirst;
+    public bool IsFinal => isFinal;
+    public BrushStamp Brush => brush;
+    public Vector2Int[] Points => points;
+}

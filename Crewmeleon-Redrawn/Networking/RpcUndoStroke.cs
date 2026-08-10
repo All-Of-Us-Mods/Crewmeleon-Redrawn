@@ -1,4 +1,4 @@
-﻿using Crewmeleon_Redrawn;
+using Crewmeleon_Redrawn;
 using Crewmeleon_Redrawn.Components;
 using Crewmeleon_Redrawn.Networking;
 using Reactor.Networking.Attributes;
@@ -13,7 +13,7 @@ public class RpcUndoStroke(CrewmeleonRedrawnPlugin plugin, uint id)
 
     public override void Handle(PlayerControl innerNetObject)
     {
-        var canvas = innerNetObject.gameObject.GetComponentInChildren<PlayerCanvasComponent>();
+        var canvas = innerNetObject.gameObject.GetComponentInChildren<PlayerCanvasComponent>(true);
         if (canvas == null)
         {
             Logger<CrewmeleonRedrawnPlugin>.Error("Could not handle undo RPC. Canvas component is null.");

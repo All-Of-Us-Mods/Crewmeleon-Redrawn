@@ -10,96 +10,90 @@ using UnityEngine;
 
 [RegisterCustomRpc((uint)CrRpcs.SendStroke)]
 public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
-    : PlayerCustomRpc<CrewmeleonRedrawnPlugin, PaintStroke?>(plugin, id)
+    : PlayerCustomRpc<CrewmeleonRedrawnPlugin, StrokeChunk>(plugin, id)
 {
     public override RpcLocalHandling LocalHandling => RpcLocalHandling.None;
 
-    public override void Write(MessageWriter writer, PaintStroke? data)
+    public override void Write(MessageWriter writer, StrokeChunk data)
     {
-        if (!data.HasValue)
+        writer.Write(data.IsFirst);
+        writer.Write(data.IsFinal);
+
+        // brush details ride only on the opening chunk; a custom mask alone can approach the
+        // packet limit, so it must not repeat per chunk
+        if (data.IsFirst)
         {
-            writer.WritePacked(0U);
-            return;
+            writer.Write(data.Brush.Color);
+            writer.Write(data.Brush.Radius);
+            writer.Write(data.Brush.Opacity);
+            writer.Write(data.Brush.Hardness);
+            writer.Write((byte)data.Brush.Shape);
+
+            if (data.Brush.Shape == BrushShape.Custom)
+            {
+                writer.Write(data.Brush.Mirrored);
+
+                var encoded = data.Brush.Mask?.Encode() ?? [];
+                writer.WritePacked((uint)encoded.Length);
+                writer.Write(encoded);
+            }
         }
 
-        var stroke = data.Value;
-
-        writer.WritePacked((uint)stroke.Points.Length);
-        if (stroke.Points.Length == 0) return;
-
-        writer.Write(stroke.Brush.Color);
-        writer.Write(stroke.Brush.Radius);
-        writer.Write(stroke.Brush.Opacity);
-        writer.Write(stroke.Brush.Hardness);
-        writer.Write((byte)stroke.Brush.Shape);
-
-        // a custom tip is self-contained in the stroke, so receivers never depend on having seen
-        // the brush registered beforehand
-        if (stroke.Brush.Shape == BrushShape.Custom)
-        {
-            writer.Write(stroke.Brush.Mirrored);
-
-            var encoded = stroke.Brush.Mask?.Encode() ?? [];
-            writer.WritePacked((uint)encoded.Length);
-            writer.Write(encoded);
-        }
-
-        foreach (var point in stroke.Points)
+        writer.WritePacked((uint)data.Points.Length);
+        foreach (var point in data.Points)
         {
             writer.Write((short)point.x);
             writer.Write((short)point.y);
         }
     }
 
-    public override PaintStroke? Read(MessageReader reader)
+    public override StrokeChunk Read(MessageReader reader)
     {
+        var isFirst = reader.ReadBoolean();
+        var isFinal = reader.ReadBoolean();
+
+        var brush = default(BrushStamp);
+        if (isFirst)
+        {
+            brush = new BrushStamp(
+                reader.ReadColor32(),
+                reader.ReadByte(),
+                reader.ReadByte(),
+                reader.ReadByte(),
+                (BrushShape)reader.ReadByte());
+
+            if (brush.Shape == BrushShape.Custom)
+            {
+                var mirrored = reader.ReadBoolean();
+                var length = (int)reader.ReadPackedUInt32();
+                var encoded = reader.ReadBytes(length);
+                brush = new BrushStamp(brush.Color, brush.Radius, brush.Opacity, brush.Hardness,
+                    brush.Shape, BrushMask.Decode(encoded), mirrored);
+            }
+        }
+
         var count = reader.ReadPackedUInt32();
-        if (count == 0U)
-        {
-            Logger<CrewmeleonRedrawnPlugin>.Error("Could not read stroke RPC data.");
-            return null;
-        }
-
-        var brush = new BrushStamp(
-            reader.ReadColor32(),
-            reader.ReadByte(),
-            reader.ReadByte(),
-            reader.ReadByte(),
-            (BrushShape)reader.ReadByte());
-
-        if (brush.Shape == BrushShape.Custom)
-        {
-            var mirrored = reader.ReadBoolean();
-            var length = (int)reader.ReadPackedUInt32();
-            var encoded = reader.ReadBytes(length);
-            brush = new BrushStamp(brush.Color, brush.Radius, brush.Opacity, brush.Hardness,
-                brush.Shape, BrushMask.Decode(encoded), mirrored);
-        }
-
         var points = new Vector2Int[count];
         for (var i = 0; i < count; i++)
         {
             points[i] = new Vector2Int(reader.ReadInt16(), reader.ReadInt16());
         }
 
-        return new PaintStroke(brush, points);
+        return new StrokeChunk(isFirst, isFinal, brush, points);
     }
 
-    public override void Handle(PlayerControl innerNetObject, PaintStroke? data)
+    public override void Handle(PlayerControl innerNetObject, StrokeChunk data)
     {
-        if (!data.HasValue)
-        {
-            Logger<CrewmeleonRedrawnPlugin>.Error("Could not handle stroke RPC. Data is null.");
-            return;
-        }
-
-        var canvas = innerNetObject.gameObject.GetComponentInChildren<PlayerCanvasComponent>();
+        // includeInactive: the canvas sits on an inactive object until the player becomes a hider
+        var canvas = innerNetObject.gameObject.GetComponentInChildren<PlayerCanvasComponent>(true);
         if (canvas == null)
         {
             Logger<CrewmeleonRedrawnPlugin>.Error("Could not handle stroke RPC. Canvas component is null.");
             return;
         }
 
-        canvas.ApplyStroke(data.Value);
+        if (data.IsFirst) canvas.BeginRemoteStroke(data.Brush);
+        if (data.Points.Length > 0) canvas.AppendRemoteStroke(data.Points);
+        if (data.IsFinal) canvas.FinishRemoteStroke();
     }
 }
