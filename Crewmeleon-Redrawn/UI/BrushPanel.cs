@@ -5,11 +5,9 @@ using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using ReactUI.Core;
 using ReactUI.Hooks;
-using ReactUI.Input;
 using UnityEngine;
 using S = ReactUI.Style;
 using static ReactUI.UI;
-using C = Crewmeleon_Redrawn.UI.CrewmeleonStyles;
 
 namespace Crewmeleon_Redrawn.UI;
 
@@ -21,48 +19,42 @@ public static class BrushPanel
     public const float WheelPx = 116f;
     public const float MarkerPx = 11f;
 
+    private const float AnchorLeft = 28f;
+    private const float AnchorTop = 120f;
+
     private static readonly Func<VNode> Root = Component(RenderRoot);
 
     public static VNode Render() => Root();
 
     private static VNode RenderRoot()
     {
-        var (posX, setPosX) = UseState(28f);
-        var (posY, setPosY) = UseState(140f);
-
-        // slider drags and eyedropper picks mutate the brush outside React, so redraw every frame
+        // the brush is mutated outside React by drags and the eyedropper, so redraw every frame
         Scheduler.ScheduleRender(HooksRuntime.Current.ComponentId);
 
         if (!IsPainting()) return Div();
 
-        InputSystem.RegisterDraggable(
-            HooksRuntime.Current.ComponentId,
-            () => posX, () => posY, setPosX, setPosY);
-
         var brush = BrushStore.Local;
 
-        var inner = Div(ClassName("panel-inner"),
+        return Div(ClassName("panel", new S.Style
+        {
+            Inset = new S.EdgeValues(AnchorTop, float.NaN, float.NaN, AnchorLeft),
+        }),
             TitleBar(),
+            Div(ClassName("rule")),
             Div(ClassName("panel-body"),
                 ColorSection(brush),
                 BrushSection(brush)
-            )
-        );
-
-        return Div(ClassName("panel-outer", new S.Style
-        {
-            Inset = new S.EdgeValues(posY, float.NaN, float.NaN, posX),
-        }),
-            inner,
-            Div(ClassName("footer-anchor"), Footer())
+            ),
+            Div(ClassName("rule")),
+            Footer()
         );
     }
 
     private static VNode TitleBar()
     {
         return Div(ClassName("title-bar"),
-            Text("Brush", ClassName("title-text")),
-            Text("drag to move", ClassName("title-hint"))
+            Text("BRUSH", ClassName("title-text")),
+            Text("CREWMELEON", ClassName("title-hint"))
         );
     }
 
@@ -72,7 +64,7 @@ public static class BrushPanel
             Text("COLOUR", ClassName("section-title")),
             Div(ClassName("row gap-10"),
                 Wheel(brush),
-                Div(ClassName("grow gap-6"),
+                Div(ClassName("swatch-col"),
                     Div(ClassName("swatch-well"),
                         Div(ClassName("swatch", new S.Style
                         {
@@ -83,8 +75,7 @@ public static class BrushPanel
                     Text(ToHex(brush.Color), ClassName("hex-text"))
                 )
             ),
-            SliderRow("Value", brush.Value, v => brush.Value = v, Percent(brush.Value)),
-            Div(ClassName("divider")),
+            ValueRow(brush),
             EyedropperButton()
         );
     }
@@ -120,14 +111,33 @@ public static class BrushPanel
         brush.Saturation = Mathf.Sqrt(dx * dx + dy * dy) * 2f;
     }
 
+    /// <summary>Value runs on the gradient itself rather than a slider, so it previews the result.</summary>
+    private static VNode ValueRow(BrushSettings brush)
+    {
+        return Div(ClassName("gap-6"),
+            Div(ClassName("row-between"),
+                Text("Value", ClassName("text-label")),
+                Text(Percent(brush.Value), ClassName("text-value"))
+            ),
+            PointerArea(p => brush.Value = Mathf.Clamp01(p.x), ClassName("strip-wrap"),
+                Image(BrushTextures.ValueStrip(brush), ClassName("strip"))
+            )
+        );
+    }
+
     private static VNode BrushSection(BrushSettings brush)
     {
         return Div(ClassName("section"),
             Text("BRUSH", ClassName("section-title")),
-            SliderRow("Size", brush.Radius, v => brush.Radius = Mathf.RoundToInt(v), $"{brush.Radius}px",
-                BrushSettings.MinRadius, BrushSettings.MaxRadius, step: 1f),
-            SliderRow("Opacity", brush.Opacity, v => brush.Opacity = v, Percent(brush.Opacity)),
-            SliderRow("Hardness", brush.Hardness, v => brush.Hardness = v, Percent(brush.Hardness))
+            Div(ClassName("row gap-10"),
+                Image(BrushTextures.BrushPreview(brush), ClassName("preview")),
+                Div(ClassName("grow gap-6"),
+                    SliderRow("Size", brush.Radius, v => brush.Radius = Mathf.RoundToInt(v), $"{brush.Radius}px",
+                        BrushSettings.MinRadius, BrushSettings.MaxRadius, step: 1f),
+                    SliderRow("Opacity", brush.Opacity, v => brush.Opacity = v, Percent(brush.Opacity)),
+                    SliderRow("Hardness", brush.Hardness, v => brush.Hardness = v, Percent(brush.Hardness))
+                )
+            )
         );
     }
 
@@ -155,7 +165,7 @@ public static class BrushPanel
         var picking = picker.IsPicking;
 
         return Button(
-            picking ? "Click to sample…" : "Pick from screen",
+            picking ? "CLICK TO SAMPLE" : "PICK FROM SCREEN",
             picker.BeginPick,
             ClassName(picking ? "btn btn-busy" : "btn btn-accent"));
     }

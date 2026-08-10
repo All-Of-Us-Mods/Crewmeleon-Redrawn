@@ -3,27 +3,26 @@ using S = ReactUI.Style;
 namespace Crewmeleon_Redrawn.UI;
 
 /// <summary>
-/// Stylesheet for the Crewmeleon panels. Accent is the game mode's own green so the UI reads as
-/// part of the mod rather than the ReactUI defaults.
+/// Among Us styling — near-black fills inside heavy white outlines, with the game mode's green
+/// as the only accent.
 /// </summary>
 public static class CrewmeleonStyles
 {
-    public static readonly S.UIColor BgMain = "#23272a";
-    public static readonly S.UIColor BgBar = "#1a1d1f";
-    public static readonly S.UIColor BgPanel = "#2b3033";
-    public static readonly S.UIColor BgSunken = "#171a1c";
+    public static readonly S.UIColor BgMain = "#08080a";
+    public static readonly S.UIColor BgPanel = "#17171c";
+    public static readonly S.UIColor BgSunken = "#000000";
 
-    public static readonly S.UIColor Accent = "#6fbf3f";
-    public static readonly S.UIColor AccentText = "#96ff5a";
-    public static readonly S.UIColor OnAccent = "#10170a";
+    public static readonly S.UIColor Outline = "#ffffff";
+    public static readonly S.UIColor OutlineSoft = "rgba(255,255,255,0.35)";
 
-    public static readonly S.UIColor TextPrimary = "#dfe4e0";
-    public static readonly S.UIColor TextMuted = "#8b968f";
+    public static readonly S.UIColor Accent = "#96ff5a";
+    public static readonly S.UIColor OnAccent = "#0a1204";
 
-    public static readonly S.UIColor BtnBg = "#353b3e";
-    public static readonly S.UIColor Divider = "rgba(255,255,255,0.08)";
-    public static readonly S.UIColor AccentHover = "rgba(111,191,63,0.30)";
-    public static readonly S.UIColor Hairline = "rgba(255,255,255,0.06)";
+    public static readonly S.UIColor TextPrimary = "#ffffff";
+    public static readonly S.UIColor TextMuted = "#9a9aa6";
+
+    public const float PanelWidth = 272f;
+    public const float OutlineWidth = 3f;
 
     public static void Register()
     {
@@ -41,56 +40,63 @@ public static class CrewmeleonStyles
         s[".gap-6"] = new S.Style { Gap = 6 };
         s[".gap-10"] = new S.Style { Gap = 10 };
 
-        // ── Panel structure ──────────────────────────────────────
-        s[".panel-outer"] = new S.Style
+        // ── Panel ────────────────────────────────────────────────
+        s[".panel"] = new S.Style
         {
             Position = S.PositionType.Absolute,
-            Width = 272,
-            BorderRadius = 14,
-            BoxShadow = new S.BoxShadow { OffsetY = 8, Blur = 32, Color = "rgba(0,0,0,0.6)" },
-        };
-        s[".panel-inner"] = new S.Style
-        {
-            Overflow = S.Overflow.Hidden,
+            Width = PanelWidth,
             Background = BgMain,
-            BorderRadii = (14, 14, 0, 0),
-            BorderColor = Hairline,
-            BorderWidth = 1,
+            BorderRadius = 16,
+            BorderWidth = OutlineWidth,
+            BorderColor = Outline,
+            Overflow = S.Overflow.Hidden,
+            BoxShadow = new S.BoxShadow { OffsetY = 6, Blur = 24, Color = "rgba(0,0,0,0.75)" },
         };
         s[".panel-body"] = new S.Style { Padding = new S.EdgeValues(12), Gap = 10 };
 
-        // ── Title bar ────────────────────────────────────────────
+        // white rules stand in for per-side borders, which Style doesn't model
+        s[".rule"] = new S.Style { Height = S.StyleValue.Px(2), Background = Outline, FlexShrink = 0 };
+
+        // ── Title ────────────────────────────────────────────────
         s[".title-bar"] = new S.Style
         {
             FlexDirection = S.FlexDirection.Row,
             JustifyContent = S.JustifyContent.SpaceBetween,
             AlignItems = S.AlignItems.Center,
-            Background = BgBar,
             Padding = new S.EdgeValues(9, 14),
-            BorderRadii = (14, 14, 0, 0),
             Gap = 10,
         };
-        s[".title-text"] = new S.Style { FontSize = 15, FontWeight = 700, Color = AccentText };
-        s[".title-hint"] = new S.Style { FontSize = 11, Color = TextMuted };
+        s[".title-text"] = new S.Style { FontSize = 16, FontWeight = 700, Color = TextPrimary };
+        s[".title-hint"] = new S.Style { FontSize = 11, FontWeight = 700, Color = Accent };
 
         // ── Section ──────────────────────────────────────────────
         s[".section"] = new S.Style
         {
             Background = BgPanel,
-            BorderRadius = 8,
+            BorderRadius = 10,
+            BorderWidth = 2,
+            BorderColor = OutlineSoft,
             Padding = new S.EdgeValues(10, 12),
-            Gap = 7,
+            Gap = 8,
         };
         s[".section-title"] = new S.Style { FontSize = 11, FontWeight = 700, Color = TextMuted };
 
         // ── Text ─────────────────────────────────────────────────
-        s[".text-label"] = new S.Style { FontSize = 13, Color = TextPrimary, FlexShrink = 0 };
+        s[".text-label"] = new S.Style { FontSize = 13, FontWeight = 700, Color = TextPrimary, FlexShrink = 0 };
         s[".text-value"] = new S.Style
         {
             FontSize = 12,
+            FontWeight = 700,
             Color = TextMuted,
             Width = S.StyleValue.Px(38),
             TextAlign = S.TextAlign.Right,
+        };
+        s[".hex-text"] = new S.Style
+        {
+            FontSize = 11,
+            FontWeight = 700,
+            Color = TextMuted,
+            TextAlign = S.TextAlign.Center,
         };
 
         // ── Sliders ──────────────────────────────────────────────
@@ -108,29 +114,29 @@ public static class CrewmeleonStyles
             Cursor = S.CursorType.Pointer,
         };
 
-        // ── Swatch / hue strip ───────────────────────────────────
+        // ── Swatch ───────────────────────────────────────────────
         s[".swatch"] = new S.Style
         {
-            Width = S.StyleValue.Px(38),
-            Height = S.StyleValue.Px(38),
+            Width = S.StyleValue.Px(56),
+            Height = S.StyleValue.Px(56),
             BorderRadius = 8,
-            BorderWidth = 1,
-            BorderColor = "rgba(255,255,255,0.20)",
-            FlexShrink = 0,
+            BorderWidth = 2,
+            BorderColor = Outline,
         };
         s[".swatch-well"] = new S.Style
         {
             Background = BgSunken,
-            BorderRadius = 9,
-            Padding = new S.EdgeValues(2),
-            FlexShrink = 0,
+            BorderRadius = 10,
+            Padding = new S.EdgeValues(3),
+            AlignItems = S.AlignItems.Center,
+            AlignSelf = S.AlignSelf.Center,
         };
-        s[".hex-text"] = new S.Style
+        s[".swatch-col"] = new S.Style
         {
-            FontSize = 11,
-            FontWeight = 700,
-            Color = TextMuted,
-            TextAlign = S.TextAlign.Center,
+            AlignItems = S.AlignItems.Center,
+            JustifyContent = S.JustifyContent.Center,
+            Gap = 6,
+            FlexGrow = 1,
         };
 
         // ── Colour wheel ─────────────────────────────────────────
@@ -140,13 +146,13 @@ public static class CrewmeleonStyles
             Width = S.StyleValue.Px(BrushPanel.WheelPx),
             Height = S.StyleValue.Px(BrushPanel.WheelPx),
             FlexShrink = 0,
+            Cursor = S.CursorType.Pointer,
         };
         s[".wheel"] = new S.Style
         {
             Width = S.StyleValue.Px(BrushPanel.WheelPx),
             Height = S.StyleValue.Px(BrushPanel.WheelPx),
             BorderRadius = BrushPanel.WheelPx / 2f,
-            Cursor = S.CursorType.Pointer,
         };
         s[".wheel-marker"] = new S.Style
         {
@@ -155,15 +161,41 @@ public static class CrewmeleonStyles
             Height = S.StyleValue.Px(BrushPanel.MarkerPx),
             BorderRadius = BrushPanel.MarkerPx / 2f,
             BorderWidth = 2,
-            BorderColor = "#ffffff",
-            BoxShadow = new S.BoxShadow { Blur = 3, Color = "rgba(0,0,0,0.55)" },
+            BorderColor = Outline,
+
+            // hard dark ring outside the white one, so the marker survives on a white centre
+            BoxShadow = new S.BoxShadow { Blur = 0, Spread = 1.5f, Color = "rgba(0,0,0,0.9)" },
+        };
+
+        // ── Value strip ──────────────────────────────────────────
+        s[".strip-wrap"] = new S.Style
+        {
+            Height = S.StyleValue.Px(18),
+            BorderRadius = 9,
+            BorderWidth = 2,
+            BorderColor = Outline,
+            Overflow = S.Overflow.Hidden,
+            Cursor = S.CursorType.Pointer,
+        };
+        s[".strip"] = new S.Style { Height = S.StyleValue.Px(14) };
+
+        // ── Brush preview ────────────────────────────────────────
+        s[".preview"] = new S.Style
+        {
+            Width = S.StyleValue.Px(56),
+            Height = S.StyleValue.Px(56),
+            BorderRadius = 8,
+            BorderWidth = 2,
+            BorderColor = Outline,
+            FlexShrink = 0,
         };
 
         // ── Buttons ──────────────────────────────────────────────
         s[".btn"] = new S.Style
         {
             Padding = new S.EdgeValues(7, 14),
-            BorderRadius = 6,
+            BorderRadius = 8,
+            BorderWidth = 2,
             FontSize = 13,
             FontWeight = 700,
             AlignItems = S.AlignItems.Center,
@@ -175,24 +207,19 @@ public static class CrewmeleonStyles
         {
             Background = Accent,
             Color = OnAccent,
-            Hover = new S.Style { Background = AccentText },
+            BorderColor = Outline,
+            Hover = new S.Style { Background = "#b6ff8a" },
         };
         s[".btn-busy"] = new S.Style
         {
-            Background = BtnBg,
+            Background = BgSunken,
             Color = TextMuted,
+            BorderColor = OutlineSoft,
         };
 
-        // ── Divider / footer ─────────────────────────────────────
-        s[".divider"] = new S.Style { Height = S.StyleValue.Px(1), Background = Divider };
-        s[".footer"] = new S.Style
-        {
-            Background = BgBar,
-            Padding = new S.EdgeValues(7, 14),
-            BorderRadii = (0, 0, 14, 14),
-        };
+        // ── Footer ───────────────────────────────────────────────
+        s[".footer"] = new S.Style { Padding = new S.EdgeValues(7, 14) };
         s[".footer-text"] = new S.Style { FontSize = 11, Color = TextMuted };
-        s[".footer-anchor"] = new S.Style { Margin = new S.EdgeValues(-1, 0, 0, 0) };
 
         ReactUI.UI.RegisterStyles(s);
     }
