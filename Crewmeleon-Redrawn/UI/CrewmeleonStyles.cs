@@ -50,24 +50,8 @@ public static class CrewmeleonStyles
             BorderWidth = OutlineWidth,
             BorderColor = Outline,
             Overflow = S.Overflow.Hidden,
-            BoxShadow = new S.BoxShadow { OffsetY = 6, Blur = 24, Color = "rgba(0,0,0,0.75)" },
         };
         s[".panel-body"] = new S.Style { Padding = new S.EdgeValues(12), Gap = 10 };
-
-        // white rules stand in for per-side borders, which Style doesn't model
-        s[".rule"] = new S.Style { Height = S.StyleValue.Px(2), Background = Outline, FlexShrink = 0 };
-
-        // ── Title ────────────────────────────────────────────────
-        s[".title-bar"] = new S.Style
-        {
-            FlexDirection = S.FlexDirection.Row,
-            JustifyContent = S.JustifyContent.SpaceBetween,
-            AlignItems = S.AlignItems.Center,
-            Padding = new S.EdgeValues(9, 14),
-            Gap = 10,
-        };
-        s[".title-text"] = new S.Style { FontSize = 16, FontWeight = 700, Color = TextPrimary };
-        s[".title-hint"] = new S.Style { FontSize = 11, FontWeight = 700, Color = Accent };
 
         // ── Section ──────────────────────────────────────────────
         s[".section"] = new S.Style
@@ -82,13 +66,14 @@ public static class CrewmeleonStyles
         s[".section-title"] = new S.Style { FontSize = 11, FontWeight = 700, Color = TextMuted };
 
         // ── Text ─────────────────────────────────────────────────
-        s[".text-label"] = new S.Style { FontSize = 13, FontWeight = 700, Color = TextPrimary, FlexShrink = 0 };
+        s[".text-label"] = new S.Style { FontSize = 12, FontWeight = 700, Color = TextPrimary, FlexShrink = 0 };
         s[".text-value"] = new S.Style
         {
-            FontSize = 12,
+            FontSize = 11,
             FontWeight = 700,
             Color = TextMuted,
-            Width = S.StyleValue.Px(38),
+            Width = S.StyleValue.Px(34),
+            FlexShrink = 0,
             TextAlign = S.TextAlign.Right,
         };
         s[".hex-text"] = new S.Style
@@ -105,12 +90,12 @@ public static class CrewmeleonStyles
             FlexDirection = S.FlexDirection.Row,
             JustifyContent = S.JustifyContent.SpaceBetween,
             AlignItems = S.AlignItems.Center,
-            Gap = 10,
+            Gap = 8,
         };
         s[".slider-control"] = new S.Style
         {
-            Padding = new S.EdgeValues(4, 6),
-            Color = Accent,
+            Padding = new S.EdgeValues(4, 4),
+            Color = TextPrimary,
             Cursor = S.CursorType.Pointer,
         };
 
@@ -170,25 +155,44 @@ public static class CrewmeleonStyles
         // ── Value strip ──────────────────────────────────────────
         s[".strip-wrap"] = new S.Style
         {
-            Height = S.StyleValue.Px(18),
-            BorderRadius = 9,
+            Height = S.StyleValue.Px(22),
+            BorderRadius = 6,
             BorderWidth = 2,
             BorderColor = Outline,
             Overflow = S.Overflow.Hidden,
             Cursor = S.CursorType.Pointer,
         };
-        s[".strip"] = new S.Style { Height = S.StyleValue.Px(14) };
+        s[".strip"] = new S.Style { Width = S.StyleValue.Percent(100), Height = S.StyleValue.Percent(100) };
 
         // ── Brush preview ────────────────────────────────────────
         s[".preview"] = new S.Style
         {
-            Width = S.StyleValue.Px(56),
-            Height = S.StyleValue.Px(56),
+            Width = S.StyleValue.Px(48),
+            Height = S.StyleValue.Px(48),
             BorderRadius = 8,
             BorderWidth = 2,
             BorderColor = Outline,
             FlexShrink = 0,
         };
+
+        // ── Keybinds ─────────────────────────────────────────────
+        s[".keybind-row"] = new S.Style
+        {
+            FlexDirection = S.FlexDirection.Row,
+            AlignItems = S.AlignItems.Center,
+            Gap = 8,
+        };
+        s[".keybind-key"] = new S.Style
+        {
+            Background = BgSunken,
+            BorderRadius = 4,
+            BorderWidth = 2,
+            BorderColor = OutlineSoft,
+            Padding = new S.EdgeValues(3, 7),
+            FlexShrink = 0,
+        };
+        s[".keybind-key-text"] = new S.Style { FontSize = 11, FontWeight = 700, Color = TextPrimary };
+        s[".keybind-action"] = new S.Style { FontSize = 12, Color = TextMuted, FlexGrow = 1 };
 
         // ── Buttons ──────────────────────────────────────────────
         s[".btn"] = new S.Style

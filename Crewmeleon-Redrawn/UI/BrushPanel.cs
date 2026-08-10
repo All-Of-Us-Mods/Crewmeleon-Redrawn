@@ -1,7 +1,5 @@
-using Crewmeleon_Redrawn.Buttons.Hider;
 using Crewmeleon_Redrawn.Components;
 using Crewmeleon_Redrawn.Modifiers;
-using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using ReactUI.Core;
 using ReactUI.Hooks;
@@ -39,22 +37,11 @@ public static class BrushPanel
         {
             Inset = new S.EdgeValues(AnchorTop, float.NaN, float.NaN, AnchorLeft),
         }),
-            TitleBar(),
-            Div(ClassName("rule")),
             Div(ClassName("panel-body"),
                 ColorSection(brush),
-                BrushSection(brush)
-            ),
-            Div(ClassName("rule")),
-            Footer()
-        );
-    }
-
-    private static VNode TitleBar()
-    {
-        return Div(ClassName("title-bar"),
-            Text("BRUSH", ClassName("title-text")),
-            Text("CREWMELEON", ClassName("title-hint"))
+                BrushSection(brush),
+                KeybindsSection()
+            )
         );
     }
 
@@ -75,8 +62,7 @@ public static class BrushPanel
                     Text(ToHex(brush.Color), ClassName("hex-text"))
                 )
             ),
-            ValueRow(brush),
-            EyedropperButton()
+            ValueRow(brush)
         );
     }
 
@@ -153,27 +139,28 @@ public static class BrushPanel
         return Div(ClassName("setting-row-slider"),
             Text(label, ClassName("text-label")),
             Div(ClassName("grow"),
-                Slider(value, onChange, min, max, ClassName("slider-control"), step)
+                Slider(value, onChange, min, max, ClassName("slider-control"), step,
+                    thumbWidth: 7f, thumbHeight: 18f, thumbRadius: 2f)
             ),
             Text(display, ClassName("text-value"))
         );
     }
 
-    private static VNode EyedropperButton()
+    private static VNode KeybindsSection()
     {
-        var picker = CustomButtonSingleton<PickColorButton>.Instance;
-        var picking = picker.IsPicking;
-
-        return Button(
-            picking ? "CLICK TO SAMPLE" : "PICK FROM SCREEN",
-            picker.BeginPick,
-            ClassName(picking ? "btn btn-busy" : "btn btn-accent"));
+        return Div(ClassName("section"),
+            Text("KEYBINDS", ClassName("section-title")),
+            Keybind("Left Click", "Paint"),
+            Keybind("Scroll", "Zoom in / out"),
+            Keybind("Ctrl + Scroll", "Brush size")
+        );
     }
 
-    private static VNode Footer()
+    private static VNode Keybind(string key, string action)
     {
-        return Div(ClassName("footer"),
-            Text("Ctrl + scroll resizes the brush", ClassName("footer-text"))
+        return Div(ClassName("keybind-row"),
+            Div(ClassName("keybind-key"), Text(key, ClassName("keybind-key-text"))),
+            Text(action, ClassName("keybind-action"))
         );
     }
 
