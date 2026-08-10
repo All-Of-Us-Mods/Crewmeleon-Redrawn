@@ -1,4 +1,4 @@
-﻿using Crewmeleon_Redrawn;
+using Crewmeleon_Redrawn;
 using Crewmeleon_Redrawn.Components;
 using Crewmeleon_Redrawn.Networking;
 using Hazel;
@@ -34,8 +34,8 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
 
         foreach (var point in stroke.Points)
         {
-            writer.Write((ushort)point.x);
-            writer.Write((ushort)point.y);
+            writer.Write((short)point.x);
+            writer.Write((short)point.y);
         }
     }
 
@@ -57,7 +57,7 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
         var points = new Vector2Int[count];
         for (var i = 0; i < count; i++)
         {
-            points[i] = new Vector2Int(reader.ReadUInt16(), reader.ReadUInt16());
+            points[i] = new Vector2Int(reader.ReadInt16(), reader.ReadInt16());
         }
 
         return new PaintStroke(brush, points);

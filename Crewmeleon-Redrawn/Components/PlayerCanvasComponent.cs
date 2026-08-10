@@ -21,6 +21,10 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     
     private const float CursorRingThickness = 3f;
 
+    // how far the brush centre may sit outside the canvas and still paint; only needs to exceed
+    // the largest radius, and keeps stroke points inside what the RPC can encode
+    private const int MaxOffCanvas = 32;
+
     private SpriteRenderer _playerRend;
     private SpriteRenderer _canvasRend;
     private SpriteRenderer _brushCursor;
@@ -37,6 +41,14 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     // interop boundary per element dominated the cost at large brush sizes
     private Color32[] _buffer;
     private bool[] _paintable;
+
+    // a stroke composites as a single layer: stamps accumulate coverage, and the colour is laid
+    // over the pre-stroke canvas once. Blending each stamp separately drove a 50% brush to ~99%.
+    private Color32[] _baseBuffer;
+    private float[] _coverage;
+    private bool[] _touchedFlag;
+    private readonly List<int> _touched = [];
+    private readonly List<int> _recompose = [];
 
     // (2r+1)^2 falloff weights, rebuilt only when radius or hardness changes
     private float[] _kernel = [];
@@ -63,7 +75,11 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         _texture = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false)
         {
-            filterMode = FilterMode.Point // removes outline
+            filterMode = FilterMode.Point, // removes outline
+
+            // Repeat is the default; any stray out-of-range write would wrap a brush across to
+            // the opposite edge of the player
+            wrapMode = TextureWrapMode.Clamp
         };
 
         _width = source.width;
@@ -71,6 +87,9 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         // kept around so strokes can be alpha-blended and the whole canvas replayed on undo
         _buffer = new Color32[_width * _height];
+        _baseBuffer = new Color32[_width * _height];
+        _coverage = new float[_width * _height];
+        _touchedFlag = new bool[_width * _height];
         ClearBuffer();
         _texture.SetPixels32(new Il2CppStructArray<Color32>(_buffer));
         _texture.Apply();
@@ -140,8 +159,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
 
         if (!Input.GetMouseButton(0)
-            || !TryGetPixelAtMouse(out var x, out var y)
-            || !IsPaintable(x, y))
+            || !TryGetPixelAtMouse(out var x, out var y))
         {
             if (_lastPixel.HasValue) EndStroke();
 
@@ -149,13 +167,19 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             return;
         }
 
-        var point = new Vector2Int(x, y);
+        // the centre may sit off the body — StampCircle masks per pixel, so only drawable
+        // pixels under the brush are touched
+        var point = new Vector2Int(
+            Mathf.Clamp(x, -MaxOffCanvas, _width + MaxOffCanvas),
+            Mathf.Clamp(y, -MaxOffCanvas, _height + MaxOffCanvas));
 
         if (!_lastPixel.HasValue)
         {
             _pendingBrush = BrushStamp.From(Brush);
             _pendingPoints.Clear();
             _pendingPoints.Add(point);
+
+            BeginStroke();
             StampCircle(point, _pendingBrush);
         }
         else if (_lastPixel.Value != point)
@@ -163,6 +187,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             _pendingPoints.Add(point);
             StampLine(_lastPixel.Value, point, _pendingBrush);
         }
+
+        CompositeStroke(_pendingBrush);
 
         _lastPixel = point;
         Flush();
@@ -236,6 +262,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var stroke = new PaintStroke(_pendingBrush, _pendingPoints.ToArray());
         _pendingPoints.Clear();
+        ClearStrokeState();
 
         _strokes.Add(stroke);
         Rpc<RpcSendStroke>.Instance.Send(PlayerControl.LocalPlayer, stroke, true);
@@ -274,11 +301,16 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     {
         if (stroke.Points.Length == 0) return;
 
+        BeginStroke();
+
         StampCircle(stroke.Points[0], stroke.Brush);
         for (var i = 1; i < stroke.Points.Length; i++)
         {
             StampLine(stroke.Points[i - 1], stroke.Points[i], stroke.Brush);
         }
+
+        CompositeStroke(stroke.Brush);
+        ClearStrokeState();
     }
 
     private void ClearBuffer()
@@ -395,7 +427,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         x = Mathf.FloorToInt(pixel.x);
         y = Mathf.FloorToInt(pixel.y);
 
-        return x >= 0 && x < _width && y >= 0 && y < _height;
+        return true;
     }
 
     private bool IsPaintable(int x, int y)
@@ -409,7 +441,6 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var r = brush.Radius;
         var size = 2 * r + 1;
-        var opacity = brush.Opacity / 255f;
 
         var minX = Mathf.Max(center.x - r, 0);
         var maxX = Mathf.Min(center.x + r, _width - 1);
@@ -427,10 +458,14 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
                 if (!_paintable[index]) continue;
 
                 var weight = _kernel[kernelRow + px];
-                if (weight <= 0f) continue;
+                if (weight <= _coverage[index]) continue;
 
-                Blend(index, brush.Color, weight * opacity);
-                MarkDirty(px, py);
+                _coverage[index] = weight;
+                _recompose.Add(index);
+
+                if (_touchedFlag[index]) continue;
+                _touchedFlag[index] = true;
+                _touched.Add(index);
             }
         }
     }
@@ -460,20 +495,56 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
     }
 
-    private void Blend(int index, Color32 color, float alpha)
+    /// <summary>Snapshots the canvas so the in-progress stroke can be recomposited each frame.</summary>
+    private void BeginStroke()
     {
-        if (index < 0 || index >= _buffer.Length) return;
+        Array.Copy(_buffer, _baseBuffer, _buffer.Length);
+        ClearStrokeState();
+    }
 
-        var dst = _buffer[index];
-        var dstAlpha = dst.a / 255f;
-        var outAlpha = alpha + dstAlpha * (1f - alpha);
-        if (outAlpha <= 0f) return;
+    /// <summary>Lays the stroke's accumulated coverage over the pre-stroke canvas.</summary>
+    private void CompositeStroke(BrushStamp brush)
+    {
+        var opacity = brush.Opacity / 255f;
+        var color = brush.Color;
 
-        // straight alpha, so a soft edge over an existing stroke doesn't darken it
-        _buffer[index] = new Color32(
-            (byte) Mathf.RoundToInt((color.r * alpha + dst.r * dstAlpha * (1f - alpha)) / outAlpha),
-            (byte) Mathf.RoundToInt((color.g * alpha + dst.g * dstAlpha * (1f - alpha)) / outAlpha),
-            (byte) Mathf.RoundToInt((color.b * alpha + dst.b * dstAlpha * (1f - alpha)) / outAlpha),
-            (byte) Mathf.RoundToInt(outAlpha * 255f));
+        foreach (var index in _recompose)
+        {
+            var alpha = _coverage[index] * opacity;
+
+            var dst = _baseBuffer[index];
+            var dstAlpha = dst.a / 255f;
+            var outAlpha = alpha + dstAlpha * (1f - alpha);
+
+            if (outAlpha <= 0f)
+            {
+                _buffer[index] = new Color32(0, 0, 0, 0);
+            }
+            else
+            {
+                // straight alpha, so a soft edge over an existing stroke doesn't darken it
+                _buffer[index] = new Color32(
+                    (byte) Mathf.RoundToInt((color.r * alpha + dst.r * dstAlpha * (1f - alpha)) / outAlpha),
+                    (byte) Mathf.RoundToInt((color.g * alpha + dst.g * dstAlpha * (1f - alpha)) / outAlpha),
+                    (byte) Mathf.RoundToInt((color.b * alpha + dst.b * dstAlpha * (1f - alpha)) / outAlpha),
+                    (byte) Mathf.RoundToInt(outAlpha * 255f));
+            }
+
+            MarkDirty(index % _width, index / _width);
+        }
+
+        _recompose.Clear();
+    }
+
+    private void ClearStrokeState()
+    {
+        foreach (var index in _touched)
+        {
+            _coverage[index] = 0f;
+            _touchedFlag[index] = false;
+        }
+
+        _touched.Clear();
+        _recompose.Clear();
     }
 }
