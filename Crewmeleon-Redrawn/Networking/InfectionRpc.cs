@@ -1,4 +1,5 @@
 using AmongUs.GameOptions;
+using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Roles;
 using MiraAPI.GameModes;
 using MiraAPI.Roles;
@@ -13,6 +14,6 @@ public static class InfectionRpc
     {
         var role = (RoleTypes)RoleId.Get<SeekerRole>();
         target.StartCoroutine(target.CoSetRole(role, true));
-        (CustomGameModeManager.ActiveMode as ChameleonGameMode)!.NotifyOfDeath(target, true);
+        (CustomGameModeManager.ActiveMode as ChameleonGameMode)!.NotifyOfDeath(target, infected: true);
     }
 }
