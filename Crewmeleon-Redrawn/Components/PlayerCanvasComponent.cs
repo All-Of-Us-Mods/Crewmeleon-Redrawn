@@ -17,10 +17,13 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     public PlayerControl Player { get; set; }
     public Color BrushColor = Color.black;
     
+    private static readonly Color OutlineColor = Color.white;
+
     private readonly IntRange _brushRadiusRange = new(1, 15);
     private int _brushRadius = 3;
     private SpriteRenderer _playerRend;
     private SpriteRenderer _canvasRend;
+    private SpriteRenderer _outlineRend;
     private Texture2D _texture;
     private HashSet<Vector2Int> _unpaintablePixels;
     private Vector2Int? _lastPixel;
@@ -72,10 +75,53 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             _unpaintablePixels.Add(new Vector2Int(x, y));
         }
 
+        _outlineRend = CreateOutlineRenderer(playerSprite, pivot);
+
         _strokes = [];
         _pendingPixels = [];
-        
+
         gameObject.SetActive(false);
+    }
+
+    private SpriteRenderer CreateOutlineRenderer(Sprite playerSprite, Vector2 pivot)
+    {
+        var outlinePixels = new Color[_texture.width * _texture.height];
+        Array.Fill(outlinePixels, Color.clear);
+
+        for (var y = 0; y < _texture.height; y++)
+        for (var x = 0; x < _texture.width; x++)
+        {
+            if (IsPaintable(x, y) && IsOnPaintableBorder(x, y))
+            {
+                outlinePixels[y * _texture.width + x] = OutlineColor;
+            }
+        }
+
+        var outlineTexture = new Texture2D(_texture.width, _texture.height, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Point
+        };
+        outlineTexture.SetPixels(new Il2CppStructArray<Color>(outlinePixels));
+        outlineTexture.Apply();
+
+        var outlineObj = new GameObject("PaintAreaOutline");
+        outlineObj.transform.SetParent(transform, false);
+
+        var rend = outlineObj.AddComponent<SpriteRenderer>();
+        rend.sortingLayerID = _playerRend.sortingLayerID;
+        rend.sortingOrder = _canvasRend.sortingOrder + 1;
+        rend.sprite = Sprite.Create(outlineTexture, playerSprite.rect, pivot, playerSprite.pixelsPerUnit);
+        rend.enabled = false;
+
+        return rend;
+    }
+
+    private bool IsOnPaintableBorder(int x, int y)
+    {
+        return !IsPaintable(x - 1, y)
+            || !IsPaintable(x + 1, y)
+            || !IsPaintable(x, y - 1)
+            || !IsPaintable(x, y + 1);
     }
 
     public void Enable()
@@ -94,12 +140,19 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     private void Update()
     {
-        if (!Player || !_playerRend || !_canvasRend || !_texture)
+        if (!Player || !_playerRend || !_canvasRend || !_outlineRend || !_texture)
             return;
 
-        _playerRend.flipX = _canvasRend.flipX = Player.cosmetics.FlipX;
+        _playerRend.flipX = _canvasRend.flipX = _outlineRend.flipX = Player.cosmetics.FlipX;
 
-        if (!Player.AmOwner || !Player.HasModifier<PaintingModifier>()) return;
+        var painting = Player.AmOwner && Player.HasModifier<PaintingModifier>();
+
+        if (_outlineRend.enabled != painting)
+        {
+            _outlineRend.enabled = painting;
+        }
+
+        if (!painting) return;
 
         HandleBrushRadiusScroll();
 
