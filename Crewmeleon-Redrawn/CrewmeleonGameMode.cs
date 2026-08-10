@@ -234,7 +234,7 @@ public class ChameleonGameMode : AbstractGameMode
         if(stageTimeLeft <= 0)
         {
             if(CurrentStage == TimerStage.Revelation)
-                OnRevalationStageEnd();
+                OnRevelationStageEnd();
             else
             {
                 if (CurrentStage == TimerStage.Hiding)
@@ -289,36 +289,37 @@ public class ChameleonGameMode : AbstractGameMode
     }
 
     /// <summary>
-    /// End the seeking stage and start the revalation stage.
+    /// End the seeking stage and start the revelation stage.
     /// </summary>
     private void OnSeekingStageEnd()
     {
         CurrentStage = TimerStage.Revelation;
 
         var hiders = Helpers.GetAlivePlayers().Where(p => !p.Data.Role.IsImpostor).ToList();
-        int timePerPlayer = 5; // TODO: add game option to manually adjust this
 
-        // give each hider a revalation period
-        if (hiders.Count > 0 )
+        // give each hider a revelation period
+        if (GameplayOpts.RevelationTimePerPlayer.Value > 0 && hiders.Count > 0)
         {
-            stageMaxTime = hiders.Count * timePerPlayer; 
+            stageMaxTime = hiders.Count * GameplayOpts.RevelationTimePerPlayer; 
             stageTimeLeft = stageMaxTime;
 
             if (timerBar is not null && timerBar)
                 timerBar.timerBarRenderer.material.SetColor("_Color", Color.yellow);
 
-            Coroutines.Start(CoReveal(hiders, timePerPlayer));
+            Coroutines.Start(CoReveal(hiders));
             return;
         }
 
+        stageMaxTime = 0;
         stageTimeLeft = 0;
+
         return;
     }
 
     /// <summary>
-    /// End the revalation stage and end the game.
+    /// End the revelation stage and end the game.
     /// </summary>
-    private void OnRevalationStageEnd()
+    private void OnRevelationStageEnd()
     {
         if (!PlayerControl.LocalPlayer.IsHost())
             return;
@@ -469,7 +470,7 @@ public class ChameleonGameMode : AbstractGameMode
         UnityEngine.Object.Destroy(intro.gameObject);
     }
 
-    private IEnumerator CoReveal(List<PlayerControl> players, int timePerPlayer)
+    private IEnumerator CoReveal(List<PlayerControl> players)
     {
         if (PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>())
             PlayerControl.LocalPlayer.RemoveModifier<SpectatingModifier>();
@@ -479,7 +480,7 @@ public class ChameleonGameMode : AbstractGameMode
         foreach (var player in players)
         {
             HudManager.Instance.PlayerCam.Target = player;
-            yield return new WaitForSeconds(timePerPlayer);
+            yield return new WaitForSeconds(GameplayOpts.RevelationTimePerPlayer.Value);
         }
     }
 }

@@ -9,7 +9,7 @@ public class GameplayOptions : AbstractOptionGroup
     public override string GroupName => "Gameplay Options";
 
     public ModdedNumberOption SeekersCount { get; } =
-        new("Seekers Count", 1, 1, 3, 1, MiraNumberSuffixes.None);
+        new ModdedNumberOption("Seekers Count", 1, 1, 3, 1, "0", "0", MiraNumberSuffixes.None);
     
     public ModdedPlayerOption Seeker1 { get; } =
         new("Forced Seeker #1")
@@ -30,12 +30,13 @@ public class GameplayOptions : AbstractOptionGroup
         };
     
     public ModdedNumberOption HideTime { get; } =
-        new("Initial Hide Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds,
-            halfIncrements: true);
+        new ModdedNumberOption("Initial Hide Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
     
     public ModdedNumberOption SeekTime { get; } =
-        new("Seek Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds,
-            halfIncrements: true);
+        new ModdedNumberOption("Seek Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
+
+    public ModdedNumberOption RevelationTimePerPlayer { get; } =
+        new ModdedNumberOption("Revelation time per Player", 5, 0, 30, 1, "0", "0", MiraNumberSuffixes.Seconds);
 
     public ModdedToggleOption InfectionMode { get; } =
         new ModdedToggleOption("InfectionMode", false);
