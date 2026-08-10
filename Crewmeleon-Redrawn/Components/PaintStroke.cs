@@ -20,16 +20,21 @@ public readonly struct BrushStamp(Color32 color, byte radius, byte opacity, byte
         (byte) Mathf.RoundToInt(brush.Hardness * 255f));
 
     /// <summary>Alpha at <paramref name="distance"/> pixels from the stamp centre.</summary>
-    public float AlphaAt(float distance)
+    public float AlphaAt(float distance) => FalloffAt(distance) * (opacity / 255f);
+
+    /// <summary>
+    /// Edge falloff alone, without opacity — separated so a cached kernel stays valid when only
+    /// the opacity changes.
+    /// </summary>
+    public float FalloffAt(float distance)
     {
-        var opacity01 = opacity / 255f;
-        if (radius <= 0) return opacity01;
+        if (radius <= 0) return 1f;
 
         var hardness01 = hardness / 255f;
         var normalized = Mathf.Clamp01(distance / radius);
-        if (normalized <= hardness01) return opacity01;
+        if (normalized <= hardness01) return 1f;
 
-        return opacity01 * (1f - Mathf.InverseLerp(hardness01, 1f, normalized));
+        return 1f - Mathf.InverseLerp(hardness01, 1f, normalized);
     }
 }
 

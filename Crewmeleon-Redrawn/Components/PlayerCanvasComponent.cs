@@ -25,12 +25,27 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private SpriteRenderer _canvasRend;
     private SpriteRenderer _brushCursor;
     private Texture2D _texture;
-    private HashSet<Vector2Int> _unpaintablePixels;
     private Vector2Int? _lastPixel;
     private List<PaintStroke> _strokes;
     private List<Vector2Int> _pendingPoints;
     private BrushStamp _pendingBrush;
-    private Il2CppStructArray<Color32> _buffer;
+
+    private int _width;
+    private int _height;
+
+    // managed, not Il2CppStructArray: every blend reads and writes a pixel, and crossing the
+    // interop boundary per element dominated the cost at large brush sizes
+    private Color32[] _buffer;
+    private bool[] _paintable;
+
+    // (2r+1)^2 falloff weights, rebuilt only when radius or hardness changes
+    private float[] _kernel = [];
+    private int _kernelRadius = -1;
+    private byte _kernelHardness;
+
+    // only the touched region is uploaded each frame instead of all 34k pixels
+    private int _dirtyMinX, _dirtyMinY, _dirtyMaxX, _dirtyMaxY;
+    private bool _dirty;
 
     private void Start()
     {
@@ -51,10 +66,13 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             filterMode = FilterMode.Point // removes outline
         };
 
+        _width = source.width;
+        _height = source.height;
+
         // kept around so strokes can be alpha-blended and the whole canvas replayed on undo
-        _buffer = new Il2CppStructArray<Color32>(source.width * source.height);
+        _buffer = new Color32[_width * _height];
         ClearBuffer();
-        _texture.SetPixels32(_buffer);
+        _texture.SetPixels32(new Il2CppStructArray<Color32>(_buffer));
         _texture.Apply();
 
         var overlayObj = new GameObject("Canvas");
@@ -66,15 +84,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         
         // makes a list of transparent pixels so you cant paint outside the mogus
         var pixels = source.GetPixels();
-        _unpaintablePixels = [];
-        for (var i = 0; i < pixels.Length; i++)
-        {
-            if (!(pixels[i].a <= 0)) continue;
-
-            var x = i % _texture.width;
-            var y = i / _texture.width;
-            _unpaintablePixels.Add(new Vector2Int(x, y));
-        }
+        _paintable = new bool[_width * _height];
+        for (var i = 0; i < pixels.Length; i++) _paintable[i] = pixels[i].a > 0;
 
         _strokes = [];
         _pendingPoints = [];
@@ -154,8 +165,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
 
         _lastPixel = point;
-        _texture.SetPixels32(_buffer);
-        _texture.Apply();
+        Flush();
     }
 
     private void UpdateBrushCursor()
@@ -236,8 +246,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         _strokes.Add(stroke);
         Rasterize(stroke);
 
-        _texture.SetPixels32(_buffer);
-        _texture.Apply();
+        Flush();
     }
 
     private void UndoLocalStroke()
@@ -258,8 +267,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         ClearBuffer();
         foreach (var stroke in _strokes) Rasterize(stroke);
 
-        _texture.SetPixels32(_buffer);
-        _texture.Apply();
+        Flush();
     }
 
     private void Rasterize(PaintStroke stroke)
@@ -275,8 +283,68 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     private void ClearBuffer()
     {
-        var clear = new Color32(0, 0, 0, 0);
-        for (var i = 0; i < _buffer.Length; i++) _buffer[i] = clear;
+        Array.Clear(_buffer, 0, _buffer.Length);
+        MarkDirty(0, 0);
+        MarkDirty(_width - 1, _height - 1);
+    }
+
+    private void MarkDirty(int x, int y)
+    {
+        if (!_dirty)
+        {
+            _dirtyMinX = _dirtyMaxX = x;
+            _dirtyMinY = _dirtyMaxY = y;
+            _dirty = true;
+            return;
+        }
+
+        if (x < _dirtyMinX) _dirtyMinX = x;
+        if (x > _dirtyMaxX) _dirtyMaxX = x;
+        if (y < _dirtyMinY) _dirtyMinY = y;
+        if (y > _dirtyMaxY) _dirtyMaxY = y;
+    }
+
+    /// <summary>Uploads only the region touched since the last flush.</summary>
+    private void Flush()
+    {
+        if (!_dirty) return;
+
+        var w = _dirtyMaxX - _dirtyMinX + 1;
+        var h = _dirtyMaxY - _dirtyMinY + 1;
+
+        var block = new Color32[w * h];
+        for (var row = 0; row < h; row++)
+        {
+            Array.Copy(_buffer, (_dirtyMinY + row) * _width + _dirtyMinX, block, row * w, w);
+        }
+
+        _texture.SetPixels32(_dirtyMinX, _dirtyMinY, w, h, new Il2CppStructArray<Color32>(block));
+        _texture.Apply(false);
+
+        _dirty = false;
+    }
+
+    /// <summary>
+    /// Falloff weights for the current radius/hardness. Rebuilt only when those change, so the
+    /// per-pixel sqrt and curve maths happen once per brush rather than once per stamped pixel.
+    /// </summary>
+    private void EnsureKernel(BrushStamp brush)
+    {
+        if (_kernelRadius == brush.Radius && _kernelHardness == brush.Hardness) return;
+
+        _kernelRadius = brush.Radius;
+        _kernelHardness = brush.Hardness;
+
+        var r = brush.Radius;
+        var size = 2 * r + 1;
+        _kernel = new float[size * size];
+
+        for (var dy = -r; dy <= r; dy++)
+        for (var dx = -r; dx <= r; dx++)
+        {
+            var distance = Mathf.Sqrt(dx * dx + dy * dy);
+            _kernel[(dy + r) * size + (dx + r)] = distance > r ? 0f : brush.FalloffAt(distance);
+        }
     }
 
     private static bool TryGetWorldMouse(out Vector2 worldMouse)
@@ -327,31 +395,43 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         x = Mathf.FloorToInt(pixel.x);
         y = Mathf.FloorToInt(pixel.y);
 
-        return x >= 0 && x < _texture.width && y >= 0 && y < _texture.height;
+        return x >= 0 && x < _width && y >= 0 && y < _height;
     }
 
     private bool IsPaintable(int x, int y)
     {
-        return x > 0 && x <= _texture.width &&
-            y > 0 && y <= _texture.height &&
-            !_unpaintablePixels.Contains(new Vector2Int(x, y));
+        return x >= 0 && x < _width && y >= 0 && y < _height && _paintable[y * _width + x];
     }
 
     private void StampCircle(Vector2Int center, BrushStamp brush)
     {
+        EnsureKernel(brush);
+
         var r = brush.Radius;
-        for (var dx = -r; dx <= r; dx++)
-        for (var dy = -r; dy <= r; dy++)
+        var size = 2 * r + 1;
+        var opacity = brush.Opacity / 255f;
+
+        var minX = Mathf.Max(center.x - r, 0);
+        var maxX = Mathf.Min(center.x + r, _width - 1);
+        var minY = Mathf.Max(center.y - r, 0);
+        var maxY = Mathf.Min(center.y + r, _height - 1);
+
+        for (var py = minY; py <= maxY; py++)
         {
-            if (dx * dx + dy * dy > r * r) continue;
+            var rowOffset = py * _width;
+            var kernelRow = (py - center.y + r) * size + r - center.x;
 
-            int px = center.x + dx, py = center.y + dy;
-            if (!IsPaintable(px, py)) continue;
+            for (var px = minX; px <= maxX; px++)
+            {
+                var index = rowOffset + px;
+                if (!_paintable[index]) continue;
 
-            var alpha = brush.AlphaAt(Mathf.Sqrt(dx * dx + dy * dy));
-            if (alpha <= 0f) continue;
+                var weight = _kernel[kernelRow + px];
+                if (weight <= 0f) continue;
 
-            Blend(py * _texture.width + px, brush.Color, alpha);
+                Blend(index, brush.Color, weight * opacity);
+                MarkDirty(px, py);
+            }
         }
     }
 
@@ -361,10 +441,17 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         int dy = -Mathf.Abs(to.y - from.y), sy = from.y < to.y ? 1 : -1;
         var err = dx + dy;
 
+        // overlapping discs are redundant; quarter-radius spacing is visually identical
+        var spacing = Mathf.Max(1, brush.Radius / 4);
+        var step = 0;
+
         while (true)
         {
-            StampCircle(from, brush);
-            if (from.x == to.x && from.y == to.y) break;
+            var atEnd = from.x == to.x && from.y == to.y;
+            if (step % spacing == 0 || atEnd) StampCircle(from, brush);
+            if (atEnd) break;
+
+            step++;
             var e2 = 2 * err;
             if (e2 >= dy) { err += dy; from.x += sx; }
             if (e2 > dx) continue;
