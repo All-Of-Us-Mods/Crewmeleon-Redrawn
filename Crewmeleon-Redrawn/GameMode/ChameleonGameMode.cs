@@ -1,5 +1,6 @@
 using System.Collections;
 using MiraAPI.GameModes;
+using Reactor.Utilities.Extensions;
 using UnityEngine;
 
 namespace Crewmeleon_Redrawn.GameMode;
@@ -91,6 +92,7 @@ public class ChameleonGameMode : AbstractGameMode
         var popupPrefab = GameManagerCreator.Instance.HideAndSeekManagerPrefab.DeathPopupPrefab;
         var popup = GameObject.Instantiate(popupPrefab, HudManager.Instance.transform.parent);
 
+        popup.text.GetComponent<TextTranslatorTMP>().DestroyImmediate();
         popup.text.text = infected ? "HAS BEEN INFECTED" : "HAS BEEN KILLED";
         popup.Show(player, deadPlayerCount);
     }
