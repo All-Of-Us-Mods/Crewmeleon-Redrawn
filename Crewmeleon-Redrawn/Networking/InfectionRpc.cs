@@ -1,4 +1,6 @@
+using System.Collections;
 using AmongUs.GameOptions;
+using BepInEx.Unity.IL2CPP.Utils;
 using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Roles;
 using HarmonyLib;
@@ -16,6 +18,7 @@ public static class InfectionRpc
     {
         var seekerRole = RoleId.Get<SeekerRole>();
         ChangeRole(target, seekerRole);
+        target.StartCoroutine(PlaySeekerAnimation(target));
         (CustomGameModeManager.ActiveMode as ChameleonGameMode)!.NotifyOfDeath(target, infected: true);
     }
     
@@ -64,5 +67,13 @@ public static class InfectionRpc
         {
             PlayerControl.AllPlayerControls.ToArray().Do(PlayerNameColor.Set);
         }
+    }
+
+    private static IEnumerator PlaySeekerAnimation(PlayerControl player)
+    {
+        player.moveable = false;
+        player.NetTransform.Halt();
+        yield return player.MyPhysics.CoAnimateCustom(HudManager.Instance.IntroPrefab.HnSSeekerSpawnAnim);
+        player.moveable = true;
     }
 }
