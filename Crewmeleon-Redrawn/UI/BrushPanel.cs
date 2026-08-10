@@ -1,4 +1,6 @@
+using Crewmeleon_Redrawn.Buttons.Hider;
 using Crewmeleon_Redrawn.Components;
+using MiraAPI.Hud;
 using Crewmeleon_Redrawn.Modifiers;
 using MiraAPI.Modifiers;
 using ReactUI.Core;
@@ -9,25 +11,50 @@ using static ReactUI.UI;
 
 namespace Crewmeleon_Redrawn.UI;
 
-/// <summary>
-/// Brush controls, shown while the local player is painting.
-/// </summary>
+/// <summary>brush controls, only up while youre painting</summary>
 public static class BrushPanel
 {
     public const float WheelPx = 116f;
     public const float MarkerPx = 11f;
+
+    // how much of ColorWheel.png carries colour, the rest is the white ring
+    private const float WheelColorFraction = 120f / 127f;
 
     private const float AnchorLeft = 28f;
     private const float AnchorTop = 120f;
 
     private static readonly Func<VNode> Root = Component(RenderRoot);
 
+    private static int componentId = -1;
+    private static int lastVersion = -1;
+    private static bool lastPainting;
+    private static bool lastPicking;
+
     public static VNode Render() => Root();
+
+    /// <summary>watches the state the panel draws from and redraws only when it changes</summary>
+    public static void Tick()
+    {
+        if (componentId < 0) return;
+
+        var painting = IsPainting();
+        var picking = CustomButtonSingleton<PickColorButton>.Instance.IsPicking;
+        var version = BrushStore.Local.Version;
+
+        if (painting == lastPainting && picking == lastPicking && version == lastVersion) return;
+
+        lastPainting = painting;
+        lastPicking = picking;
+        lastVersion = version;
+
+        Scheduler.ScheduleRender(componentId);
+    }
 
     private static VNode RenderRoot()
     {
-        // the brush is mutated outside React by drags and the eyedropper, so redraw every frame
-        Scheduler.ScheduleRender(HooksRuntime.Current.ComponentId);
+        // the brush changes outside React, so a ticker watches it and only asks for a redraw when
+        // something actually moved
+        componentId = HooksRuntime.Current.ComponentId;
 
         if (!IsPainting()) return Div();
 
@@ -37,19 +64,11 @@ public static class BrushPanel
         {
             Inset = new S.EdgeValues(AnchorTop, float.NaN, float.NaN, AnchorLeft),
         }),
-#if BRUSHES
-            BrushCreator.IsOpen
-                ? Div(ClassName("panel-body"), BrushCreator.Render())
-                :
-#endif
-                Div(ClassName("panel-body"),
-                    ColorSection(brush),
-                    BrushSection(brush),
-#if BRUSHES
-                    BrushesSection(brush),
-#endif
-                    KeybindsSection()
-                )
+            Div(ClassName("panel-body"),
+                ColorSection(brush),
+                BrushSection(brush),
+                KeybindsSection()
+            )
         );
     }
 
@@ -78,15 +97,15 @@ public static class BrushPanel
     {
         var angle = brush.Hue * 2f * Mathf.PI;
 
-        // stop at the inner edge of the baked outline, where the colour actually ends
-        var reach = brush.Saturation * (WheelPx / 2f - 1f) * BrushTextures.WheelColorFraction;
+        // stop at the inside of the baked outline where the colour actually ends
+        var reach = brush.Saturation * (WheelPx / 2f - 1f) * WheelColorFraction;
 
-        // screen space is top-down, so the marker's Y is subtracted rather than added
+        // screen space is top down so Y gets subtracted here
         var markerX = WheelPx / 2f + Mathf.Cos(angle) * reach - MarkerPx / 2f;
         var markerY = WheelPx / 2f - Mathf.Sin(angle) * reach - MarkerPx / 2f;
 
         return PointerArea(p => ApplyWheelPointer(brush, p), ClassName("wheel-wrap"),
-            Image(BrushTextures.ColorWheel, ClassName("wheel")),
+            Image(CrewmeleonAssets.ColorWheel.LoadAsset().texture, ClassName("wheel")),
             Div(ClassName("wheel-marker", new S.Style
             {
                 Inset = new S.EdgeValues(markerY, float.NaN, float.NaN, markerX),
@@ -95,28 +114,44 @@ public static class BrushPanel
         );
     }
 
-    /// <summary>Maps a normalized pointer position on the wheel to hue (angle) and saturation (radius).</summary>
+    /// <summary>turns a pointer position on the wheel into hue by angle and saturation by radius</summary>
     private static void ApplyWheelPointer(BrushSettings brush, Vector2 normalized)
     {
         var dx = normalized.x - 0.5f;
 
-        // pointer space is top-down, the wheel texture is not
+        // pointer space is top down, the wheel texture isnt
         var dy = 0.5f - normalized.y;
 
         brush.Hue = Mathf.Repeat(Mathf.Atan2(dy, dx) / (2f * Mathf.PI), 1f);
-        brush.Saturation = Mathf.Sqrt(dx * dx + dy * dy) * 2f / BrushTextures.WheelColorFraction;
+        brush.Saturation = Mathf.Sqrt(dx * dx + dy * dy) * 2f / WheelColorFraction;
     }
 
-    /// <summary>Value runs on the gradient itself rather than a slider, so it previews the result.</summary>
+    /// <summary>value drags on the gradient itself so youre picking on a preview of the result</summary>
     private static VNode ValueRow(BrushSettings brush)
     {
+        var lit = ToHex(Color.HSVToRGB(brush.Hue, brush.Saturation, 1f));
+
         return Div(ClassName("gap-6"),
             Div(ClassName("row-between"),
                 Text("Value", ClassName("text-label")),
                 Text(Percent(brush.Value), ClassName("text-value"))
             ),
-            PointerArea(p => brush.Value = Mathf.Clamp01(p.x), ClassName("strip-wrap"),
-                Image(BrushTextures.ValueStrip(brush), ClassName("strip"))
+            PointerArea(p => brush.Value = Mathf.Clamp01(p.x), ClassName("strip-wrap", new S.Style
+            {
+                BackgroundGradient = new S.Gradient
+                {
+                    Type = S.GradientType.Linear,
+                    Angle = 0f,
+                    ColorA = "#000000",
+                    ColorB = lit,
+                },
+            }),
+                // percent spacer instead of an absolute offset, since the strip stretches and
+                // Inset only takes pixels
+                Div(ClassName("strip-row"),
+                    Div(ClassName("strip-spacer", new S.Style { Width = S.StyleValue.Percent(brush.Value * 100f) })),
+                    Div(ClassName("strip-marker"))
+                )
             )
         );
     }
@@ -155,39 +190,6 @@ public static class BrushPanel
             Text(display, ClassName("text-value"))
         );
     }
-
-#if BRUSHES
-    private static VNode BrushesSection(BrushSettings brush)
-    {
-        var tiles = BrushLibrary.All
-            .Select(preset => BrushTile(preset, brush))
-            .Append(CreateBrushTile());
-
-        return Div(ClassName("section"),
-            Text("BRUSHES", ClassName("section-title")),
-            ScrollView(ClassName("brush-strip"), tiles.ToArray())
-        );
-    }
-
-    private static VNode BrushTile(BrushPreset preset, BrushSettings brush)
-    {
-        var active = preset.Matches(brush);
-
-        var tile = Button(() => preset.ApplyTo(brush),
-            ClassName(active ? "brush-tile brush-tile-active" : "brush-tile"),
-            Image(BrushTextures.PresetPreview(preset), ClassName("brush-tile-img")));
-
-        tile.Key = preset.Name;
-        return tile;
-    }
-
-    private static VNode CreateBrushTile()
-    {
-        var tile = Button("+", BrushCreator.Open, ClassName("brush-add"));
-        tile.Key = "__create";
-        return tile;
-    }
-#endif
 
     private static VNode KeybindsSection()
     {

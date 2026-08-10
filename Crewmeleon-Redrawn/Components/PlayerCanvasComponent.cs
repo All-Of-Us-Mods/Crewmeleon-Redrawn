@@ -19,10 +19,11 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     public PlayerControl Player { get; set; }
     public static BrushSettings Brush => BrushStore.Local;
     
-    private const float CursorRingThickness = 3f;
+    // the ring in BrushCursor.png stops a pixel short of the sprite edge
+    private const float CursorEdgeFraction = 62f / 64f;
 
-    // how far the brush centre may sit outside the canvas and still paint; only needs to exceed
-    // the largest radius, and keeps stroke points inside what the RPC can encode
+    // how far off canvas the brush centre can go and still paint.
+    // allows people to use the edge of the brush to paint instead of the center
     private const int MaxOffCanvas = 32;
 
     private SpriteRenderer _playerRend;
@@ -31,37 +32,37 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private Texture2D _texture;
     private Vector2Int? _lastPixel;
 
-    // the click that commits a colour pick must not also start a stroke
+    // the click that finishes a colour pick shouldnt also start a stroke
     private bool _paintBlockedUntilRelease;
     private List<PaintStroke> _strokes;
+
+    // undo replays from here rather than from a blank canvas. once the list passes UndoDepth the
+    // oldest stroke is baked in and dropped, so a replay is bounded no matter how long the game runs
+    private const int UndoDepth = 24;
+    private Color32[] _flattened;
     private List<Vector2Int> _pendingPoints;
     private BrushStamp _pendingBrush;
 
     private int _width;
     private int _height;
-
-    // managed, not Il2CppStructArray: every blend reads and writes a pixel, and crossing the
-    // interop boundary per element dominated the cost at large brush sizes
+    
     private Color32[] _buffer;
     private bool[] _paintable;
 
-    // a stroke composites as a single layer: stamps accumulate coverage, and the colour is laid
-    // over the pre-stroke canvas once. Blending each stamp separately drove a 50% brush to ~99%.
+    // a stroke draws as one layer, stamps build up coverage and colour goes down once on top of
+    // the pre stroke canvas. blending each stamp on its own pushed a 50% brush to ~99%
     private Color32[] _baseBuffer;
     private float[] _coverage;
     private bool[] _touchedFlag;
     private readonly List<int> _touched = [];
     private readonly List<int> _recompose = [];
 
-    // (2r+1)^2 falloff weights, rebuilt only when radius or hardness changes
+    // falloff weights for the hardness slider, (2r+1)^2
     private float[] _kernel = [];
     private int _kernelRadius = -1;
     private byte _kernelHardness;
-    private BrushShape _kernelShape;
-    private BrushMask? _kernelMask;
-    private bool _kernelMirrored;
 
-    // only the touched region is uploaded each frame instead of all 34k pixels
+    // mark modified area dirty to avoid having to upload just the touched region each frame, not all 34k pixels
     private int _dirtyMinX, _dirtyMinY, _dirtyMaxX, _dirtyMaxY;
     private bool _dirty;
 
@@ -70,9 +71,9 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private void Start() => EnsureInitialized();
 
     /// <summary>
-    /// Unity only runs Start on an active object and not until the next frame, but role
-    /// assignment arrives on an RPC and touches the canvas immediately. Throwing there kills the
-    /// connection, so setup has to be callable on demand.
+    /// Unity only runs Start on an active object and not until next frame. role assignment comes
+    /// in on an RPC and touches the canvas straight away, and throwing there drops the connection,
+    /// so setup has to be callable whenever
     /// </summary>
     private void EnsureInitialized()
     {
@@ -95,17 +96,17 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         {
             filterMode = FilterMode.Point, // removes outline
 
-            // Repeat is the default; any stray out-of-range write would wrap a brush across to
-            // the opposite edge of the player
+            // default is Repeat, which wraps a stray out of range write to the far side
             wrapMode = TextureWrapMode.Clamp
         };
 
         _width = source.width;
         _height = source.height;
 
-        // kept around so strokes can be alpha-blended and the whole canvas replayed on undo
+        // kept so strokes can blend and so undo can replay the whole canvas
         _buffer = new Color32[_width * _height];
         _baseBuffer = new Color32[_width * _height];
+        _flattened = new Color32[_width * _height];
         _coverage = new float[_width * _height];
         _touchedFlag = new bool[_width * _height];
         ClearBuffer();
@@ -169,14 +170,14 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         {
             Coroutines.Start(CustomButtonSingleton<PickColorButton>.Instance.CoPickColor(this));
 
-            // CoPickColor clears IsPicking before it yields, so without this the still-held
-            // button would start painting on the very next frame
+            // CoPickColor clears IsPicking before it yields so without this the button youre
+            // still holding starts painting next frame
             _paintBlockedUntilRelease = true;
             FinishAnyStroke();
             return;
         }
 
-        // dragging to pick a colour must not lay down a stroke
+        // dragging to pick a colour shouldnt leave a stroke behind
         if (CustomButtonSingleton<PickColorButton>.Instance.IsPicking) return;
 
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
@@ -188,7 +189,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         if (Input.GetKeyDown(PickColorButton.PickKey))
         {
-            // without this a stroke interrupted mid-drag would never be sent or recorded
+            // otherwise a stroke interrupted mid drag never gets sent or recorded
             FinishAnyStroke();
             CustomButtonSingleton<PickColorButton>.Instance.BeginPick(fromKey: true);
             return;
@@ -209,15 +210,14 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             return;
         }
 
-        // the centre may sit off the body — StampCircle masks per pixel, so only drawable
-        // pixels under the brush are touched
+        // centre can sit off the body. StampCircle masks per pixel so only drawable ones change
         var point = new Vector2Int(
             Mathf.Clamp(x, -MaxOffCanvas, _width + MaxOffCanvas),
             Mathf.Clamp(y, -MaxOffCanvas, _height + MaxOffCanvas));
 
         if (!_lastPixel.HasValue)
         {
-            _pendingBrush = BrushStamp.From(Brush, _canvasRend.flipX);
+            _pendingBrush = BrushStamp.From(Brush);
             _pendingPoints.Clear();
             _pendingPoints.Add(point);
 
@@ -249,11 +249,11 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         ShowBrushCursor(true);
 
-        // PaintCircle covers a disc of Brush.Radius texture pixels, and the canvas renders scaled down
+        // StampCircle covers Brush.Radius texture pixels and the canvas renders scaled down
         var paintedDiameter = (Brush.Radius * 2 + 1)
                               / _canvasRend.sprite.pixelsPerUnit
                               * _canvasRend.transform.lossyScale.x;
-        var scale = paintedDiameter / CircleSprite.DrawnDiameterFraction;
+        var scale = paintedDiameter / CursorEdgeFraction;
 
         _brushCursor.transform.position = new Vector3(worldMouse.x, worldMouse.y, _canvasRend.transform.position.z - 0.01f);
         _brushCursor.transform.localScale = new Vector3(scale, scale, 1f);
@@ -265,7 +265,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         var cursorObj = new GameObject("BrushCursor") { layer = gameObject.layer };
 
         _brushCursor = cursorObj.AddComponent<SpriteRenderer>();
-        _brushCursor.sprite = CircleSprite.CreateRing(CursorRingThickness);
+        _brushCursor.sprite = CrewmeleonAssets.BrushCursor.LoadAsset();
         _brushCursor.sortingLayerID = _canvasRend.sortingLayerID;
         _brushCursor.sortingOrder = _canvasRend.sortingOrder + 1;
 
@@ -298,8 +298,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         Brush.Radius += scrollWheel > 0 ? 1 : -1;
     }
 
-    // a long drag is far past the packet limit in one message, so the path goes out in pieces
-    // and the receiver composites only once the final piece lands
+    // max points per stroke packet chunk.
     private const int PointsPerChunk = 120;
 
     private static void SendStroke(BrushStamp brush, Vector2Int[] points)
@@ -320,7 +319,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
     }
 
-    /// <summary>Commits an in-progress stroke, for input that interrupts a drag.</summary>
+    /// <summary>finishes whatever stroke is in progress, for input that interrupts a drag</summary>
     private void FinishAnyStroke()
     {
         if (_lastPixel.HasValue) EndStroke();
@@ -334,6 +333,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         var points = _pendingPoints.ToArray();
         _pendingPoints.Clear();
         ClearStrokeState();
+
+        TrimHistory();
 
         _strokes.Add(new PaintStroke(_pendingBrush, points));
         SendStroke(_pendingBrush, points);
@@ -364,6 +365,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     {
         EnsureInitialized();
 
+        TrimHistory();
+
         _strokes.Add(stroke);
         Rasterize(stroke);
 
@@ -378,7 +381,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         Rpc<RpcUndoStroke>.Instance.Send(PlayerControl.LocalPlayer, true);
     }
 
-    /// <summary>Drops the last stroke and replays the rest — the canvas holds no per-stroke history.</summary>
+    /// <summary>drops the last stroke and replays whats left on top of the flattened canvas</summary>
     public void UndoStroke()
     {
         EnsureInitialized();
@@ -387,10 +390,30 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         _strokes.RemoveAt(_strokes.Count - 1);
 
-        ClearBuffer();
+        Array.Copy(_flattened, _buffer, _buffer.Length);
+        MarkDirty(0, 0);
+        MarkDirty(_width - 1, _height - 1);
+
         foreach (var stroke in _strokes) Rasterize(stroke);
 
         Flush();
+    }
+
+    /// <summary>bakes the oldest stroke into the flattened canvas once history gets too deep</summary>
+    private void TrimHistory()
+    {
+        if (_strokes.Count < UndoDepth) return;
+
+        var oldest = _strokes[0];
+        _strokes.RemoveAt(0);
+        
+        var live = _buffer;
+        _buffer = _flattened;
+
+        Rasterize(oldest);
+
+        _flattened = _buffer;
+        _buffer = live;
     }
 
     private void Rasterize(PaintStroke stroke)
@@ -412,6 +435,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private void ClearBuffer()
     {
         Array.Clear(_buffer, 0, _buffer.Length);
+        if (_flattened != null) Array.Clear(_flattened, 0, _flattened.Length);
         MarkDirty(0, 0);
         MarkDirty(_width - 1, _height - 1);
     }
@@ -432,7 +456,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (y > _dirtyMaxY) _dirtyMaxY = y;
     }
 
-    /// <summary>Uploads only the region touched since the last flush.</summary>
+    /// <summary>uploads just the region touched since the last flush</summary>
     private void Flush()
     {
         if (!_dirty) return;
@@ -453,20 +477,15 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     }
 
     /// <summary>
-    /// Falloff weights for the current radius/hardness. Rebuilt only when those change, so the
-    /// per-pixel sqrt and curve maths happen once per brush rather than once per stamped pixel.
+    /// falloff weights for the current radius and hardness, rebuilt only when those change. keeps
+    /// the sqrt and curve maths to once per brush instead of once per stamped pixel
     /// </summary>
     private void EnsureKernel(BrushStamp brush)
     {
-        if (_kernelRadius == brush.Radius && _kernelHardness == brush.Hardness
-            && _kernelShape == brush.Shape && ReferenceEquals(_kernelMask, brush.Mask)
-            && _kernelMirrored == brush.Mirrored) return;
+        if (_kernelRadius == brush.Radius && _kernelHardness == brush.Hardness) return;
 
         _kernelRadius = brush.Radius;
         _kernelHardness = brush.Hardness;
-        _kernelShape = brush.Shape;
-        _kernelMask = brush.Mask;
-        _kernelMirrored = brush.Mirrored;
 
         var r = brush.Radius;
         var size = 2 * r + 1;
@@ -576,7 +595,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         int dy = -Mathf.Abs(to.y - from.y), sy = from.y < to.y ? 1 : -1;
         var err = dx + dy;
 
-        // overlapping discs are redundant; quarter-radius spacing is visually identical
+        // stamping every pixel along the line is redundant, quarter radius looks the same
         var spacing = Mathf.Max(1, brush.Radius / 4);
         var step = 0;
 
@@ -595,14 +614,14 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
     }
 
-    /// <summary>Snapshots the canvas so the in-progress stroke can be recomposited each frame.</summary>
+    /// <summary>snapshot of the canvas so the in progress stroke can be redrawn each frame</summary>
     private void BeginStroke()
     {
         Array.Copy(_buffer, _baseBuffer, _buffer.Length);
         ClearStrokeState();
     }
 
-    /// <summary>Lays the stroke's accumulated coverage over the pre-stroke canvas.</summary>
+    /// <summary>puts the strokes built up coverage down over the pre stroke canvas</summary>
     private void CompositeStroke(BrushStamp brush)
     {
         var opacity = brush.Opacity / 255f;
@@ -622,7 +641,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             }
             else
             {
-                // straight alpha, so a soft edge over an existing stroke doesn't darken it
+                // straight alpha, otherwise a soft edge darkens whatever it lands on
                 _buffer[index] = new Color32(
                     (byte) Mathf.RoundToInt((color.r * alpha + dst.r * dstAlpha * (1f - alpha)) / outAlpha),
                     (byte) Mathf.RoundToInt((color.g * alpha + dst.g * dstAlpha * (1f - alpha)) / outAlpha),

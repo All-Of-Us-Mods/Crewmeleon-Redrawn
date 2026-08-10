@@ -3,9 +3,7 @@ using UnityEngine;
 
 namespace Crewmeleon_Redrawn.Utilities;
 
-/// <summary>
-/// Mouse on desktop, first touch on mobile.
-/// </summary>
+/// <summary>mouse on desktop, first touch on mobile</summary>
 public static class Pointer
 {
     public static bool IsMobile => MiraApiPlugin.IsMobile;
@@ -28,10 +26,7 @@ public static class Pointer
         return true;
     }
 
-    /// <summary>
-    /// Desktop commits on click, mobile commits when the finger lifts so the
-    /// player can drag around and preview before choosing.
-    /// </summary>
+    /// <summary>desktop commits on click, mobile waits for the finger to lift so you can preview</summary>
     public static bool SelectCommitted()
     {
         if (!IsMobile) return Input.GetMouseButtonDown(0);

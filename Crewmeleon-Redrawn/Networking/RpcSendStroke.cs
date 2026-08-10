@@ -16,29 +16,16 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
 
     public override void Write(MessageWriter writer, StrokeChunk data)
     {
-        var startLength = writer.Length;
-
         writer.Write(data.IsFirst);
         writer.Write(data.IsFinal);
 
-        // brush details ride only on the opening chunk; a custom mask alone can approach the
-        // packet limit, so it must not repeat per chunk
+        // brush only goes in the first chunk, no point repeating it
         if (data.IsFirst)
         {
             writer.Write(data.Brush.Color);
             writer.Write(data.Brush.Radius);
             writer.Write(data.Brush.Opacity);
             writer.Write(data.Brush.Hardness);
-            writer.Write((byte)data.Brush.Shape);
-
-            if (data.Brush.Shape == BrushShape.Custom)
-            {
-                writer.Write(data.Brush.Mirrored);
-
-                var encoded = data.Brush.Mask?.Encode() ?? [];
-                writer.WritePacked((uint)encoded.Length);
-                writer.Write(encoded);
-            }
         }
 
         writer.WritePacked((uint)data.Points.Length);
@@ -47,14 +34,10 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
             WriteInt16(writer, point.x);
             WriteInt16(writer, point.y);
         }
-
-        PaintNetStats.RecordSent(writer.Length - startLength, data.Points.Length, data.IsFirst, data.IsFinal);
     }
 
     public override StrokeChunk Read(MessageReader reader)
     {
-        var startPosition = reader.Position;
-
         var isFirst = reader.ReadBoolean();
         var isFinal = reader.ReadBoolean();
 
@@ -65,17 +48,7 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
                 reader.ReadColor32(),
                 reader.ReadByte(),
                 reader.ReadByte(),
-                reader.ReadByte(),
-                (BrushShape)reader.ReadByte());
-
-            if (brush.Shape == BrushShape.Custom)
-            {
-                var mirrored = reader.ReadBoolean();
-                var length = (int)reader.ReadPackedUInt32();
-                var encoded = reader.ReadBytes(length);
-                brush = new BrushStamp(brush.Color, brush.Radius, brush.Opacity, brush.Hardness,
-                    brush.Shape, BrushMask.Decode(encoded), mirrored);
-            }
+                reader.ReadByte());
         }
 
         var count = reader.ReadPackedUInt32();
@@ -85,13 +58,11 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
             points[i] = new Vector2Int(ReadInt16(reader), ReadInt16(reader));
         }
 
-        PaintNetStats.RecordReceived(reader.Position - startPosition, isFinal);
-
         return new StrokeChunk(isFirst, isFinal, brush, points);
     }
 
-    // Written byte-by-byte on purpose: writer.Write((short)v) resolved to the int overload and
-    // emitted 4 bytes while the reader consumed 2, so every point after the first was garbage.
+    // byte by byte on purpose, writer.Write((short)v) picked the int overload and wrote 4 bytes
+    // while the reader took 2 so every point after the first came out garbage
     private static void WriteInt16(MessageWriter writer, int value)
     {
         writer.Write((byte)(value & 0xFF));
@@ -107,7 +78,7 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
 
     public override void Handle(PlayerControl innerNetObject, StrokeChunk data)
     {
-        // includeInactive: the canvas sits on an inactive object until the player becomes a hider
+        // includeInactive, the canvas object is inactive until youre a hider
         var canvas = innerNetObject.gameObject.GetComponentInChildren<PlayerCanvasComponent>(true);
         if (canvas == null)
         {

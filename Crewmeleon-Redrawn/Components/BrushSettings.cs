@@ -2,10 +2,7 @@ using UnityEngine;
 
 namespace Crewmeleon_Redrawn.Components;
 
-/// <summary>
-/// The local player's brush. Stored as HSV so the picker can move hue independently of a
-/// desaturated or dark colour, which round-tripping through RGB would lose.
-/// </summary>
+/// <summary>local players brush settings, stores HSV, opacity, and size/hardness</summary>
 public class BrushSettings
 {
     private float hue;
@@ -15,53 +12,52 @@ public class BrushSettings
     private float hardness = 1f;
     private int radius = 3;
 
-    public BrushShape Shape { get; set; } = BrushShape.Circle;
+    /// <summary>bumped on every change so the ui knows when to redraw</summary>
+    public int Version { get; private set; }
 
-    /// <summary>Only meaningful when <see cref="Shape"/> is Custom.</summary>
-    public BrushMask? Mask { get; set; }
 
     public float Hue
     {
         get => hue;
-        set => hue = Mathf.Repeat(value, 1f);
+        set { hue = Mathf.Repeat(value, 1f); Version++; }
     }
 
     public float Saturation
     {
         get => saturation;
-        set => saturation = Mathf.Clamp01(value);
+        set { saturation = Mathf.Clamp01(value); Version++; }
     }
 
     public float Value
     {
         get => value;
-        set => this.value = Mathf.Clamp01(value);
+        set { this.value = Mathf.Clamp01(value); Version++; }
     }
 
-    /// <summary>Alpha applied to each painted pixel, letting strokes build up.</summary>
+    /// <summary>opacity </summary>
     public float Opacity
     {
         get => opacity;
-        set => opacity = Mathf.Clamp01(value);
+        set { opacity = Mathf.Clamp01(value); Version++; }
     }
 
-    /// <summary>1 is a hard edge; lower values fade the brush out towards its rim.</summary>
+    /// <summary>hardness fades brush out from the center</summary>
     public float Hardness
     {
         get => hardness;
-        set => hardness = Mathf.Clamp01(value);
+        set { hardness = Mathf.Clamp01(value); Version++; }
     }
 
     public int Radius
     {
         get => radius;
-        set => radius = Mathf.Clamp(value, MinRadius, MaxRadius);
+        set { radius = Mathf.Clamp(value, MinRadius, MaxRadius); Version++; }
     }
 
     public const int MinRadius = 1;
     public const int MaxRadius = 15;
 
-    /// <summary>Fully opaque brush colour, ignoring <see cref="Opacity"/>.</summary>
+    /// <summary>colour without opacity</summary>
     public Color Color => Color.HSVToRGB(hue, saturation, value);
 
     public void SetFromColor(Color color)
@@ -69,10 +65,7 @@ public class BrushSettings
         Color.RGBToHSV(color, out hue, out saturation, out value);
     }
 
-    /// <summary>
-    /// Alpha for a pixel at <paramref name="distance"/> from the brush centre. Inside the hard
-    /// core it is flat <see cref="Opacity"/>, then falls to zero at the rim.
-    /// </summary>
+    /// <summary>flat Opacity inside the hard core then fades to nothing at the rim</summary>
     public float AlphaAt(float distance)
     {
         if (radius <= 0) return opacity;
@@ -80,7 +73,7 @@ public class BrushSettings
         var normalized = Mathf.Clamp01(distance / radius);
         if (normalized <= hardness) return opacity;
 
-        // avoid a divide by zero when hardness is exactly 1
+        // hardness of exactly 1 would divide by zero
         var falloff = 1f - Mathf.InverseLerp(hardness, 1f, normalized);
         return opacity * falloff;
     }

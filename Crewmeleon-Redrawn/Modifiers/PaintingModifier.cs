@@ -37,8 +37,8 @@ public class PaintingModifier : BaseModifier
         base.OnDeactivate();
     }
 
-    // MiraAPI republishes its ActiveModifiers list *after* these hooks run, so HasModifier<T>()
-    // still reports the old state here. Waiting a frame lets the buttons read the new one.
+    // MiraAPI updates ActiveModifiers after these hooks run so HasModifier<T>() still reports
+    // the old state in here. waiting a frame lets the buttons see the new one
     private void RefreshButtonsDeferred()
     {
         if (Player == null || !Player.AmOwner) return;

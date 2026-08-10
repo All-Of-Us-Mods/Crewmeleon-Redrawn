@@ -10,6 +10,7 @@ using Reactor;
 using Reactor.Networking;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
+using ReactUI.Plugin;
 
 namespace Crewmeleon_Redrawn;
 
@@ -17,11 +18,10 @@ namespace Crewmeleon_Redrawn;
 [BepInProcess("Among Us.exe")]
 [BepInDependency(MiraApiPlugin.Id)]
 [BepInDependency(ReactorPlugin.Id)]
-[BepInDependency(ReactUiId)]
+[BepInDependency(ReactUIPlugin.Id)]
 [ReactorModFlags(ModFlags.RequireOnAllClients)]
 public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 {
-    private const string ReactUiId = "com.reactui.core";
 
     public Harmony Harmony { get; } = new(Id);
 
@@ -30,13 +30,9 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
         Harmony.PatchAll();
         ReactorCredits.Register<CrewmeleonRedrawnPlugin>(location => location is ReactorCredits.Location.MainMenu);
 
-#if BRUSHES
-        BrushLibrary.Load(Config);
-#endif
-
         CrewmeleonStyles.Register();
         ReactUI.UI.Render(BrushPanel.Render);
-        ReactUI.UI.Render(NetDebugPanel.Render);
+        ReactUI.Plugin.ReactUIBehaviour.OnUpdate += BrushPanel.Tick;
     }
 
     public override bool Unload()

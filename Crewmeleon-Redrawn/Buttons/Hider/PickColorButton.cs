@@ -24,10 +24,7 @@ public class PickColorButton : CustomActionButton
     private bool shadowWasEnabled;
     private bool startedWithKey;
 
-    /// <summary>
-    /// A key-driven pick is momentary — it samples the moment the key comes back up. A pick
-    /// started from the button waits for a click instead.
-    /// </summary>
+    /// <summary>key picks sample on release, button picks wait for a click</summary>
     public bool ShouldCommitPick()
     {
         if (!IsPicking) return false;
@@ -51,8 +48,7 @@ public class PickColorButton : CustomActionButton
         yield return new WaitForEndOfFrame();
 
         BrushStore.Local.SetFromColor(ReadScreenPixel(pointer));
-
-        // only now — restoring before the read would put the shadow back into the sampled frame
+        
         RestoreShadow();
     }
 
@@ -64,7 +60,7 @@ public class PickColorButton : CustomActionButton
 
             if (!IsPicking) break;
 
-            // leaving paint mode mid-pick would otherwise strand the shadow off
+            // ensure shadow gets restored if they stop painting
             if (!PlayerControl.LocalPlayer || !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>())
             {
                 StopPicking();
@@ -111,9 +107,9 @@ public class PickColorButton : CustomActionButton
         IsPicking = true;
         startedWithKey = fromKey;
 
-        // the shadow overlay tints the whole screen, so sampling through it returns colours
-        // darker than what is actually on the canvas
-        // TODO: remove shadowquad completely?
+        // the shadow overlay tints the whole screen so sampling through it comes back darker
+        // than whats actually on the canvas
+        // TODO: rework colour picker to ignore shadowquad without disabling
         var shadow = HudManager.Instance?.ShadowQuad;
         if (shadow)
         {

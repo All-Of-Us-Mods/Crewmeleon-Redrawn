@@ -166,7 +166,21 @@ public static class CrewmeleonStyles
             Overflow = S.Overflow.Hidden,
             Cursor = S.CursorType.Pointer,
         };
-        s[".strip"] = new S.Style { Width = S.StyleValue.Percent(100), Height = S.StyleValue.Percent(100) };
+        s[".strip-row"] = new S.Style
+        {
+            FlexDirection = S.FlexDirection.Row,
+            Width = S.StyleValue.Percent(100),
+            Height = S.StyleValue.Percent(100),
+            AlignItems = S.AlignItems.Center,
+        };
+        s[".strip-spacer"] = new S.Style { FlexShrink = 0 };
+        s[".strip-marker"] = new S.Style
+        {
+            Width = S.StyleValue.Px(3),
+            Height = S.StyleValue.Percent(100),
+            Background = Outline,
+            FlexShrink = 0,
+        };
 
         // ── Brush preview ────────────────────────────────────────
         s[".preview-frame"] = new S.Style
@@ -185,78 +199,6 @@ public static class CrewmeleonStyles
             Height = S.StyleValue.Percent(100),
             BorderRadius = 6,
         };
-
-#if BRUSHES
-        // ── Brush presets ────────────────────────────────────────
-        s[".brush-strip"] = new S.Style
-        {
-            FlexDirection = S.FlexDirection.Row,
-            Gap = 8,
-            Padding = new S.EdgeValues(2, 0),
-        };
-        s[".brush-tile"] = new S.Style
-        {
-            Width = S.StyleValue.Px(44),
-            Height = S.StyleValue.Px(44),
-            BorderRadius = 8,
-            BorderWidth = 2,
-            BorderColor = OutlineSoft,
-            Padding = new S.EdgeValues(2),
-            FlexShrink = 0,
-            Cursor = S.CursorType.Pointer,
-            Hover = new S.Style { BorderColor = Outline },
-        };
-        s[".brush-tile-active"] = new S.Style
-        {
-            BorderColor = Accent,
-            BorderWidth = 3,
-        };
-        s[".brush-tile-img"] = new S.Style
-        {
-            Width = S.StyleValue.Percent(100),
-            Height = S.StyleValue.Percent(100),
-            BorderRadius = 5,
-        };
-        s[".brush-add"] = new S.Style
-        {
-            Width = S.StyleValue.Px(44),
-            Height = S.StyleValue.Px(44),
-            BorderRadius = 8,
-            BorderWidth = 2,
-            BorderColor = OutlineSoft,
-            Background = BgSunken,
-            Color = TextPrimary,
-            FontSize = 22,
-            FontWeight = 700,
-            AlignItems = S.AlignItems.Center,
-            JustifyContent = S.JustifyContent.Center,
-            TextAlign = S.TextAlign.Center,
-            Padding = new S.EdgeValues(0),
-            FlexShrink = 0,
-            Cursor = S.CursorType.Pointer,
-            Hover = new S.Style { BorderColor = Outline },
-        };
-
-        // ── Brush creator ────────────────────────────────────────
-        s[".creator-canvas"] = new S.Style
-        {
-            Width = S.StyleValue.Px(BrushCreator.CanvasPx),
-            Height = S.StyleValue.Px(BrushCreator.CanvasPx),
-            BorderRadius = 8,
-            BorderWidth = 2,
-            BorderColor = Outline,
-            Padding = new S.EdgeValues(2),
-            AlignSelf = S.AlignSelf.Center,
-            Cursor = S.CursorType.Pointer,
-        };
-        s[".creator-img"] = new S.Style
-        {
-            Width = S.StyleValue.Percent(100),
-            Height = S.StyleValue.Percent(100),
-            BorderRadius = 5,
-        };
-        s[".creator-mode"] = new S.Style { FontSize = 11, FontWeight = 700, Color = Accent };
-#endif
 
         // ── Keybinds ─────────────────────────────────────────────
         s[".keybind-row"] = new S.Style
@@ -307,37 +249,6 @@ public static class CrewmeleonStyles
         // ── Footer ───────────────────────────────────────────────
         s[".footer"] = new S.Style { Padding = new S.EdgeValues(7, 14) };
         s[".footer-text"] = new S.Style { FontSize = 11, Color = TextMuted };
-
-        // ── Net debug overlay ────────────────────────────────────
-        s[".net-panel"] = new S.Style
-        {
-            Position = S.PositionType.Absolute,
-            Inset = new S.EdgeValues(12, float.NaN, float.NaN, 320),
-            Width = 300,
-            Background = "rgba(8,8,10,0.92)",
-            BorderRadius = 10,
-            BorderWidth = 2,
-            BorderColor = OutlineSoft,
-            Padding = new S.EdgeValues(10, 12),
-            Gap = 4,
-        };
-        s[".btn-small"] = new S.Style
-        {
-            Padding = new S.EdgeValues(6, 10),
-            FontSize = 11,
-            FlexGrow = 1,
-        };
-        s[".net-title"] = new S.Style { FontSize = 12, FontWeight = 700, Color = Accent };
-        s[".net-row"] = new S.Style
-        {
-            FlexDirection = S.FlexDirection.Row,
-            JustifyContent = S.JustifyContent.SpaceBetween,
-            Gap = 10,
-        };
-        s[".net-label"] = new S.Style { FontSize = 11, Color = TextMuted, FlexShrink = 0 };
-        s[".net-value"] = new S.Style { FontSize = 11, FontWeight = 700, Color = TextPrimary, TextAlign = S.TextAlign.Right };
-        s[".net-warn"] = new S.Style { Color = "#ff6b6b" };
-        s[".net-rule"] = new S.Style { Height = S.StyleValue.Px(1), Background = OutlineSoft, Margin = new S.EdgeValues(4, 0) };
 
         ReactUI.UI.RegisterStyles(s);
     }

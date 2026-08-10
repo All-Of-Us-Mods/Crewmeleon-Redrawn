@@ -9,8 +9,8 @@ public static class CustomButtonUtilities
     private static readonly Dictionary<CustomActionButton, DateTimeOffset> LastVisible = new();
 
     /// <summary>
-    /// Re-evaluates every custom button's <c>Enabled(role)</c> immediately. Without this the row
-    /// keeps its old layout until the grid next rearranges itself, which reads as a dropped frame.
+    /// re checks every buttons Enabled(role) right now. without it the row keeps its old layout
+    /// until the grid next rearranges, which looks like a dropped frame
     /// </summary>
     public static void RefreshVisibility()
     {
@@ -28,7 +28,7 @@ public static class CustomButtonUtilities
                 continue;
             }
 
-            // charge the cooldown for the time spent hidden, so toggling a mode can't pause or refund it
+            // charge the time it spent hidden so toggling cant pause or refund a cooldown
             if (!LastVisible.Remove(button, out var lastVisible)) continue;
 
             var hidden = (float) (DateTimeOffset.UtcNow - lastVisible).TotalSeconds;

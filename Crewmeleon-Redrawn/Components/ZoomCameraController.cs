@@ -19,11 +19,10 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
 
     private const float ZoomRendFraction = 0.6f;
 
-    // the frame art's transparent window is 844 of its 959px width; scaling by the inverse makes
-    // that window line up with the zoom view rather than the art's outer edge
+    // the window of the frame is 844px wide. whole sprite is 959
     private const float FrameInnerFraction = 844f / 959f;
 
-    // the art hangs slightly low because of its bottom shadow
+    // small gap above the window, need to offset slightly
     private const float FrameOffsetY = -0.037f;
     private const float ZoomStep = 1.25f;
     private readonly FloatRange ZoomRange = new (0.3f, 3f);
@@ -41,8 +40,8 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         _zoomCamera = gameObject.AddComponent<Camera>();
         _zoomCamera.orthographic = true;
         _zoomCamera.orthographicSize = 1f;
-        // the main camera clears to a transparent background, which left the render texture
-        // partly see-through; clear opaque so the zoom view is solid
+        // main camera clears transparent which left the render texture see through. clear opaque
+        // so the zoom view is solid
         _zoomCamera.clearFlags = CameraClearFlags.SolidColor;
 
         var background = mainCam.backgroundColor;
@@ -65,8 +64,8 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         
         _zoomRend = displayObj.GetComponent<MeshRenderer>();
 
-        // Sprites/Default is a blended shader, so the quad composited against the world behind it
-        // no matter how opaque the render texture was; Unlit/Texture ignores alpha outright
+        // Sprites/Default blends so the quad mixed with the world behind it however opaque the
+        // render texture was. Unlit/Texture just ignores alpha
         var zoomShader = Shader.Find("Unlit/Texture") ?? Shader.Find("Sprites/Default");
         _zoomRend.material = new Material(zoomShader) { mainTexture = _camRenderTex };
         _zoomRend.sortingOrder = short.MaxValue - 1;
@@ -155,7 +154,7 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
 
         if (!_zoomFrame || _zoomFrame.sprite == null) return;
 
-        // measured off the sprite so it stays correct whatever pixels-per-unit it loads at
+        // measured off the sprite so it holds up whatever pixels per unit it loads at
         var spriteWidth = _zoomFrame.sprite.bounds.size.x;
         if (spriteWidth <= 0f) return;
 
