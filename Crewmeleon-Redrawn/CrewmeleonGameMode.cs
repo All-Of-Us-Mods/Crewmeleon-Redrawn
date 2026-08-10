@@ -445,6 +445,7 @@ public class ChameleonGameMode : AbstractGameMode
         var popup = GameManagerCreator.Instance.HideAndSeekManagerPrefab.DeathPopupPrefab;
         deadPlayerCount++;
         var item = UnityEngine.Object.Instantiate(popup, HudManager.Instance.transform.parent);
+        item.text.text = notDead ? "HAS BEEN INFECTED" : "HAS BEEN KILLED";
         item.Show(player, deadPlayerCount);
     }
 

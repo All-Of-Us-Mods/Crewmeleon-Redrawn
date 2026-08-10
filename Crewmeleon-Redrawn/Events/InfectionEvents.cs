@@ -1,4 +1,5 @@
 using AmongUs.GameOptions;
+using Crewmeleon_Redrawn.Networking;
 using Crewmeleon_Redrawn.Roles;
 using MiraAPI.Events;
 using MiraAPI.Events.Vanilla.Gameplay;
@@ -13,18 +14,14 @@ public static class InfectionEvents
     [RegisterEvent]
     public static void BeforeMurderEventHandler(BeforeMurderEvent @event)
     {
-        if (!CustomGameModeManager.IsActiveGameMode<ChameleonGameMode>())
-        {
-            return;
-        }
-        if (!OptionGroupSingleton<GameplayOptions>.Instance.InfectionMode)
+        if (!AmongUsClient.Instance.AmHost || !CustomGameModeManager.IsActiveGameMode<ChameleonGameMode>()
+            || !OptionGroupSingleton<GameplayOptions>.Instance.InfectionMode)
         {
             return;
         }
 
         var player = @event.Target;
+        InfectionRpc.RpcInfect(player);
         @event.Cancel();
-        player.RpcSetRole((RoleTypes)RoleId.Get<SeekerRole>());
-        (CustomGameModeManager.ActiveMode as ChameleonGameMode)!.NotifyOfDeath(player, true);
     }
 }

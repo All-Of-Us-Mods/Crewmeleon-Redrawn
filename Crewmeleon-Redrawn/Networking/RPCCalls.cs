@@ -2,5 +2,6 @@ namespace Crewmeleon_Redrawn.Networking;
 
 public enum RPCCalls
 {
-    Taunt = 0
+    Taunt = 0,
+    Infect,
 }
