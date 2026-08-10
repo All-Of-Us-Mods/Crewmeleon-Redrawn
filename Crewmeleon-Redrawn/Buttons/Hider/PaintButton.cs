@@ -7,16 +7,25 @@ using UnityEngine;
 
 namespace Crewmeleon_Redrawn.Buttons.Hider;
 
-public class SpectateButton : CustomActionButton
+public class PaintButton : CustomActionButton
 {
     protected override void OnClick()
     {
-        if (SpectatingModifier.GetSpectateTargets().Count > 1) PlayerControl.LocalPlayer.AddModifier<SpectatingModifier>();
+        if (PlayerControl.LocalPlayer.HasModifier<PaintingModifier>())
+        {
+            OverrideName("Paint");
+            PlayerControl.LocalPlayer.RpcRemoveModifier<PaintingModifier>();
+        }
+        else
+        {
+            OverrideName("Stop");
+            PlayerControl.LocalPlayer.RpcAddModifier<PaintingModifier>();
+        }
     }
 
     public override bool CanUse()
     {
-        return !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
+        return true;
     }
 
     public override bool Enabled(RoleBehaviour? role)
@@ -24,7 +33,7 @@ public class SpectateButton : CustomActionButton
         return role is HiderRole;
     }
 
-    public override string Name => "Spectate";
+    public override string Name => "Paint";
 
     public override float Cooldown => 1;
 

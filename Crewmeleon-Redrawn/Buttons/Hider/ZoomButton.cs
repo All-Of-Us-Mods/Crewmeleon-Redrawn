@@ -1,3 +1,4 @@
+using Crewmeleon_Redrawn.Components;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
 using MiraAPI.Hud;
@@ -7,16 +8,16 @@ using UnityEngine;
 
 namespace Crewmeleon_Redrawn.Buttons.Hider;
 
-public class SpectateButton : CustomActionButton
+public class ZoomButton : CustomActionButton
 {
     protected override void OnClick()
     {
-        if (SpectatingModifier.GetSpectateTargets().Count > 1) PlayerControl.LocalPlayer.AddModifier<SpectatingModifier>();
+        ZoomCameraController.Instance.ToggleDisplay(!ZoomCameraController.Instance.IsActive);
     }
 
     public override bool CanUse()
     {
-        return !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
+        return PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
     }
 
     public override bool Enabled(RoleBehaviour? role)
@@ -24,7 +25,7 @@ public class SpectateButton : CustomActionButton
         return role is HiderRole;
     }
 
-    public override string Name => "Spectate";
+    public override string Name => "Zoom";
 
     public override float Cooldown => 1;
 
