@@ -12,6 +12,7 @@ using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 using TMPro;
+using Action = Il2CppSystem.Action;
 
 namespace Crewmeleon_Redrawn;
 
@@ -21,7 +22,7 @@ public class ChameleonGameMode : AbstractGameMode
     public override string Description => "You can run, but you can't hide!";
     public override Color Color { get; } = new Color32(150, 255, 90, 255);
 
-    public override bool ShowGameModeIntroCutscene => false;
+    public override bool ShowGameModeIntroCutscene => true;
     public override bool GameModeBodyTypeOverride => true;
     public override bool ShowNormalGameSettings => false;
 
@@ -65,46 +66,66 @@ public class ChameleonGameMode : AbstractGameMode
             players[0].RpcSetRole((RoleTypes) RoleId.Get<SeekerRole>(), false);
             return;
         }
-        
-        var setSeekers = new List<NetworkedPlayerInfo?> 
-        { 
-            GameplayOpts.Seeker1.GetPlayerValue(), 
-            GameplayOpts.Seeker2.GetPlayerValue(), 
+
+        var setSeekers = new List<NetworkedPlayerInfo?>
+        {
+            GameplayOpts.Seeker1.GetPlayerValue(),
+            GameplayOpts.Seeker2.GetPlayerValue(),
             GameplayOpts.Seeker3.GetPlayerValue()
         }
-        .OfType<NetworkedPlayerInfo>().ToList();
+        .OfType<NetworkedPlayerInfo>()
+        .ToList();
 
         players = players.Randomize();
+
+        var seekers = new List<PlayerControl>();
         foreach (var sser in setSeekers)
         {
-            var p = sser.Object;
-            players.Remove(p);
-        }
-        
-        var seekers = new List<PlayerControl>();
+            var p = sser?.Object;
+            if (p == null)
+            {
+                Logger<CrewmeleonRedrawnPlugin>.Instance.LogWarning(
+                    $"Skipped manual seeker '{sser?.PlayerName}' - player is no longer connected.");
+                continue;
+            }
 
-        var seekerCount = GameplayOpts.SeekersCount - setSeekers.Count;
-        for (int i = 0; i < Math.Clamp(seekerCount, 0, players.Count - 1); i++)
+            players.Remove(p);
+
+            if (seekers.Contains(p))
+            {
+                Logger<CrewmeleonRedrawnPlugin>.Instance.LogError(
+                    $"Failed to assign seeker to {sser.PlayerName}, they are already assigned as a seeker.");
+                continue;
+            }
+
+            seekers.Add(p);
+            Logger<CrewmeleonRedrawnPlugin>.Instance.LogWarning($"Manually assigned seeker to {sser.PlayerName}.");
+        }
+
+        // Reserve at least one hider from the remaining pool - clamp the upper bound
+        // to 0 (not -1) when there are no candidates left, so Math.Clamp never throws.
+        var seekerCount = GameplayOpts.SeekersCount - seekers.Count;
+        var maxRandomSeekers = Math.Max(0, players.Count - 1);
+        var randomSeekerCount = Math.Clamp(seekerCount, 0, maxRandomSeekers);
+
+        for (var i = 0; i < randomSeekerCount; i++)
         {
             seekers.Add(players[i]);
             Logger<CrewmeleonRedrawnPlugin>.Instance.LogWarning($"Randomly assigned seeker to {players[i].Data.PlayerName}.");
         }
 
-        foreach (var sser in setSeekers)
-        {
-            if(seekers.Contains(sser.Object))
-            {
-                Logger<CrewmeleonRedrawnPlugin>.Instance.LogError($"Failed to assign seeker to {sser.PlayerName}, they are already assigned as a seeker.");
-                continue;
-            }
-
-            seekers.Add(sser.Object);
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogWarning($"Manually assigned seeker to {sser.PlayerName}.");
-        }
-        
         var hiders = players.Where(x => !seekers.Contains(x)).ToList();
         AssignTeamRoles(hiders, (RoleTypes) RoleId.Get<HiderRole>());
         AssignTeamRoles(seekers, (RoleTypes) RoleId.Get<SeekerRole>());
+
+        // Modifier logic for fear, uncomment this to add it back, no clue if this will make the sut
+        
+        //foreach (var hider in hiders)
+        //{
+        //    hider.AddModifier<DangerModifier>();
+        //}
+        // hud.DangerMeter.gameObject.SetActive(!AmImpostor);
+        // hud.DangerMeter.transform.parent.gameObject.SetActive(true);
     }
 
     private static void AssignTeamRoles(List<PlayerControl> players, RoleTypes role)
@@ -123,6 +144,8 @@ public class ChameleonGameMode : AbstractGameMode
 
         var hud = HudManager.Instance;
         hud.CrewmatesKilled.gameObject.SetActive(true);
+        hud.DangerMeter.gameObject.SetActive(!AmImpostor);
+        hud.DangerMeter.transform.parent.gameObject.SetActive(true);
         hud.TaskStuff.gameObject.SetActive(false);
 
         timerBar = GameObject.Instantiate(GameManagerCreator.Instance.HideAndSeekManagerPrefab.TimerBarPrefab, hud.transform.parent);
@@ -165,6 +188,17 @@ public class ChameleonGameMode : AbstractGameMode
             tauntBar.transform.localScale *= 0.7f;
             text.text = "NEXT TAUNT";
         }
+        // Enable player kill tracker, and add gridArrange component to it.
+        HudManager.Instance.CrewmatesKilled.gameObject.SetActive(true);
+        var killTrackerGridArrange = HudManager.Instance.CrewmatesKilled.gameObject.AddComponent<GridArrange>();
+        killTrackerGridArrange.Alignment = GridArrange.StartAlign.Right;
+        killTrackerGridArrange.CellSize = new Vector3(0.5f, -0.5f, 0);
+        killTrackerGridArrange.MaxColumns = 5;
+        killTrackerGridArrange.ArrangeChilds();
+        var killTrackerAspectPosition = 
+            HudManager.Instance.CrewmatesKilled.gameObject.GetComponent<AspectPosition>();
+        killTrackerAspectPosition.DistanceFromEdge = new Vector3(0.23f, 0.35f, 0);
+        killTrackerAspectPosition.AdjustPosition();
     }
 
     public override PlayerBodyTypes GetBodyType(PlayerControl player)
@@ -209,7 +243,18 @@ public class ChameleonGameMode : AbstractGameMode
     {
         if (timerBar is null || !timerBar)
             return;
-
+        //Crewmate kill tracker positioning, this is in HudUpdate because something is overriding the distance.
+        instance.CrewmatesKilled.gameObject.SetActive(true);
+        var killTrackerAspectPosition = 
+            instance.CrewmatesKilled.gameObject.GetComponent<AspectPosition>();
+        killTrackerAspectPosition.DistanceFromEdge = new Vector3(0.23f, 0.35f, 0);
+        killTrackerAspectPosition.AdjustPosition();
+        var killTrackerGridArrange = 
+            instance.CrewmatesKilled.gameObject.GetComponent<GridArrange>();
+        killTrackerGridArrange.MaxColumns = killTrackerGridArrange.cells.Count;
+        killTrackerGridArrange.CellSize = new Vector3(2.5f/killTrackerGridArrange.cells.Count, -0.5f, 0);
+        killTrackerGridArrange.ArrangeChilds();
+        
         instance.TaskStuff.gameObject.SetActive(false);
         instance.Chat.gameObject.SetActive(CanUseChat);
         
