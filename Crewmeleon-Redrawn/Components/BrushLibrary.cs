@@ -18,18 +18,7 @@ public static class BrushLibrary
 
     private static ConfigEntry<string>? storage;
 
-    public static IReadOnlyList<BrushPreset> All => BuiltIn.Concat(Offered()).ToList();
-
-    private static IEnumerable<BrushPreset> Offered()
-    {
-#if CUSTOM_BRUSHES
-        return Saved;
-#else
-        // hidden rather than dropped: they stay in config, so enabling authoring again brings
-        // the player's brushes back instead of silently destroying them
-        return Saved.Where(preset => preset.Shape != BrushShape.Custom);
-#endif
-    }
+    public static IReadOnlyList<BrushPreset> All => BuiltIn.Concat(Saved).ToList();
 
     public static void Load(ConfigFile config)
     {

@@ -21,14 +21,17 @@
         <PackageReference Include="Reactor" Version="2.5.1-ci.384" />
     </ItemGroup>
 
-    <!-- Opt-in brush authoring: -p:CUSTOM_BRUSHES=true. The mask model, rasteriser and RPC are
-         always compiled so a default build still renders custom strokes from other players. -->
-    <PropertyGroup Condition="'$(CUSTOM_BRUSHES)' == 'true'">
-        <DefineConstants>$(DefineConstants);CUSTOM_BRUSHES</DefineConstants>
+    <!-- Opt-in brush system: -p:BRUSHES=true. Without it everyone paints with the circle brush
+         and the picker UI is gone, but the shape/mask model, rasteriser and RPC stay compiled so
+         a default build still renders strokes made with other brushes. -->
+    <PropertyGroup Condition="'$(BRUSHES)' == 'true'">
+        <DefineConstants>$(DefineConstants);BRUSHES</DefineConstants>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(CUSTOM_BRUSHES)' != 'true'">
+    <ItemGroup Condition="'$(BRUSHES)' != 'true'">
         <Compile Remove="UI\BrushCreator.cs" />
+        <Compile Remove="Components\BrushLibrary.cs" />
+        <Compile Remove="Components\BrushPreset.cs" />
     </ItemGroup>
 
     <ItemGroup>

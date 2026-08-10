@@ -186,6 +186,7 @@ public static class CrewmeleonStyles
             BorderRadius = 6,
         };
 
+#if BRUSHES
         // ── Brush presets ────────────────────────────────────────
         s[".brush-strip"] = new S.Style
         {
@@ -236,7 +237,6 @@ public static class CrewmeleonStyles
             Hover = new S.Style { BorderColor = Outline },
         };
 
-#if CUSTOM_BRUSHES
         // ── Brush creator ────────────────────────────────────────
         s[".creator-canvas"] = new S.Style
         {

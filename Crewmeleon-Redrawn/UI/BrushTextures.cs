@@ -26,7 +26,9 @@ public static class BrushTextures
     private static Texture2D? valueStrip;
     private static Texture2D? brushPreview;
 
+#if BRUSHES
     private static readonly Dictionary<BrushPreset, Texture2D> PresetPreviews = [];
+#endif
 
     private static Vector3 lastStripState = new(-1, -1, -1);
     private static Vector4 lastPreviewState = new(-1, -1, -1, -1);
@@ -113,6 +115,7 @@ public static class BrushTextures
         return brushPreview;
     }
 
+#if BRUSHES
     /// <summary>
     /// Swatch for a saved brush. Drawn white rather than in the current colour so it reads as a
     /// shape-and-softness sample, and so it never needs regenerating when the colour changes.
@@ -171,6 +174,8 @@ public static class BrushTextures
 
         return texture;
     }
+
+#endif
 
     private static Texture2D CreateColorWheel()
     {

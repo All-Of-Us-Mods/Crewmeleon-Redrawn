@@ -37,7 +37,7 @@ public static class BrushPanel
         {
             Inset = new S.EdgeValues(AnchorTop, float.NaN, float.NaN, AnchorLeft),
         }),
-#if CUSTOM_BRUSHES
+#if BRUSHES
             BrushCreator.IsOpen
                 ? Div(ClassName("panel-body"), BrushCreator.Render())
                 :
@@ -45,7 +45,9 @@ public static class BrushPanel
                 Div(ClassName("panel-body"),
                     ColorSection(brush),
                     BrushSection(brush),
+#if BRUSHES
                     BrushesSection(brush),
+#endif
                     KeybindsSection()
                 )
         );
@@ -154,6 +156,7 @@ public static class BrushPanel
         );
     }
 
+#if BRUSHES
     private static VNode BrushesSection(BrushSettings brush)
     {
         var tiles = BrushLibrary.All
@@ -180,15 +183,11 @@ public static class BrushPanel
 
     private static VNode CreateBrushTile()
     {
-#if CUSTOM_BRUSHES
         var tile = Button("+", BrushCreator.Open, ClassName("brush-add"));
-#else
-        // without the creator the plus still earns its place by saving the current brush
-        var tile = Button("+", () => BrushLibrary.SaveCurrent(BrushStore.Local), ClassName("brush-add"));
-#endif
         tile.Key = "__create";
         return tile;
     }
+#endif
 
     private static VNode KeybindsSection()
     {
