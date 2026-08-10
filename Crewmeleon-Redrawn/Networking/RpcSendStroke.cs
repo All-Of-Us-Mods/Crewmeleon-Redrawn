@@ -44,8 +44,8 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
         writer.WritePacked((uint)data.Points.Length);
         foreach (var point in data.Points)
         {
-            writer.Write((short)point.x);
-            writer.Write((short)point.y);
+            WriteInt16(writer, point.x);
+            WriteInt16(writer, point.y);
         }
 
         PaintNetStats.RecordSent(writer.Length - startLength, data.Points.Length, data.IsFirst, data.IsFinal);
@@ -82,12 +82,27 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
         var points = new Vector2Int[count];
         for (var i = 0; i < count; i++)
         {
-            points[i] = new Vector2Int(reader.ReadInt16(), reader.ReadInt16());
+            points[i] = new Vector2Int(ReadInt16(reader), ReadInt16(reader));
         }
 
         PaintNetStats.RecordReceived(reader.Position - startPosition, isFinal);
 
         return new StrokeChunk(isFirst, isFinal, brush, points);
+    }
+
+    // Written byte-by-byte on purpose: writer.Write((short)v) resolved to the int overload and
+    // emitted 4 bytes while the reader consumed 2, so every point after the first was garbage.
+    private static void WriteInt16(MessageWriter writer, int value)
+    {
+        writer.Write((byte)(value & 0xFF));
+        writer.Write((byte)((value >> 8) & 0xFF));
+    }
+
+    private static int ReadInt16(MessageReader reader)
+    {
+        int low = reader.ReadByte();
+        int high = reader.ReadByte();
+        return (short)(low | (high << 8));
     }
 
     public override void Handle(PlayerControl innerNetObject, StrokeChunk data)
