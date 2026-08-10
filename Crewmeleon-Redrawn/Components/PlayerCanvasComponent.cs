@@ -30,6 +30,9 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private SpriteRenderer _brushCursor;
     private Texture2D _texture;
     private Vector2Int? _lastPixel;
+
+    // the click that commits a colour pick must not also start a stroke
+    private bool _paintBlockedUntilRelease;
     private List<PaintStroke> _strokes;
     private List<Vector2Int> _pendingPoints;
     private BrushStamp _pendingBrush;
@@ -146,6 +149,11 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (CustomButtonSingleton<PickColorButton>.Instance.ShouldCommitPick())
         {
             Coroutines.Start(CustomButtonSingleton<PickColorButton>.Instance.CoPickColor(this));
+
+            // CoPickColor clears IsPicking before it yields, so without this the still-held
+            // button would start painting on the very next frame
+            _paintBlockedUntilRelease = true;
+            FinishAnyStroke();
             return;
         }
 
@@ -154,7 +162,22 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
         {
+            FinishAnyStroke();
             UndoLocalStroke();
+            return;
+        }
+
+        if (Input.GetKeyDown(PickColorButton.PickKey))
+        {
+            // without this a stroke interrupted mid-drag would never be sent or recorded
+            FinishAnyStroke();
+            CustomButtonSingleton<PickColorButton>.Instance.BeginPick(fromKey: true);
+            return;
+        }
+
+        if (_paintBlockedUntilRelease)
+        {
+            if (!Input.GetMouseButton(0)) _paintBlockedUntilRelease = false;
             return;
         }
 
@@ -254,6 +277,13 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (scrollWheel == 0) return;
 
         Brush.Radius += scrollWheel > 0 ? 1 : -1;
+    }
+
+    /// <summary>Commits an in-progress stroke, for input that interrupts a drag.</summary>
+    private void FinishAnyStroke()
+    {
+        if (_lastPixel.HasValue) EndStroke();
+        _lastPixel = null;
     }
 
     private void EndStroke()

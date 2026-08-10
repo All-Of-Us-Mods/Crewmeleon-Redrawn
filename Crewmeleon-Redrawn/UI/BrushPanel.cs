@@ -155,7 +155,8 @@ public static class BrushPanel
             Keybind("Left Click", "Paint"),
             Keybind("Scroll", "Zoom in / out"),
             Keybind("Ctrl + Scroll", "Brush size"),
-            Keybind("Ctrl + Z", "Undo last stroke")
+            Keybind("Ctrl + Z", "Undo last stroke"),
+            Keybind("Hold Space", "Pick colour on release")
         );
     }
 
