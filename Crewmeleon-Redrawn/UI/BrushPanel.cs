@@ -40,6 +40,7 @@ public static class BrushPanel
             Div(ClassName("panel-body"),
                 ColorSection(brush),
                 BrushSection(brush),
+                BrushesSection(brush),
                 KeybindsSection()
             )
         );
@@ -146,6 +147,37 @@ public static class BrushPanel
             ),
             Text(display, ClassName("text-value"))
         );
+    }
+
+    private static VNode BrushesSection(BrushSettings brush)
+    {
+        var tiles = BrushLibrary.All
+            .Select(preset => BrushTile(preset, brush))
+            .Append(SaveBrushTile(brush));
+
+        return Div(ClassName("section"),
+            Text("BRUSHES", ClassName("section-title")),
+            ScrollView(ClassName("brush-strip"), tiles.ToArray())
+        );
+    }
+
+    private static VNode BrushTile(BrushPreset preset, BrushSettings brush)
+    {
+        var active = preset.Matches(brush);
+
+        var tile = Button(() => preset.ApplyTo(brush),
+            ClassName(active ? "brush-tile brush-tile-active" : "brush-tile"),
+            Image(BrushTextures.PresetPreview(preset), ClassName("brush-tile-img")));
+
+        tile.Key = preset.Name;
+        return tile;
+    }
+
+    private static VNode SaveBrushTile(BrushSettings brush)
+    {
+        var tile = Button("+", () => BrushLibrary.SaveCurrent(brush), ClassName("brush-add"));
+        tile.Key = "__save";
+        return tile;
     }
 
     private static VNode KeybindsSection()

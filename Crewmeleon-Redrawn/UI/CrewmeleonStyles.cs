@@ -186,6 +186,56 @@ public static class CrewmeleonStyles
             BorderRadius = 6,
         };
 
+        // ── Brush presets ────────────────────────────────────────
+        s[".brush-strip"] = new S.Style
+        {
+            FlexDirection = S.FlexDirection.Row,
+            Gap = 8,
+            Padding = new S.EdgeValues(2, 0),
+        };
+        s[".brush-tile"] = new S.Style
+        {
+            Width = S.StyleValue.Px(44),
+            Height = S.StyleValue.Px(44),
+            BorderRadius = 8,
+            BorderWidth = 2,
+            BorderColor = OutlineSoft,
+            Padding = new S.EdgeValues(2),
+            FlexShrink = 0,
+            Cursor = S.CursorType.Pointer,
+            Hover = new S.Style { BorderColor = Outline },
+        };
+        s[".brush-tile-active"] = new S.Style
+        {
+            BorderColor = Accent,
+            BorderWidth = 3,
+        };
+        s[".brush-tile-img"] = new S.Style
+        {
+            Width = S.StyleValue.Percent(100),
+            Height = S.StyleValue.Percent(100),
+            BorderRadius = 5,
+        };
+        s[".brush-add"] = new S.Style
+        {
+            Width = S.StyleValue.Px(44),
+            Height = S.StyleValue.Px(44),
+            BorderRadius = 8,
+            BorderWidth = 2,
+            BorderColor = OutlineSoft,
+            Background = BgSunken,
+            Color = TextPrimary,
+            FontSize = 22,
+            FontWeight = 700,
+            AlignItems = S.AlignItems.Center,
+            JustifyContent = S.JustifyContent.Center,
+            TextAlign = S.TextAlign.Center,
+            Padding = new S.EdgeValues(0),
+            FlexShrink = 0,
+            Cursor = S.CursorType.Pointer,
+            Hover = new S.Style { BorderColor = Outline },
+        };
+
         // ── Keybinds ─────────────────────────────────────────────
         s[".keybind-row"] = new S.Style
         {

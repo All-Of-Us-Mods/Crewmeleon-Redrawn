@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
+using Crewmeleon_Redrawn.Components;
 using Crewmeleon_Redrawn.UI;
 using HarmonyLib;
 using MiraAPI;
@@ -28,6 +29,8 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
     {
         Harmony.PatchAll();
         ReactorCredits.Register<CrewmeleonRedrawnPlugin>(location => location is ReactorCredits.Location.MainMenu);
+
+        BrushLibrary.Load(Config);
 
         CrewmeleonStyles.Register();
         ReactUI.UI.Render(BrushPanel.Render);

@@ -31,6 +31,7 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
         writer.Write(stroke.Brush.Radius);
         writer.Write(stroke.Brush.Opacity);
         writer.Write(stroke.Brush.Hardness);
+        writer.Write((byte)stroke.Brush.Shape);
 
         foreach (var point in stroke.Points)
         {
@@ -52,7 +53,8 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
             reader.ReadColor32(),
             reader.ReadByte(),
             reader.ReadByte(),
-            reader.ReadByte());
+            reader.ReadByte(),
+            (BrushShape)reader.ReadByte());
 
         var points = new Vector2Int[count];
         for (var i = 0; i < count; i++)

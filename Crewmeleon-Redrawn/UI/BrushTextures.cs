@@ -26,6 +26,8 @@ public static class BrushTextures
     private static Texture2D? valueStrip;
     private static Texture2D? brushPreview;
 
+    private static readonly Dictionary<BrushPreset, Texture2D> PresetPreviews = [];
+
     private static Vector3 lastStripState = new(-1, -1, -1);
     private static Vector4 lastPreviewState = new(-1, -1, -1, -1);
     private static Color lastPreviewColor = new(-1, -1, -1);
@@ -109,6 +111,57 @@ public static class BrushTextures
 
         Upload(brushPreview, pixels);
         return brushPreview;
+    }
+
+    /// <summary>
+    /// Swatch for a saved brush. Drawn white rather than in the current colour so it reads as a
+    /// shape-and-softness sample, and so it never needs regenerating when the colour changes.
+    /// </summary>
+    public static Texture2D PresetPreview(BrushPreset preset)
+    {
+        if (PresetPreviews.TryGetValue(preset, out var cached) && cached) return cached;
+
+        var stamp = new BrushStamp(Color.white, (byte) preset.Radius,
+            (byte) Mathf.RoundToInt(preset.Opacity * 255f),
+            (byte) Mathf.RoundToInt(preset.Hardness * 255f),
+            preset.Shape);
+
+        var texture = NewTexture(PreviewSize, PreviewSize);
+        var pixels = new Color[PreviewSize * PreviewSize];
+
+        var center = (PreviewSize - 1) / 2f;
+        var extent = PreviewSize / 2f - 2f;
+
+        for (var i = 0; i < pixels.Length; i++)
+        {
+            var x = i % PreviewSize;
+            var y = i / PreviewSize;
+
+            var light = (x / CheckerSquare + y / CheckerSquare) % 2 == 0;
+            var background = light ? new Color(0.24f, 0.26f, 0.27f) : new Color(0.17f, 0.19f, 0.20f);
+
+            var dx = x - center;
+            var dy = y - center;
+
+            // preset swatches always fill the tile, so shape and softness are comparable
+            var offset = preset.Shape == BrushShape.Square
+                ? Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) / extent
+                : Mathf.Sqrt(dx * dx + dy * dy) / extent;
+
+            if (offset > 1f)
+            {
+                pixels[i] = background;
+                continue;
+            }
+
+            var alpha = stamp.FalloffFromNormalized(offset) * preset.Opacity;
+            pixels[i] = Color.Lerp(background, Color.white, Mathf.Clamp01(alpha));
+        }
+
+        Upload(texture, pixels);
+        PresetPreviews[preset] = texture;
+
+        return texture;
     }
 
     private static Texture2D CreateColorWheel()

@@ -15,6 +15,8 @@ public class BrushSettings
     private float hardness = 1f;
     private int radius = 3;
 
+    public BrushShape Shape { get; set; } = BrushShape.Circle;
+
     public float Hue
     {
         get => hue;
