@@ -1,5 +1,6 @@
 using Crewmeleon_Redrawn.Components;
 using Crewmeleon_Redrawn.Utilities;
+using MiraAPI.GameOptions;
 using MiraAPI.Patches.Stubs;
 using MiraAPI.Roles;
 using Reactor.Utilities.Extensions;
@@ -23,7 +24,13 @@ public class HiderRole : CrewmateRole, ICustomRole
     {
         RoleHintType = RoleHintType.None
     };
-    
+
+    private static readonly LayerMask[] DisabledColliders =
+    [
+        LayerMask.NameToLayer("ShortObjects"),
+        LayerMask.NameToLayer("Objects")
+    ];
+
     private PlayerCanvasComponent _playerCanvas;
 
     public override void Initialize(PlayerControl player)
@@ -33,6 +40,12 @@ public class HiderRole : CrewmateRole, ICustomRole
         if (player.GetPlayerCanvas(out var canvas))
         {
             canvas!.Enable();
+        }
+
+        if (!player.AmOwner || !OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects.Value) return;
+        foreach (var collider in ShipStatus.Instance.GetComponentsInChildren<Collider2D>().Where(x => DisabledColliders.Contains(x.gameObject.layer)))
+        {
+            collider.enabled = false;
         }
     }
 
