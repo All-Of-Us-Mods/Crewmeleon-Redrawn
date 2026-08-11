@@ -17,7 +17,7 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
     private RenderTexture _camRenderTex;
     private float _zoomSize = 1f;
 
-    private const float ZoomRendFraction = 0.6f;
+    private const float ZoomRendFraction = 0.75f;
 
     // the window of the frame is 844px wide. whole sprite is 959
     private const float FrameInnerFraction = 844f / 959f;

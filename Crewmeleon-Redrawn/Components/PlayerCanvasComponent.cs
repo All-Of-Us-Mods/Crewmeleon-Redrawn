@@ -181,8 +181,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
         {
-            FinishAnyStroke();
-            UndoLocalStroke();
+            UndoLastLocalStroke();
             return;
         }
 
@@ -368,6 +367,13 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         Rasterize(stroke);
 
         Flush();
+    }
+
+    /// <summary>undo from outside the input loop, so a half drawn stroke still lands first</summary>
+    public void UndoLastLocalStroke()
+    {
+        FinishAnyStroke();
+        UndoLocalStroke();
     }
 
     private void UndoLocalStroke()

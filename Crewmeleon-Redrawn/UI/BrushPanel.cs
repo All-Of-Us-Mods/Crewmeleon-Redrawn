@@ -2,6 +2,7 @@ using Crewmeleon_Redrawn.Buttons.Hider;
 using Crewmeleon_Redrawn.Components;
 using MiraAPI.Hud;
 using Crewmeleon_Redrawn.Modifiers;
+using Crewmeleon_Redrawn.Utilities;
 using MiraAPI.Modifiers;
 using ReactUI.Core;
 using ReactUI.Hooks;
@@ -14,91 +15,156 @@ namespace Crewmeleon_Redrawn.UI;
 /// <summary>brush controls, only up while youre painting</summary>
 public static class BrushPanel
 {
-    public const float WheelPx = 116f;
-    public const float MarkerPx = 11f;
+    /// <summary>mobile stacks the wheel on its own line, so it takes the section's full width</summary>
+    public static float WheelPx =>
+        MobileUi.Active ? CrewmeleonStyles.SectionContentWidth : CrewmeleonStyles.Px(116f);
+    public static float MarkerPx => CrewmeleonStyles.Px(11f);
 
     // how much of ColorWheel.png carries colour, the rest is the white ring
     private const float WheelColorFraction = 120f / 127f;
 
-    private const float AnchorLeft = 28f;
-    private const float AnchorTop = 120f;
+    private static readonly Func<VNode> ColourRoot = Component(RenderColour);
+    private static readonly Func<VNode> BrushRoot = Component(RenderBrush);
+    private static readonly Func<VNode> FullRoot = Component(RenderFull);
 
-    private static readonly Func<VNode> Root = Component(RenderRoot);
+    private static readonly List<int> componentIds = [];
 
-    private static int componentId = -1;
     private static int lastVersion = -1;
     private static bool lastPainting;
     private static bool lastPicking;
 
-    public static VNode Render() => Root();
+    private static RenderHandle? colourHandle;
+    private static RenderHandle? brushHandle;
+    private static RenderHandle? fullHandle;
+
+    private static float colourTop;
+    private static float brushTop;
+    private static float fullTop;
+
+    /// <summary>
+    /// Mobile splits into two roots so neither covers the screen and blocks game clicks. All three
+    /// mount up front and pick themselves out by layout, so the dev toggle can switch live.
+    /// </summary>
+    public static void Mount()
+    {
+        colourHandle = Render(ColourRoot);
+        brushHandle = Render(BrushRoot);
+        fullHandle = Render(FullRoot);
+
+        colourTop = brushTop = fullTop = CrewmeleonStyles.PanelTop;
+    }
 
     /// <summary>watches the state the panel draws from and redraws only when it changes</summary>
     public static void Tick()
     {
-        if (componentId < 0) return;
+        if (componentIds.Count == 0) return;
+
+        var toggled = MobileUi.PollToggle();
+        if (toggled) CrewmeleonStyles.Register();
+
+        var resized = CrewmeleonStyles.RefreshIfResolutionChanged();
+
+        var recentred = Recentre(colourHandle, ref colourTop)
+                        | Recentre(brushHandle, ref brushTop)
+                        | Recentre(fullHandle, ref fullTop);
 
         var painting = IsPainting();
         var picking = CustomButtonSingleton<PickColorButton>.Instance.IsPicking;
         var version = BrushStore.Local.Version;
 
-        if (painting == lastPainting && picking == lastPicking && version == lastVersion) return;
+        if (!toggled && !resized && !recentred
+            && painting == lastPainting && picking == lastPicking && version == lastVersion) return;
 
         lastPainting = painting;
         lastPicking = picking;
         lastVersion = version;
 
-        Scheduler.ScheduleRender(componentId);
+        foreach (var id in componentIds) Scheduler.ScheduleRender(id);
     }
 
-    private static VNode RenderRoot()
-    {
-        // the brush changes outside React, so a ticker watches it and only asks for a redraw when
-        // something actually moved
-        componentId = HooksRuntime.Current.ComponentId;
+    private static VNode RenderColour() =>
+        Visible(MobileUi.Active) ? Panel(LeftInset(colourTop), ColorSection(BrushStore.Local)) : Div();
 
-        if (!IsPainting()) return Div();
+    private static VNode RenderBrush() =>
+        Visible(MobileUi.Active) ? Panel(RightInset(brushTop), BrushSection(BrushStore.Local)) : Div();
+
+    private static VNode RenderFull()
+    {
+        if (!Visible(!MobileUi.Active)) return Div();
 
         var brush = BrushStore.Local;
+        return Panel(LeftInset(fullTop), ColorSection(brush), BrushSection(brush), KeybindsSection());
+    }
 
-        return Div(ClassName("panel", new S.Style
-        {
-            Inset = new S.EdgeValues(AnchorTop, float.NaN, float.NaN, AnchorLeft),
-        }),
-            Div(ClassName("panel-body"),
-                ColorSection(brush),
-                BrushSection(brush),
-                KeybindsSection()
-            )
+    /// <summary>
+    /// The panels are content-height, so their real height only exists after layout. Re-centring
+    /// off the measured rect only moves them, never resizes them, so it settles in one pass.
+    /// </summary>
+    private static bool Recentre(RenderHandle? handle, ref float top)
+    {
+        var height = handle?.RootNode?.ScreenRect.Height ?? 0f;
+        if (height <= 0f) return false;
+
+        var wanted = CrewmeleonStyles.CentreTop(height);
+        if (Mathf.Abs(wanted - top) < 0.5f) return false;
+
+        top = wanted;
+        return true;
+    }
+
+    /// <summary>the brush changes outside React, so each root registers for the ticker's redraws</summary>
+    private static bool Visible(bool inThisLayout)
+    {
+        var id = HooksRuntime.Current.ComponentId;
+        if (!componentIds.Contains(id)) componentIds.Add(id);
+
+        return inThisLayout && IsPainting();
+    }
+
+    private static S.EdgeValues LeftInset(float top) =>
+        new(top, float.NaN, float.NaN, CrewmeleonStyles.ScreenGutter);
+
+    private static S.EdgeValues RightInset(float top) =>
+        new(top, CrewmeleonStyles.ScreenGutter, float.NaN, float.NaN);
+
+    private static VNode Panel(S.EdgeValues inset, params VNode[] sections)
+    {
+        return Div(ClassName("panel", new S.Style { Inset = inset }),
+            Div(ClassName("panel-body"), sections)
         );
     }
 
     private static VNode ColorSection(BrushSettings brush)
     {
+        if (MobileUi.Active)
+        {
+            return Div(ClassName("section"),
+                Text("COLOUR", ClassName("section-title")),
+                Div(ClassName("gap-10"),
+                    Div(ClassName("self-center"), Wheel(brush)),
+                    ValueRow(brush)
+                )
+            );
+        }
+
         return Div(ClassName("section"),
             Text("COLOUR", ClassName("section-title")),
-            Div(ClassName("row gap-10"),
+            Div(ClassName("row gap-10 items-top"),
                 Wheel(brush),
-                Div(ClassName("swatch-col"),
-                    Div(ClassName("swatch-well"),
-                        Div(ClassName("swatch", new S.Style
-                        {
-                            Background = ToHex(brush.Color),
-                            Opacity = Mathf.Max(brush.Opacity, 0.08f),
-                        }))
-                    ),
-                    Text(ToHex(brush.Color), ClassName("hex-text"))
-                )
-            ),
-            ValueRow(brush)
+                Div(ClassName("swatch-col"), Preview(brush), ValueRow(brush))
+            )
         );
     }
+
+    private static VNode Preview(BrushSettings brush) =>
+        Div(ClassName("swatch-well"), Image(BrushTextures.BrushPreview(brush), ClassName("swatch")));
 
     private static VNode Wheel(BrushSettings brush)
     {
         var angle = brush.Hue * 2f * Mathf.PI;
 
         // stop at the inside of the baked outline where the colour actually ends
-        var reach = brush.Saturation * (WheelPx / 2f - 1f) * WheelColorFraction;
+        var reach = brush.Saturation * (WheelPx / 2f - CrewmeleonStyles.Px(1f)) * WheelColorFraction;
 
         // screen space is top down so Y gets subtracted here
         var markerX = WheelPx / 2f + Mathf.Cos(angle) * reach - MarkerPx / 2f;
@@ -158,17 +224,29 @@ public static class BrushPanel
 
     private static VNode BrushSection(BrushSettings brush)
     {
+        // stacked rows need more air between them than inside them, or the labels read as
+        // belonging to the slider above
+        var sliders = Div(ClassName(MobileUi.Active ? "gap-10" : "gap-6"),
+            SliderRow("Size", brush.Radius, v => brush.Radius = Mathf.RoundToInt(v), $"{brush.Radius}px",
+                BrushSettings.MinRadius, BrushSettings.MaxRadius, step: 1f),
+            SliderRow("Opacity", brush.Opacity, v => brush.Opacity = v, Percent(brush.Opacity)),
+            SliderRow("Hardness", brush.Hardness, v => brush.Hardness = v, Percent(brush.Hardness))
+        );
+
+        // desktop undoes with Ctrl + Z, so the button is only earning its space on touch
+        if (MobileUi.Active)
+        {
+            return Div(ClassName("section"),
+                Text("BRUSH", ClassName("section-title")),
+                Preview(brush),
+                sliders,
+                Button("UNDO", UndoLastStroke, ClassName("btn btn-dark"))
+            );
+        }
+
         return Div(ClassName("section"),
             Text("BRUSH", ClassName("section-title")),
-            Div(ClassName("row gap-10"),
-                Div(ClassName("preview-frame"), Image(BrushTextures.BrushPreview(brush), ClassName("preview"))),
-                Div(ClassName("grow gap-6"),
-                    SliderRow("Size", brush.Radius, v => brush.Radius = Mathf.RoundToInt(v), $"{brush.Radius}px",
-                        BrushSettings.MinRadius, BrushSettings.MaxRadius, step: 1f),
-                    SliderRow("Opacity", brush.Opacity, v => brush.Opacity = v, Percent(brush.Opacity)),
-                    SliderRow("Hardness", brush.Hardness, v => brush.Hardness = v, Percent(brush.Hardness))
-                )
-            )
+            sliders
         );
     }
 
@@ -181,12 +259,26 @@ public static class BrushPanel
         float max = 1f,
         float step = 0f)
     {
+        var slider = Slider(value, onChange, min, max, ClassName("slider-control"), step,
+            thumbWidth: CrewmeleonStyles.SliderThumbWidthPx,
+            thumbHeight: CrewmeleonStyles.SliderThumbHeightPx,
+            thumbRadius: CrewmeleonStyles.SliderThumbRadiusPx,
+            trackHeight: CrewmeleonStyles.SliderTrackHeightPx);
+
+        if (MobileUi.Active)
+        {
+            return Div(ClassName("gap-6"),
+                Div(ClassName("row-between"),
+                    Text(label, ClassName("text-label")),
+                    Text(display, ClassName("text-value"))
+                ),
+                slider
+            );
+        }
+
         return Div(ClassName("setting-row-slider"),
-            Text(label, ClassName("text-label")),
-            Div(ClassName("grow"),
-                Slider(value, onChange, min, max, ClassName("slider-control"), step,
-                    thumbWidth: 7f, thumbHeight: 18f, thumbRadius: 2f)
-            ),
+            Text(label, ClassName("text-label slider-label")),
+            Div(ClassName("grow"), slider),
             Text(display, ClassName("text-value"))
         );
     }
@@ -209,6 +301,12 @@ public static class BrushPanel
             Div(ClassName("keybind-key"), Text(key, ClassName("keybind-key-text"))),
             Text(action, ClassName("keybind-action"))
         );
+    }
+
+    private static void UndoLastStroke()
+    {
+        var player = PlayerControl.LocalPlayer;
+        if (player && player.GetPlayerCanvas(out var canvas)) canvas!.UndoLastLocalStroke();
     }
 
     private static string Percent(float value) => $"{Mathf.RoundToInt(value * 100)}%";

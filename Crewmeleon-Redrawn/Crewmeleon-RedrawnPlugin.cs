@@ -18,7 +18,6 @@ namespace Crewmeleon_Redrawn;
 [BepInProcess("Among Us.exe")]
 [BepInDependency(MiraApiPlugin.Id)]
 [BepInDependency(ReactorPlugin.Id)]
-[BepInDependency(ReactUIPlugin.Id)]
 [ReactorModFlags(ModFlags.RequireOnAllClients)]
 public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 {
@@ -30,9 +29,10 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
         Harmony.PatchAll();
         ReactorCredits.Register<CrewmeleonRedrawnPlugin>(location => location is ReactorCredits.Location.MainMenu);
 
+        ReactUIBootstrap.Initialize();
         CrewmeleonStyles.Register();
-        ReactUI.UI.Render(BrushPanel.Render);
-        ReactUI.Plugin.ReactUIBehaviour.OnUpdate += BrushPanel.Tick;
+        BrushPanel.Mount();
+        ReactUIBehaviour.OnUpdate += BrushPanel.Tick;
     }
 
     public override bool Unload()
