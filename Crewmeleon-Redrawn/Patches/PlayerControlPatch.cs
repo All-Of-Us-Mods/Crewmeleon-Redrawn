@@ -19,7 +19,7 @@ public static class PlayerControlPatch
             {
                 parent = __instance.transform,
                 localPosition = Vector3.zero,
-                localScale = new Vector3(0.5f, 0.5f, 0)
+                localScale = new Vector3(0.5f, 0.5f, 1)
             },
             layer = __instance.gameObject.layer,
         };

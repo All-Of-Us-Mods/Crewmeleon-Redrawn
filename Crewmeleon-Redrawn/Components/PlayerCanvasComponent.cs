@@ -115,9 +115,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var overlayObj = new GameObject("Canvas");
         overlayObj.transform.SetParent(transform, false);
+        overlayObj.transform.localPosition = new Vector3(0, 0, -0.01f);
         _canvasRend = overlayObj.AddComponent<SpriteRenderer>();
-        _canvasRend.sortingLayerID = _playerRend.sortingLayerID;
-        _canvasRend.sortingOrder = _playerRend.sortingOrder + 1;
         _canvasRend.sprite = Sprite.Create(_texture, playerSprite.rect, pivot, playerSprite.pixelsPerUnit);
         
         // makes a list of transparent pixels so you cant paint outside the mogus
@@ -266,8 +265,6 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         _brushCursor = cursorObj.AddComponent<SpriteRenderer>();
         _brushCursor.sprite = CrewmeleonAssets.BrushCursor.LoadAsset();
-        _brushCursor.sortingLayerID = _canvasRend.sortingLayerID;
-        _brushCursor.sortingOrder = _canvasRend.sortingOrder + 1;
 
         cursorObj.SetActive(false);
     }
