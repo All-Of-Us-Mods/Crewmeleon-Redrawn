@@ -1,3 +1,5 @@
+using Crewmeleon_Redrawn.Modifiers;
+using MiraAPI.Modifiers;
 using UnityEngine;
 
 namespace Crewmeleon_Redrawn.GameMode;
@@ -31,5 +33,22 @@ public class ChameleonPlayerTracker
         _gridArrange.ArrangeChilds();
         _aspectPosition.DistanceFromEdge = new Vector3(0.23f, 0.35f, 0);
         _aspectPosition.AdjustPosition();
+    }
+
+    public void OnCrewmateKilled()
+    {
+        _tracker.OnCrewmateKilled();
+    }
+
+    public void OnSpectate(PlayerControl player)
+    {
+        int numSpectators = PlayerControl.AllPlayerControls.ToArray().Count(pc => pc.Data?.Role != null && !pc.Data.Role.IsImpostor && pc.HasModifier<SpectatingModifier>());
+        int numDead = PlayerControl.AllPlayerControls.ToArray().Count(pc => pc.Data?.Role != null && !pc.Data.Role.IsImpostor && pc.Data.IsDead);
+        for (int i = 0; i < numSpectators; ++i)
+        {
+            int index = i + numDead;
+            if (_tracker.crewmateSprites[index] == null || _tracker.crewmateSprites[index].IsKilled) continue;
+            _tracker.crewmateSprites[index].transform.GetChild(0).GetComponent<SpriteRenderer>().color = Color.cyan;
+        }
     }
 }

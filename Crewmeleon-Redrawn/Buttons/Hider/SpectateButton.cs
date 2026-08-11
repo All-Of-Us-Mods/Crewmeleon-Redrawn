@@ -10,7 +10,7 @@ namespace Crewmeleon_Redrawn.Buttons.Hider;
 public class SpectateButton : CustomActionButton
 {
     public override string Name => "Spectate";
-    public override float Cooldown => 1;
+    public override float Cooldown => 5;
     public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
 
     public override bool CanUse() => true;
@@ -19,6 +19,6 @@ public class SpectateButton : CustomActionButton
     protected override void OnClick()
     {
         if (SpectatingModifier.GetSpectateTargets().Count > 1)
-            PlayerControl.LocalPlayer.AddModifier<SpectatingModifier>();
+            PlayerControl.LocalPlayer.RpcAddModifier<SpectatingModifier>();
     }
 }

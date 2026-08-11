@@ -89,15 +89,21 @@ public class ChameleonGameMode : AbstractGameMode
     public void NotifyOfDeath(PlayerControl player, bool infected = false)
     {
         deadPlayerCount++;
-
+        
         HudManager.Instance.NotifyOfDeath();
-
+        _playerTracker.OnCrewmateKilled();
+        
         var popupPrefab = GameManagerCreator.Instance.HideAndSeekManagerPrefab.DeathPopupPrefab;
         var popup = GameObject.Instantiate(popupPrefab, HudManager.Instance.transform.parent);
 
         popup.text.GetComponent<TextTranslatorTMP>().DestroyImmediate();
         popup.text.text = infected ? "HAS BEEN INFECTED" : "HAS BEEN KILLED";
         popup.Show(player, deadPlayerCount);
+    }
+
+    public void OnBeginSpectate(PlayerControl player)
+    {
+        _playerTracker.OnSpectate(player);
     }
 
     public override bool CanReport(DeadBody body) => false;

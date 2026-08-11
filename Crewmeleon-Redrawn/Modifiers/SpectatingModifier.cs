@@ -1,5 +1,6 @@
 using System.Collections;
 using Crewmeleon_Redrawn.GameMode;
+using MiraAPI.GameModes;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
 using MiraAPI.Utilities.Assets;
@@ -23,6 +24,11 @@ public class SpectatingModifier : BaseModifier
 
     public override void OnActivate()
     {
+        if (CustomGameModeManager.ActiveMode is ChameleonGameMode chameleon)
+        {
+            chameleon.OnBeginSpectate(Player);
+        }
+        if (!Player.AmOwner) return;
         Coroutines.Start(CoBegin());
         HudManager.Instance.ShadowQuad.enabled = false;
         this.Player.moveable = false;
@@ -30,6 +36,7 @@ public class SpectatingModifier : BaseModifier
 
     public override void OnDeactivate()
     {
+        if (!Player.AmOwner) return;
         Coroutines.Start(CoEnd());
         HudManager.Instance.ShadowQuad.enabled = true;
         this.Player.moveable = true;
@@ -131,7 +138,7 @@ public class SpectatingModifier : BaseModifier
         // create the stop spectating button
         var stopButton = GameObject.Instantiate(HudManager.Instance.GameMenu.Tabs[0].Content.transform.FindChild("LeaveGameButton"), spectateControls.transform).GetComponent<PassiveButton>();
         stopButton.OnClick = new Button.ButtonClickedEvent();
-        stopButton.OnClick.AddListener((UnityAction)(() => Player.RemoveModifier(this)));
+        stopButton.OnClick.AddListener((UnityAction)(() => Player.RpcRemoveModifier<SpectatingModifier>()));
 
         var stopBtnAspectPos = stopButton.gameObject.AddComponent<AspectPosition>();
         stopBtnAspectPos.Alignment = AspectPosition.EdgeAlignments.Right;
