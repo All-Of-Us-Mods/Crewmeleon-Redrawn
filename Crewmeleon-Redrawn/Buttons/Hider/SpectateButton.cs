@@ -9,24 +9,16 @@ namespace Crewmeleon_Redrawn.Buttons.Hider;
 
 public class SpectateButton : CustomActionButton
 {
+    public override string Name => "Spectate";
+    public override float Cooldown => 1;
+    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+
+    public override bool CanUse() => true;
+    public override bool Enabled(RoleBehaviour? role) => role is HiderRole;
+
     protected override void OnClick()
     {
-        if (SpectatingModifier.GetSpectateTargets().Count > 1) PlayerControl.LocalPlayer.AddModifier<SpectatingModifier>();
+        if (SpectatingModifier.GetSpectateTargets().Count > 1)
+            PlayerControl.LocalPlayer.AddModifier<SpectatingModifier>();
     }
-
-    public override bool CanUse()
-    {
-        return true;
-    }
-
-    public override bool Enabled(RoleBehaviour? role)
-    {
-        return role is HiderRole;
-    }
-
-    public override string Name => "Spectate";
-
-    public override float Cooldown => 1;
-
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
 }
