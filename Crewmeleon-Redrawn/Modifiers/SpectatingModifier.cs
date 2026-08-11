@@ -1,5 +1,5 @@
 using System.Collections;
-using MiraAPI.GameOptions;
+using Crewmeleon_Redrawn.GameMode;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
 using MiraAPI.Utilities.Assets;
@@ -9,7 +9,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using Object = System.Object;
 
 namespace Crewmeleon_Redrawn.Modifiers;
 
@@ -37,7 +36,7 @@ public class SpectatingModifier : BaseModifier
 
     public static List<PlayerControl> GetSpectateTargets()
     {
-        if (!OptionGroupSingleton<SpectatingOptions>.Instance.SpectateHiders)
+        if (!ChameleonOptions.Spectating.SpectateHiders)
         {
             return PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data.Role.IsImpostor).ToList();
         }
