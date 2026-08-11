@@ -45,6 +45,8 @@ public class HiderRole : CrewmateRole, ICustomRole
         if (!player.AmOwner || !OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects.Value) return;
         foreach (var collider in ShipStatus.Instance.GetComponentsInChildren<Collider2D>().Where(x => DisabledColliders.Contains(x.gameObject.layer)))
         {
+            if (collider.transform.parent.TryGetComponent<PlainDoor>(out _) || (collider.transform.TryGetComponent<IUsable>(out _) && !collider.transform.TryGetComponent<Console>(out _))) continue;
+
             collider.enabled = false;
         }
     }
