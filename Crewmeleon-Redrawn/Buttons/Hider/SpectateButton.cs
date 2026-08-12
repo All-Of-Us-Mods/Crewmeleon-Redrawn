@@ -16,12 +16,12 @@ public class SpectateButton : CustomActionButton
 
     public override bool CanUse()
     {
-        return true;
+        return !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
     }
 
     public override bool Enabled(RoleBehaviour? role)
     {
-        return role is HiderRole;
+        return role is HiderRole && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
     }
 
     public override string Name => "Spectate";

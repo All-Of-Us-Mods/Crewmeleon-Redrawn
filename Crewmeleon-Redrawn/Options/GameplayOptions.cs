@@ -8,6 +8,9 @@ public class GameplayOptions : AbstractOptionGroup
 {
     public override string GroupName => "Gameplay Options";
 
+    public ModdedToggleOption AllowUndo { get; } =
+        new ModdedToggleOption("Allow Undo", false);
+
     public ModdedNumberOption SeekersCount { get; } =
         new ModdedNumberOption("Seekers Count", 1, 1, 3, 1, "0", "0", MiraNumberSuffixes.None);
     
@@ -40,4 +43,13 @@ public class GameplayOptions : AbstractOptionGroup
 
     public ModdedToggleOption InfectionMode { get; } =
         new ModdedToggleOption("InfectionMode", false);
+    
+    public ModdedToggleOption AlwaysOnTop { get; } =
+        new ModdedToggleOption("Hiders Always On Top Of Objects", true)
+        {
+            Visible = () => !OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects.Value,
+        };
+    
+    public ModdedToggleOption HideOnObjects { get; } =
+        new ModdedToggleOption("Hiders Can Hide On Map Objects", true);
 }
