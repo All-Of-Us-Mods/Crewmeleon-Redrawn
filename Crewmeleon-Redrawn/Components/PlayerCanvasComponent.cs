@@ -36,9 +36,9 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private bool _paintBlockedUntilRelease;
     private List<PaintStroke> _strokes;
 
-    // undo replays from here rather than from a blank canvas. once the list passes UndoDepth the
-    // oldest stroke is baked in and dropped, so a replay is bounded no matter how long the game runs
-    private const int UndoDepth = 24;
+    // past UndoDepth the oldest stroke is baked into the flattened canvas and dropped
+    private const int UndoDepth = 8;
+    private readonly List<StrokeUndo> _undoCache = [];
     private Color32[] _flattened;
     private List<Vector2Int> _pendingPoints;
     private BrushStamp _pendingBrush;
@@ -103,7 +103,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         _width = source.width;
         _height = source.height;
 
-        // kept so strokes can blend and so undo can replay the whole canvas
+        // kept so strokes can blend against what is already down
         _buffer = new Color32[_width * _height];
         _baseBuffer = new Color32[_width * _height];
         _flattened = new Color32[_width * _height];
@@ -337,11 +337,14 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var points = _pendingPoints.ToArray();
         _pendingPoints.Clear();
+
+        var undo = CaptureUndo();
         ClearStrokeState();
 
         TrimHistory();
 
         _strokes.Add(new PaintStroke(_pendingBrush, points));
+        _undoCache.Add(undo);
         SendStroke(_pendingBrush, points);
     }
 
@@ -373,7 +376,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         TrimHistory();
 
         _strokes.Add(stroke);
-        Rasterize(stroke);
+        _undoCache.Add(Rasterize(stroke, captureUndo: true));
 
         Flush();
     }
@@ -393,7 +396,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         Rpc<RpcUndoStroke>.Instance.Send(PlayerControl.LocalPlayer, true);
     }
 
-    /// <summary>drops the last stroke and replays whats left on top of the flattened canvas</summary>
+    /// <summary>drops the last stroke by putting back the pixels it covered</summary>
     public void UndoStroke()
     {
         EnsureInitialized();
@@ -402,13 +405,54 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         _strokes.RemoveAt(_strokes.Count - 1);
 
-        Array.Copy(_flattened, _buffer, _buffer.Length);
-        MarkDirty(0, 0);
-        MarkDirty(_width - 1, _height - 1);
-
-        foreach (var stroke in _strokes) Rasterize(stroke);
+        if (_undoCache.Count > 0)
+        {
+            Restore(_undoCache[^1]);
+            _undoCache.RemoveAt(_undoCache.Count - 1);
+        }
 
         Flush();
+    }
+
+    private StrokeUndo CaptureUndo()
+    {
+        if (_touched.Count == 0) return default;
+
+        int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+        foreach (var index in _touched)
+        {
+            var x = index % _width;
+            var y = index / _width;
+
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+        }
+
+        var width = maxX - minX + 1;
+        var height = maxY - minY + 1;
+        var pixels = new Color32[width * height];
+
+        for (var row = 0; row < height; row++)
+        {
+            Array.Copy(_baseBuffer, (minY + row) * _width + minX, pixels, row * width, width);
+        }
+
+        return new StrokeUndo(minX, minY, width, height, pixels);
+    }
+
+    private void Restore(StrokeUndo undo)
+    {
+        if (!undo.HasPixels) return;
+
+        for (var row = 0; row < undo.Height; row++)
+        {
+            Array.Copy(undo.Pixels, row * undo.Width, _buffer, (undo.Y + row) * _width + undo.X, undo.Width);
+        }
+
+        MarkDirty(undo.X, undo.Y);
+        MarkDirty(undo.X + undo.Width - 1, undo.Y + undo.Height - 1);
     }
 
     /// <summary>bakes the oldest stroke into the flattened canvas once history gets too deep</summary>
@@ -418,7 +462,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var oldest = _strokes[0];
         _strokes.RemoveAt(0);
-        
+        if (_undoCache.Count > 0) _undoCache.RemoveAt(0);
+
         var live = _buffer;
         _buffer = _flattened;
 
@@ -428,9 +473,9 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         _buffer = live;
     }
 
-    private void Rasterize(PaintStroke stroke)
+    private StrokeUndo Rasterize(PaintStroke stroke, bool captureUndo = false)
     {
-        if (stroke.Points.Length == 0) return;
+        if (stroke.Points.Length == 0) return default;
 
         BeginStroke();
 
@@ -441,7 +486,11 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
 
         CompositeStroke(stroke.Brush);
+
+        var undo = captureUndo ? CaptureUndo() : default;
         ClearStrokeState();
+
+        return undo;
     }
 
     private void ClearBuffer()

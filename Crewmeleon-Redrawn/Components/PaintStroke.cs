@@ -54,6 +54,17 @@ public readonly struct PaintStroke(BrushStamp brush, Vector2Int[] points)
     public Vector2Int[] Points => points;
 }
 
+public readonly struct StrokeUndo(int x, int y, int width, int height, Color32[] pixels)
+{
+    public int X => x;
+    public int Y => y;
+    public int Width => width;
+    public int Height => height;
+    public Color32[] Pixels => pixels;
+
+    public bool HasPixels => pixels is { Length: > 0 };
+}
+
 /// <summary>
 /// strokes are chunked to avoid one large packet being sent
 /// </summary>
