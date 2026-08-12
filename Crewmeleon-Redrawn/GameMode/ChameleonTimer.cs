@@ -26,14 +26,14 @@ public class ChameleonTimer
     public bool IsActive => timerBar is not null && timerBar;
 
     private HideAndSeekTimerBar? timerBar;
-    private TextMeshPro? stageText;
+    private TextMeshPro? stageLabel;
 
     private float timeLeft;
     private float maxTime;
 
     private float defaultSeekerSpeed;
 
-    private string StageLabel => $"{CurrentStage.ToString().ToUpperInvariant()} TIME";
+    private string StageText => CurrentStage.ToString().ToUpperInvariant();
 
     public void Begin(HudManager hud)
     {
@@ -41,7 +41,7 @@ public class ChameleonTimer
         maxTime = ChameleonOptions.Gameplay.HideTime.Value;
         timeLeft = maxTime;
 
-        timerBar = TimerBarFactory.Create(hud, Palette.CrewmateBlue, 0.35f, StageLabel, out stageText);
+        timerBar = TimerBarFactory.Create(hud, Palette.CrewmateBlue, 0.35f, StageText, out stageLabel);
     }
 
     public void Update()
@@ -76,19 +76,15 @@ public class ChameleonTimer
 
     private void AdvanceStage()
     {
-        if (CurrentStage == TimerStage.Revelation)
-        {
-            OnRevelationStageEnd();
-            return;
-        }
-
         if (CurrentStage == TimerStage.Hiding)
             OnHidingStageEnd();
         else if (CurrentStage == TimerStage.Seeking)
             OnSeekingStageEnd();
-
-        if (stageText is not null && stageText)
-            stageText.text = StageLabel;
+        else if (CurrentStage == TimerStage.Revelation)
+            OnRevelationStageEnd();
+        
+        if (stageLabel is not null && stageLabel)
+            stageLabel.text = StageText;
     }
 
     /// <summary>
@@ -121,6 +117,13 @@ public class ChameleonTimer
         CurrentStage = TimerStage.Revelation;
 
         var hiders = Helpers.GetAlivePlayers().Where(p => !p.Data.Role.IsImpostor).ToList();
+
+        // forcefully close painting or spectating screen
+        if(PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()) 
+            PlayerControl.LocalPlayer.RpcRemoveModifier<PaintingModifier>();
+
+        if (PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>())
+            PlayerControl.LocalPlayer.RpcRemoveModifier<SpectatingModifier>();
 
         // give each hider a revelation period
         if (ChameleonOptions.Gameplay.RevelationTimePerPlayer.Value > 0 && hiders.Count > 0)
