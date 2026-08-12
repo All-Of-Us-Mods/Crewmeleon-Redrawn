@@ -30,6 +30,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     private SpriteRenderer _playerRend;
     private SpriteRenderer _canvasRend;
+    private SpriteRenderer _outlineRend;
     private SpriteRenderer _brushCursor;
     private Texture2D _texture;
     private Vector2Int? _lastPixel;
@@ -124,10 +125,10 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         var outlineObj = new GameObject("Outline");
         outlineObj.transform.SetParent(overlayObj.transform, false);
         outlineObj.transform.localPosition = new Vector3(0, 0, -0.1f);
-        var outlineRend = outlineObj.AddComponent<SpriteRenderer>();
+        _outlineRend = outlineObj.AddComponent<SpriteRenderer>();
         var outlineOpacity = (int)ChameleonOptions.Outline.OutlineStrengthOption.Value / 100f;
-        outlineRend.sprite = CrewmeleonAssets.PlayerSpriteOutline.LoadAsset();
-        outlineRend.color = new Color(1f, 1f, 1f, outlineOpacity);
+        _outlineRend.sprite = CrewmeleonAssets.PlayerSpriteOutline.LoadAsset();
+        _outlineRend.color = new Color(1f, 1f, 1f, outlineOpacity);
 
         // makes a list of transparent pixels so you cant paint outside the mogus
         var pixels = source.GetPixels();
@@ -163,7 +164,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (!_initialized || !Player || !_playerRend || !_canvasRend || !_texture)
             return;
 
-        _playerRend.flipX = _canvasRend.flipX = Player.cosmetics.FlipX;
+        _playerRend.flipX = _outlineRend.flipX = _canvasRend.flipX = Player.cosmetics.FlipX;
 
         if (!Player.AmOwner || !Player.HasModifier<PaintingModifier>())
         {
@@ -178,7 +179,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (CustomButtonSingleton<PickColorButton>.Instance.ShouldCommitPick())
         {
             Coroutines.Start(CustomButtonSingleton<PickColorButton>.Instance.CoPickColor(this));
-
+ 
             // CoPickColor clears IsPicking before it yields so without this the button youre
             // still holding starts painting next frame
             _paintBlockedUntilRelease = true;
