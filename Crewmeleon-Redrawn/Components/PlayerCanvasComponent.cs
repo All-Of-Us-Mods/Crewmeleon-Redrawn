@@ -262,7 +262,12 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         var paintedDiameter = (Brush.Radius * 2 + 1)
                               / _canvasRend.sprite.pixelsPerUnit
                               * _canvasRend.transform.lossyScale.x;
-        var scale = paintedDiameter / CursorEdgeFraction;
+
+        // measured off the sprite so it holds up whatever pixels per unit it loads at
+        var spriteWidth = _brushCursor.sprite.bounds.size.x;
+        if (spriteWidth <= 0f) return;
+
+        var scale = paintedDiameter / (spriteWidth * CursorEdgeFraction);
 
         _brushCursor.transform.position = new Vector3(worldMouse.x, worldMouse.y, _canvasRend.transform.position.z - 0.01f);
         _brushCursor.transform.localScale = new Vector3(scale, scale, 1f);
