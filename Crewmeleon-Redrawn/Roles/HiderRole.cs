@@ -36,7 +36,7 @@ public class HiderRole : CrewmateRole, ICustomRole
     public override void Initialize(PlayerControl player)
     {
         RoleBehaviourStubs.Initialize(this, player);
-
+        Player.cosmetics.TogglePet(false);
         if (player.GetPlayerCanvas(out var canvas))
         {
             canvas!.Enable();
