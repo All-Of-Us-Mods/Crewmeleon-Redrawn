@@ -116,7 +116,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var overlayObj = new GameObject("Canvas");
         overlayObj.transform.SetParent(transform, false);
-        overlayObj.transform.localPosition = new Vector3(0, 0, -0.01f);
+        overlayObj.transform.localPosition = new Vector3(0, 0, -0.1f);
         _canvasRend = overlayObj.AddComponent<SpriteRenderer>();
         _canvasRend.sprite = Sprite.Create(_texture, playerSprite.rect, pivot, playerSprite.pixelsPerUnit);
         

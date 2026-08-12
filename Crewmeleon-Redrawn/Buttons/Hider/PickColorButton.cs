@@ -117,6 +117,14 @@ public class PickColorButton : CustomActionButton
             shadow.enabled = false;
         }
 
+        if (ShipStatus.Instance.Type == ShipStatus.MapType.Fungle)
+        {
+            var tint = ShipStatus.Instance.transform.Find("Backgrounds/Base/OverlayTint");
+            var jungleShadow = ShipStatus.Instance.transform.Find("FungleJungleShadow");
+            jungleShadow.gameObject.SetActive(false);
+            tint.gameObject.SetActive(false);
+        }
+
         Coroutines.Start(CoPreview());
     }
 
@@ -124,6 +132,13 @@ public class PickColorButton : CustomActionButton
     {
         var shadow = HudManager.Instance?.ShadowQuad;
         if (shadow) shadow!.enabled = shadowWasEnabled;
+
+        if (ShipStatus.Instance.Type != ShipStatus.MapType.Fungle) return;
+
+        var tint = ShipStatus.Instance.transform.Find("Backgrounds/Base/OverlayTint");
+        var jungleShadow = ShipStatus.Instance.transform.Find("FungleJungleShadow");
+        jungleShadow.gameObject.SetActive(true);
+        tint.gameObject.SetActive(true);
     }
 
     public override bool CanUse()

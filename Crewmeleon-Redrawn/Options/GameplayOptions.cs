@@ -21,4 +21,13 @@ public class GameplayOptions : AbstractOptionGroup
     public ModdedNumberOption SeekTime { get; } =
         new ModdedNumberOption("Seek Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds,
             halfIncrements: true);
+    
+    public ModdedToggleOption AlwaysOnTop { get; } =
+        new ModdedToggleOption("Hiders Always On Top Of Objects", true)
+        {
+            Visible = () => !OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects.Value,
+        };
+    
+    public ModdedToggleOption HideOnObjects { get; } =
+        new ModdedToggleOption("Hiders Can Hide On Map Objects", true);
 }

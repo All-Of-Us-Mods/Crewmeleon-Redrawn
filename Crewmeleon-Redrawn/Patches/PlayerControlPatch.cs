@@ -1,5 +1,6 @@
 ﻿using Crewmeleon_Redrawn.Components;
 using HarmonyLib;
+using MiraAPI.GameOptions;
 using Reactor.Utilities;
 using UnityEngine;
 
@@ -12,13 +13,17 @@ public static class PlayerControlPatch
     [HarmonyPostfix]
     public static void PlayerControlStart(PlayerControl __instance)
     {
-        Logger<CrewmeleonRedrawnPlugin>.Instance.LogInfo("Loaded");
+        var zValue = OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects
+                     || OptionGroupSingleton<GameplayOptions>.Instance.AlwaysOnTop
+            ? -0.3f
+            : 0f;
+        
         var newBody = new GameObject("PaintablePlayer")
         {
             transform =
             {
                 parent = __instance.transform,
-                localPosition = Vector3.zero,
+                localPosition = new Vector3(0, 0, zValue),
                 localScale = new Vector3(0.5f, 0.5f, 1)
             },
             layer = __instance.gameObject.layer,
