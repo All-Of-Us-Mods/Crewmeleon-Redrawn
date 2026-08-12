@@ -38,6 +38,9 @@ public class GameplayOptions : AbstractOptionGroup
     public ModdedNumberOption SeekTime { get; } =
         new ModdedNumberOption("Seek Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
 
+    public ModdedNumberOption ShotgunCooldown { get; } =
+        new ModdedNumberOption("Seeker Shot Cooldown", 2, 0.5f, 15, 1, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
+    
     public ModdedNumberOption RevelationTimePerPlayer { get; } =
         new ModdedNumberOption("Revelation time per Player", 5, 0, 30, 1, "0", "0", MiraNumberSuffixes.Seconds);
 

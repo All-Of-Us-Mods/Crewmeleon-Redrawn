@@ -1,10 +1,15 @@
 ﻿using System.Collections;
+using System.Linq;
 using Crewmeleon_Redrawn.Networking;
 using Crewmeleon_Redrawn.Utilities;
+using MiraAPI.GameOptions;
+using MiraAPI.Networking;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
+using Reactor.Utilities.Extensions;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Crewmeleon_Redrawn.Components;
 
@@ -17,8 +22,11 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private bool _isSplatter;
     private SpriteRenderer _rend;
     private SpriteRenderer _handsRend;
+    private SpriteRenderer _muzzleRend;
     private int _lastNetworkedAngle = 0;
     private int _networkedThreshold = 15;
+    private float _currentCooldown = 0f;
+    private readonly LayerMask _uiLayerMask = LayerMask.GetMask("UI");
 
     private void Start()
     {
@@ -37,7 +45,51 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         _handsRend = hands.AddComponent<SpriteRenderer>();
         _handsRend.sprite = Assets.Hands.LoadAsset();
+        
+        var muzzle = new GameObject("Muzzle")
+        {
+            transform =
+            {
+                parent = transform,
+                localPosition = new Vector3(1.6f, 0.2f, -0.1f),
+                localScale = new Vector3(0.5f, 0.5f, 1)
+            },
+            layer = gameObject.layer
+        };
+
+        _muzzleRend = muzzle.AddComponent<SpriteRenderer>();
+        _muzzleRend.sprite = Assets.MuzzleFlash.LoadAsset();
+        muzzle.gameObject.SetActive(false);
+
         Coroutines.Start(CoUpdateHandColor(Owner, _handsRend));
+        gameObject.SetActive(false);
+    }
+
+    private void Update()
+    {
+        if (!Owner.AmOwner) return;
+
+        if (_currentCooldown > 0f)
+        {
+            _currentCooldown -= Time.deltaTime;
+            return;
+        }
+
+        var uiCovered = PassiveButtonManager.Instance.currentOver != null &&
+                        PassiveButtonManager.Instance.currentOver.gameObject.layer == _uiLayerMask;
+
+        if (!Input.GetMouseButtonDown(0) || uiCovered) return;
+
+        var worldPos = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
+        Owner.RpcShootShotgun(worldPos, Palette.PlayerColors.Random(), Random.RandomRange(0.06f, 0.14f));
+        _currentCooldown = OptionGroupSingleton<GameplayOptions>.Instance.ShotgunCooldown.Value;
+    }
+
+    public IEnumerator CoFlashMuzzle()
+    {
+        _muzzleRend.gameObject.SetActive(true);
+        yield return new WaitForSeconds(0.2f);
+        _muzzleRend.gameObject.SetActive(false);
     }
 
     private void FixedUpdate()
@@ -52,6 +104,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         var shouldFlip = transform.eulerAngles.z is > 90 and < 270;
         _rend.flipY = _handsRend.flipY = shouldFlip;
         transform.localPosition = new Vector3(shouldFlip ? -0.55f : 0.55f, transform.localPosition.y, transform.localPosition.z);
+        _muzzleRend.transform.localPosition = new Vector3(_muzzleRend.transform.localPosition.x, shouldFlip ? -0.2f : 0.2f, -0.1f);
 
         if (Owner.MyPhysics.Velocity.sqrMagnitude < 0.0001f)
         {
@@ -75,7 +128,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (!(Mathf.Abs(Mathf.DeltaAngle(_lastNetworkedAngle, transform.eulerAngles.z)) > _networkedThreshold)) return;
 
         _lastNetworkedAngle = (int) transform.eulerAngles.z;
-        RpcSyncShotgun(Owner, _lastNetworkedAngle);
+        Owner.RpcSyncShotgun(_lastNetworkedAngle);
     }
 
     private static float ClampAngle(float angle, float previousAngle)
@@ -104,7 +157,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             transform =
             {
                 parent = player.transform,
-                localPosition = new Vector3(0.55f, -0.05f, -1),
+                localPosition = new Vector3(0.55f, -0.1f, -1),
                 localScale = new Vector3(0.55f, 0.55f, 1)
             },
             layer = player.gameObject.layer
@@ -114,13 +167,6 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var shotgun = shotgunObj.AddComponent<ShotgunComponent>();
         shotgun.Owner = player;
-    }
-
-    [MethodRpc((uint)CrRpcs.SyncShotgun)]
-    public static void RpcSyncShotgun(PlayerControl player, int zRot)
-    {
-        if (!player.GetPlayerShotgun(out var shotgun)) return;
-        shotgun!.ZRotation = zRot;
     }
 
     private static IEnumerator CoUpdateHandColor(PlayerControl player, SpriteRenderer handsRend)

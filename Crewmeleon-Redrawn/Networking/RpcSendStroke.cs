@@ -8,7 +8,7 @@ using Reactor.Networking.Rpc;
 using Reactor.Utilities;
 using UnityEngine;
 
-[RegisterCustomRpc((uint)CrRpcs.SendStroke)]
+[RegisterCustomRpc((uint)RPCCalls.SendStroke)]
 public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
     : PlayerCustomRpc<CrewmeleonRedrawnPlugin, StrokeChunk>(plugin, id)
 {
