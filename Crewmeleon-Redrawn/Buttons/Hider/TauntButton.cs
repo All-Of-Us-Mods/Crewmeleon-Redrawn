@@ -2,6 +2,7 @@ using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Networking;
 using Crewmeleon_Redrawn.Roles;
+using Crewmeleon_Redrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
@@ -21,8 +22,7 @@ public class TauntButton : CustomActionButton
     {
         return role is HiderRole
             && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()
-            && ChameleonGameMode.Instance is not null
-            && ChameleonGameMode.Instance.CurrentStage != TimerStage.Revelation;
+            && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
     }
 
     protected override void OnClick()
