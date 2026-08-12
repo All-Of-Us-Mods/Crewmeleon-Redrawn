@@ -1,5 +1,8 @@
 using System.Collections;
+using Crewmeleon_Redrawn.Roles;
 using MiraAPI.GameModes;
+using MiraAPI.Roles;
+using MiraAPI.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
@@ -13,7 +16,7 @@ public class ChameleonGameMode : AbstractGameMode
     public override string Description => "You can run, but you can't hide!";
     public override Color Color { get; } = new Color32(150, 255, 90, 255);
 
-    public override bool ShowGameModeIntroCutscene => false;
+    public override bool ShowGameModeIntroCutscene => true;
     public override bool GameModeBodyTypeOverride => true;
     public override bool ShowNormalGameSettings => false;
 
@@ -36,7 +39,7 @@ public class ChameleonGameMode : AbstractGameMode
     }
 
     //Using PostAssignRoles because Initialize doesn't get called, inlining maybe?
-    public override void PostAssignRoles(LogicRoleSelectionNormal logic)
+    public override void Initialize()
     {
         ShipStatus.Instance.BreakEmergencyButton();
 
@@ -105,6 +108,15 @@ public class ChameleonGameMode : AbstractGameMode
     
     public void OnStopSpectate(PlayerControl player)
     {
+    }
+
+    public override void CheckGameEnd(out bool runOriginal, LogicGameFlowNormal instance)
+    {
+        runOriginal = false;
+        if (!PlayerControl.LocalPlayer.IsHost()) return;
+        if (Helpers.GetAlivePlayers().Where(x => x.Data.Role is HiderRole && !x.Data.IsDead).ToArray().Length >
+            0) return;
+        GameManager.Instance.RpcEndGame(GameOverReason.ImpostorsByKill, false);
     }
 
     public override bool CanReport(DeadBody body) => false;

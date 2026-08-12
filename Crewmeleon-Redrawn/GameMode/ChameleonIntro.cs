@@ -1,4 +1,5 @@
 using System.Collections;
+using MiraAPI.GameModes;
 using MiraAPI.Utilities;
 using PowerTools;
 using Reactor.Utilities;
@@ -71,6 +72,7 @@ public static class ChameleonIntro
 
         ShipStatus.Instance.StartSFX();
         UnityEngine.Object.Destroy(intro.gameObject);
+        CustomGameModeManager.ActiveMode?.Initialize();
     }
 
     private static IEnumerator PlaySeekerIntro(IntroCutscene intro, float hideTimer)
