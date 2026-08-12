@@ -193,6 +193,15 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             return;
         }
 
+        // the first touch also reads as mouse button 0, so a pinch would paint with one finger
+        // while the other zooms. blocked until every finger lifts so the stroke cant resume midway
+        if (Input.touchCount >= 2)
+        {
+            _paintBlockedUntilRelease = true;
+            FinishAnyStroke();
+            return;
+        }
+
         if (_paintBlockedUntilRelease)
         {
             if (!Input.GetMouseButton(0)) _paintBlockedUntilRelease = false;

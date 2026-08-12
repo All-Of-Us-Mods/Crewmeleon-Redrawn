@@ -25,6 +25,9 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
     // small gap above the window, need to offset slightly
     private const float FrameOffsetY = -0.037f;
     private const float ZoomStep = 1.25f;
+
+    // a scroll notch is one discrete event, a pinch reports every frame the fingers move
+    private const float PinchStep = 1.04f;
     private readonly FloatRange ZoomRange = new (0.3f, 3f);
     public Camera Camera => _zoomCamera;
     public bool IsActive => _zoomCamera && _zoomCamera.gameObject.activeSelf;
@@ -113,6 +116,7 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var zoomIn = false;
         var zoomOut = false;
+        var step = ZoomStep;
 
         if (Input.touchCount == 2)
         {
@@ -135,6 +139,8 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
                     zoomOut = true;
                     break;
             }
+
+            if (zoomIn || zoomOut) step = PinchStep;
         }
 
         if (scrollWheel > 0 || axisRaw > 0) zoomIn = true;
@@ -143,7 +149,7 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         if (!zoomIn && !zoomOut) return;
 
         var size = _zoomCamera.orthographicSize;
-        size = zoomIn ? size / ZoomStep : size * ZoomStep;
+        size = zoomIn ? size / step : size * step;
         _zoomSize = _zoomCamera.orthographicSize = Mathf.Clamp(size, ZoomRange.min, ZoomRange.max);
     }
     
