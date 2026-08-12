@@ -8,6 +8,9 @@ public class GameplayOptions : AbstractOptionGroup
 {
     public override string GroupName => "Gameplay Options";
 
+    public ModdedToggleOption AllowUndo { get; } =
+        new ModdedToggleOption("Allow Undo", false);
+
     public ModdedNumberOption SeekersCount { get; } =
         new ModdedNumberOption("Seekers Count", 1, 1, 3, 1, MiraNumberSuffixes.None);
     

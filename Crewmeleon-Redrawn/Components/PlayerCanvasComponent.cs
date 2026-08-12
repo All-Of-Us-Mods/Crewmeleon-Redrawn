@@ -2,6 +2,7 @@ using Crewmeleon_Redrawn.Buttons.Hider;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Utilities;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using MiraAPI.GameOptions;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using Reactor.Networking.Rpc;
@@ -179,7 +180,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         // dragging to pick a colour shouldnt leave a stroke behind
         if (CustomButtonSingleton<PickColorButton>.Instance.IsPicking) return;
 
-        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
+        if (OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value
+            && Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
         {
             UndoLastLocalStroke();
             return;
@@ -338,7 +340,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         var points = _pendingPoints.ToArray();
         _pendingPoints.Clear();
 
-        var undo = CaptureUndo();
+        var undo = OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value ? CaptureUndo() : default;
         ClearStrokeState();
 
         TrimHistory();
@@ -376,7 +378,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         TrimHistory();
 
         _strokes.Add(stroke);
-        _undoCache.Add(Rasterize(stroke, captureUndo: true));
+        _undoCache.Add(
+            Rasterize(stroke, captureUndo: OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value));
 
         Flush();
     }
@@ -384,6 +387,8 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     /// <summary>undo from outside the input loop, so a half drawn stroke still lands first</summary>
     public void UndoLastLocalStroke()
     {
+        if (!OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value) return;
+
         FinishAnyStroke();
         UndoLocalStroke();
     }
@@ -401,7 +406,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     {
         EnsureInitialized();
 
-        if (_strokes.Count == 0) return;
+        if (!OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value || _strokes.Count == 0) return;
 
         _strokes.RemoveAt(_strokes.Count - 1);
 

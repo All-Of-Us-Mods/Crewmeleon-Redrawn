@@ -1,5 +1,6 @@
 using Crewmeleon_Redrawn.Buttons.Hider;
 using Crewmeleon_Redrawn.Components;
+using MiraAPI.GameOptions;
 using MiraAPI.Hud;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Utilities;
@@ -236,12 +237,17 @@ public static class BrushPanel
         // desktop undoes with Ctrl + Z, so the button is only earning its space on touch
         if (MobileUi.Active)
         {
-            return Div(ClassName("section"),
+            var children = new List<VNode>
+            {
                 Text("BRUSH", ClassName("section-title")),
                 Preview(brush),
                 sliders,
-                Button("UNDO", UndoLastStroke, ClassName("btn btn-dark"))
-            );
+            };
+
+            if (OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value)
+                children.Add(Button("UNDO", UndoLastStroke, ClassName("btn btn-dark")));
+
+            return Div(ClassName("section"), children);
         }
 
         return Div(ClassName("section"),
@@ -285,14 +291,19 @@ public static class BrushPanel
 
     private static VNode KeybindsSection()
     {
-        return Div(ClassName("section"),
+        var rows = new List<VNode>
+        {
             Text("KEYBINDS", ClassName("section-title")),
             Keybind("Left Click", "Paint"),
             Keybind("Scroll", "Zoom in / out"),
             Keybind("Ctrl + Scroll", "Brush size"),
-            Keybind("Ctrl + Z", "Undo last stroke"),
-            Keybind("Hold Space", "Pick colour on release")
-        );
+            Keybind("Hold Space", "Pick colour"),
+        };
+
+        if (OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value)
+            rows.Add(Keybind("Ctrl + Z", "Undo last stroke"));
+
+        return Div(ClassName("section"), rows);
     }
 
     private static VNode Keybind(string key, string action)
