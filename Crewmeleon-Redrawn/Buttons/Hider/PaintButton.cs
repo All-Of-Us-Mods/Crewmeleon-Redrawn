@@ -1,6 +1,7 @@
 using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
+using Crewmeleon_Redrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
@@ -22,8 +23,7 @@ public class PaintButton : CustomActionButton
     public override bool Enabled(RoleBehaviour? role)
     {
         return role is HiderRole
-            && ChameleonGameMode.Instance is not null
-            && ChameleonGameMode.Instance.CurrentStage != TimerStage.Revelation;
+            && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
     }
 
     protected override void OnClick()

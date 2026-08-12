@@ -35,8 +35,7 @@ public class PickColorButton : CustomActionButton
     {
         return role is HiderRole
             && PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()
-            && ChameleonGameMode.Instance is not null
-            && ChameleonGameMode.Instance.CurrentStage != TimerStage.Revelation;
+            && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
     }
 
     protected override void OnClick()

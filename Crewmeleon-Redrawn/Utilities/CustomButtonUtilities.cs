@@ -1,6 +1,7 @@
 using MiraAPI.Hud;
 using MiraAPI.Patches;
 using MiraAPI.Utilities;
+using Object = UnityEngine.Object;
 
 namespace Crewmeleon_Redrawn.Utilities;
 
@@ -38,5 +39,10 @@ public static class CustomButtonUtilities
 
         var bottomLeft = HudManagerPatches.BottomLeft;
         if (bottomLeft != null) bottomLeft.GetComponent<GridArrange>().CheckCurrentChildren();
+    }
+
+    public static bool IsInPractice()
+    {
+        return Object.FindObjectOfType<TutorialManager>() != null;
     }
 }
