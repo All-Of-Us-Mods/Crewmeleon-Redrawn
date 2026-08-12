@@ -26,7 +26,6 @@ public class ChameleonGameMode : AbstractGameMode
 
     private readonly ChameleonTimer _timer = new();
     private readonly TauntTimer _tauntTimer = new();
-    private readonly ChameleonPlayerTracker _playerTracker = new();
 
     private int deadPlayerCount;
 
@@ -47,7 +46,6 @@ public class ChameleonGameMode : AbstractGameMode
 
         _timer.Begin(hud);
         _tauntTimer.Begin(hud);
-        _playerTracker.Begin(hud);
     }
 
     public override void HudUpdate(HudManager instance)
@@ -60,7 +58,6 @@ public class ChameleonGameMode : AbstractGameMode
 
         _timer.Update();
         _tauntTimer.Update();
-        _playerTracker.Update();
     }
 
     public override IEnumerator IntroCutscene(IntroCutscene intro)
@@ -93,7 +90,6 @@ public class ChameleonGameMode : AbstractGameMode
         deadPlayerCount++;
         
         HudManager.Instance.NotifyOfDeath();
-        _playerTracker.OnCrewmateKilled();
         
         var popupPrefab = GameManagerCreator.Instance.HideAndSeekManagerPrefab.DeathPopupPrefab;
         var popup = GameObject.Instantiate(popupPrefab, HudManager.Instance.transform.parent);
@@ -105,7 +101,10 @@ public class ChameleonGameMode : AbstractGameMode
 
     public void OnBeginSpectate(PlayerControl player)
     {
-        _playerTracker.OnSpectate(player);
+    }
+    
+    public void OnStopSpectate(PlayerControl player)
+    {
     }
 
     public override bool CanReport(DeadBody body) => false;

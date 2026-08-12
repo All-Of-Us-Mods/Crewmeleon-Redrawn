@@ -36,6 +36,10 @@ public class SpectatingModifier : BaseModifier
 
     public override void OnDeactivate()
     {
+        if (CustomGameModeManager.ActiveMode is ChameleonGameMode chameleon)
+        {
+            chameleon.OnStopSpectate(Player);
+        }
         if (!Player.AmOwner) return;
         Coroutines.Start(CoEnd());
         HudManager.Instance.ShadowQuad.enabled = true;
