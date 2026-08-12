@@ -6,6 +6,7 @@ namespace Crewmeleon_Redrawn;
 public class CrewmeleonAssets
 {
     public static LoadableAsset<Sprite> PlayerSprite { get; } = new LoadableResourceAsset($"Crewmeleon-Redrawn.Resources.PlayerSprite.png");
+    public static LoadableAsset<Sprite> PlayerSpriteOutline { get; } = new LoadableResourceAsset($"Crewmeleon-Redrawn.Resources.PlayerOutline.png");
     public static LoadableAsset<Sprite> ZoomFrame { get; } = new LoadableResourceAsset($"Crewmeleon-Redrawn.Resources.ZoomFrame.png");
     public static LoadableAsset<Sprite> ColorWheel { get; } = new LoadableResourceAsset($"Crewmeleon-Redrawn.Resources.ColorWheel.png");
     public static LoadableAsset<Sprite> BrushCursor { get; } = new LoadableResourceAsset($"Crewmeleon-Redrawn.Resources.BrushCursor.png");

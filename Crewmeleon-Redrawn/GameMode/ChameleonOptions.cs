@@ -8,4 +8,5 @@ public static class ChameleonOptions
     public static TauntingOptions   Taunting => OptionGroupSingleton<TauntingOptions>.Instance;
     public static SpectatingOptions Spectating => OptionGroupSingleton<SpectatingOptions>.Instance;
     public static ChatOptions       Chat => OptionGroupSingleton<ChatOptions>.Instance;
+    public static OutlineOptions    Outline => OptionGroupSingleton<OutlineOptions>.Instance;
 }

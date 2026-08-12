@@ -1,4 +1,5 @@
 using Crewmeleon_Redrawn.Buttons.Hider;
+using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Utilities;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
@@ -120,6 +121,14 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         _canvasRend = overlayObj.AddComponent<SpriteRenderer>();
         _canvasRend.sprite = Sprite.Create(_texture, playerSprite.rect, pivot, playerSprite.pixelsPerUnit);
         
+        var outlineObj = new GameObject("Outline");
+        outlineObj.transform.SetParent(overlayObj.transform, false);
+        outlineObj.transform.localPosition = new Vector3(0, 0, -0.1f);
+        var outlineRend = outlineObj.AddComponent<SpriteRenderer>();
+        var outlineOpacity = (int)ChameleonOptions.Outline.OutlineStrengthOption.Value / 100f;
+        outlineRend.sprite = CrewmeleonAssets.PlayerSpriteOutline.LoadAsset();
+        outlineRend.color = new Color(1f, 1f, 1f, outlineOpacity);
+
         // makes a list of transparent pixels so you cant paint outside the mogus
         var pixels = source.GetPixels();
         _paintable = new bool[_width * _height];
