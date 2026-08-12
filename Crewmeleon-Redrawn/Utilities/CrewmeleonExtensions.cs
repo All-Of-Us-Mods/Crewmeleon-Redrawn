@@ -17,4 +17,17 @@ public static class CrewmeleonExtensions
         canvas = playerCanvas;
         return true;
     }
+    
+    public static bool GetPlayerShotgun(this PlayerControl player, out ShotgunComponent? shotgun)
+    {
+        var plrShotgun = player.GetComponentInChildren<ShotgunComponent>(true);
+        if (plrShotgun == null)
+        {
+            shotgun = null;
+            return false;
+        }
+
+        shotgun = plrShotgun;
+        return true;
+    }
 }

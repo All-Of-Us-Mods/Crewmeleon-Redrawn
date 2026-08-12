@@ -1,7 +1,7 @@
-﻿using Crewmeleon_Redrawn.Components;
+﻿
+using Crewmeleon_Redrawn.Components;
 using HarmonyLib;
 using MiraAPI.GameOptions;
-using Reactor.Utilities;
 using UnityEngine;
 
 namespace Crewmeleon_Redrawn.Patches;
@@ -31,5 +31,6 @@ public static class PlayerControlPatch
         
         var _playerCanvas = newBody.AddComponent<PlayerCanvasComponent>();
         _playerCanvas.Player = __instance;
+        ShotgunComponent.CreateShotgun(__instance);
     }
 }
