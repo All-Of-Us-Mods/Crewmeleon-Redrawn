@@ -7,15 +7,25 @@ public class OutlineOptions : AbstractOptionGroup
 {
     public override string GroupName => "Outline";
 
-    public ModdedEnumOption<OutlineStrength> OutlineStrengthOption = new("Outline Strength", OutlineStrength.Strong);
+    public ModdedEnumOption<OutlineStrength> OutlineStrengthOption { get; } =
+        new("Outline Strength", OutlineStrength.Strong);
 
-    // enum value is the percentage of opacity (Strong = 40%)
     public enum OutlineStrength
     {
-        Disabled = 0,
-        VerySubtle = 20,
-        Subtle = 30,
-        Strong = 40
+        VerySubtle,
+        Subtle,
+        Strong,
+        Disabled,
     }
+}
 
+public static class OutlineStrengthExtensions
+{
+    public static float Opacity(this OutlineOptions.OutlineStrength strength) => strength switch
+    {
+        OutlineOptions.OutlineStrength.VerySubtle => 0.2f,
+        OutlineOptions.OutlineStrength.Subtle => 0.3f,
+        OutlineOptions.OutlineStrength.Strong => 0.4f,
+        _ => 0f,
+    };
 }

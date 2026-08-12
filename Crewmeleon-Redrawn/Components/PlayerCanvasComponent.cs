@@ -126,7 +126,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         outlineObj.transform.SetParent(overlayObj.transform, false);
         outlineObj.transform.localPosition = new Vector3(0, 0, -0.1f);
         _outlineRend = outlineObj.AddComponent<SpriteRenderer>();
-        var outlineOpacity = (int)ChameleonOptions.Outline.OutlineStrengthOption.Value / 100f;
+        var outlineOpacity = ChameleonOptions.Outline.OutlineStrengthOption.Value.Opacity();
         _outlineRend.sprite = CrewmeleonAssets.PlayerSpriteOutline.LoadAsset();
         _outlineRend.color = new Color(1f, 1f, 1f, outlineOpacity);
 
