@@ -24,19 +24,13 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\**\*.*" />
+        
         <Reference Include="MiraAPI">
             <HintPath>../packages.local\MiraAPI.dll</HintPath>
         </Reference>
         <Reference Include="ReactUI" Private="false">
             <HintPath>../packages.local\ReactUI.dll</HintPath>
         </Reference>
-    </ItemGroup>
-    <ItemGroup>
-      <EmbeddedResource Include="Resources/Sounds/*.wav" />
-        <EmbeddedResource Include="Resources/Sprites/Buttons/*.png" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Components\" />
     </ItemGroup>
 
     <Target Name="Copy" AfterTargets="MergeReactUI" Condition="'$(AmongUs)' != ''">
