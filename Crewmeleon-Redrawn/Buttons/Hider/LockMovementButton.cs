@@ -9,28 +9,28 @@ namespace Crewmeleon_Redrawn.Buttons.Hider;
 
 public class LockMovementButton : CustomActionButton
 {
-    protected override void OnClick()
-    {
-        PlayerControl.LocalPlayer.moveable = !PlayerControl.LocalPlayer.moveable;
-        PlayerControl.LocalPlayer.NetTransform.Halt();
-        
-        OverrideName(PlayerControl.LocalPlayer.CanMove ? "Lock Movement" : "Unlock Movement");
-        OverrideSprite(PlayerControl.LocalPlayer.CanMove ? Assets.LockButton.LoadAsset() : Assets.UnlockButton.LoadAsset());
-    }
+    private const string LockText = "Lock";
+    private const string UnlockText = "Unlock";
 
-    public override bool CanUse()
-    {
-        return true;
-    }
+    public override string Name => LockText;
+    public override float Cooldown => 0;
+    public override LoadableAsset<Sprite> Sprite => Assets.LockButton;
+
+    public bool Locked { get; private set; } = true;
+
+    public override bool CanUse() => true;
 
     public override bool Enabled(RoleBehaviour? role)
+        => role is HiderRole && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
+
+    protected override void OnClick()
     {
-        return role is HiderRole && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
+        Locked = !Locked;
+
+        PlayerControl.LocalPlayer.moveable = !Locked;
+        PlayerControl.LocalPlayer.NetTransform.Halt();
+        
+        OverrideName(Locked ? UnlockText : LockText);
+        OverrideSprite(Locked ? Assets.UnlockButton.LoadAsset() : Assets.LockButton.LoadAsset());
     }
-
-    public override string Name => "Lock Movement";
-
-    public override float Cooldown => 0;
-
-    public override LoadableAsset<Sprite> Sprite => Assets.LockButton;
 }
