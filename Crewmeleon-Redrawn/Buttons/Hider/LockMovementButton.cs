@@ -1,5 +1,7 @@
+using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
+using Crewmeleon_Redrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
@@ -9,28 +11,32 @@ namespace Crewmeleon_Redrawn.Buttons.Hider;
 
 public class LockMovementButton : CustomActionButton
 {
-    protected override void OnClick()
-    {
-        PlayerControl.LocalPlayer.moveable = !PlayerControl.LocalPlayer.moveable;
-        PlayerControl.LocalPlayer.NetTransform.Halt();
-        
-        OverrideName(PlayerControl.LocalPlayer.CanMove ? "Lock Movement" : "Unlock Movement");
-        OverrideSprite(PlayerControl.LocalPlayer.CanMove ? Assets.LockButton.LoadAsset() : Assets.UnlockButton.LoadAsset());
-    }
+    private const string LockText = "Lock";
+    private const string UnlockText = "Unlock";
 
-    public override bool CanUse()
-    {
-        return true;
-    }
+    public override string Name => LockText;
+    public override float Cooldown => 0;
+    public override LoadableAsset<Sprite> Sprite => Assets.LockButton;
+
+    public bool IsLocked { get; private set; } = true;
+
+    public override bool CanUse() => true;
 
     public override bool Enabled(RoleBehaviour? role)
     {
-        return role is HiderRole && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
+        return role is HiderRole
+               && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()
+               && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
     }
 
-    public override string Name => "Lock Movement";
+    protected override void OnClick()
+    {
+        IsLocked = !IsLocked;
 
-    public override float Cooldown => 0;
-
-    public override LoadableAsset<Sprite> Sprite => Assets.LockButton;
+        PlayerControl.LocalPlayer.moveable = !IsLocked;
+        PlayerControl.LocalPlayer.NetTransform.Halt();
+        
+        OverrideName(IsLocked ? UnlockText : LockText);
+        OverrideSprite(IsLocked ? Assets.UnlockButton.LoadAsset() : Assets.LockButton.LoadAsset());
+    }
 }

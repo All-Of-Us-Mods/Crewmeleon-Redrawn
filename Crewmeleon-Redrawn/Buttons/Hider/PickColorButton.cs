@@ -1,5 +1,5 @@
-using System.Collections;
 using Crewmeleon_Redrawn.Components;
+using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
 using Crewmeleon_Redrawn.Utilities;
@@ -7,6 +7,7 @@ using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
 using Reactor.Utilities;
+using System.Collections;
 using UnityEngine;
 
 namespace Crewmeleon_Redrawn.Buttons.Hider;
@@ -15,14 +16,33 @@ public class PickColorButton : CustomActionButton
 {
     public const KeyCode PickKey = KeyCode.Space;
 
+    public override string Name => "Pick";
+    public override float Cooldown => 0;
+    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+
     public bool IsPicking { get; private set; }
 
-    private readonly ColorPickPreview _preview = new();
+    private static Texture2D? Sampler;
 
-    private static Texture2D? _sampler;
+    private readonly ColorPickPreview preview = new();
 
     private bool shadowWasEnabled;
     private bool startedWithKey;
+
+    public override bool CanUse() => !IsPicking;
+
+    public override bool Enabled(RoleBehaviour? role)
+    {
+        return role is HiderRole
+            && PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()
+            && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
+    }
+
+    protected override void OnClick()
+    {
+        BeginPick();
+    }
+
 
     /// <summary>key picks sample on release, button picks wait for a click</summary>
     public bool ShouldCommitPick()
@@ -69,18 +89,18 @@ public class PickColorButton : CustomActionButton
             }
 
             if (Pointer.TryGetPosition(out var pointer))
-                _preview.Show(pointer, ReadScreenPixel(pointer));
+                preview.Show(pointer, ReadScreenPixel(pointer));
             else
-                _preview.Hide();
+                preview.Hide();
         }
 
-        _preview.Hide();
+        preview.Hide();
     }
 
     private void StopPicking()
     {
         IsPicking = false;
-        _preview.Hide();
+        preview.Hide();
     }
 
     private static Color ReadScreenPixel(Vector2 screenPosition)
@@ -88,16 +108,11 @@ public class PickColorButton : CustomActionButton
         var x = Mathf.Clamp((int) screenPosition.x, 0, Screen.width - 1);
         var y = Mathf.Clamp((int) screenPosition.y, 0, Screen.height - 1);
 
-        _sampler ??= new Texture2D(1, 1, TextureFormat.RGB24, false);
-        _sampler.ReadPixels(new Rect(x, y, 1, 1), 0, 0, false);
-        _sampler.Apply();
+        Sampler ??= new Texture2D(1, 1, TextureFormat.RGB24, false);
+        Sampler.ReadPixels(new Rect(x, y, 1, 1), 0, 0, false);
+        Sampler.Apply();
 
-        return _sampler.GetPixel(0, 0);
-    }
-
-    protected override void OnClick()
-    {
-        BeginPick();
+        return Sampler.GetPixel(0, 0);
     }
 
     public void BeginPick(bool fromKey = false)
@@ -140,18 +155,4 @@ public class PickColorButton : CustomActionButton
         jungleShadow.gameObject.SetActive(true);
         tint.gameObject.SetActive(true);
     }
-
-    public override bool CanUse()
-    {
-        return !IsPicking;
-    }
-
-    public override bool Enabled(RoleBehaviour? role)
-    {
-        return role is HiderRole && PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
-    }
-
-    public override string Name => "Pick Color";
-    public override float Cooldown => 0;
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
 }

@@ -1,4 +1,5 @@
 using Crewmeleon_Redrawn.Buttons.Hider;
+using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Utilities;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
@@ -29,6 +30,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     private SpriteRenderer _playerRend;
     private SpriteRenderer _canvasRend;
+    private SpriteRenderer _outlineRend;
     private SpriteRenderer _brushCursor;
     private Texture2D _texture;
     private Vector2Int? _lastPixel;
@@ -120,6 +122,14 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         _canvasRend = overlayObj.AddComponent<SpriteRenderer>();
         _canvasRend.sprite = Sprite.Create(_texture, playerSprite.rect, pivot, playerSprite.pixelsPerUnit);
         
+        var outlineObj = new GameObject("Outline");
+        outlineObj.transform.SetParent(overlayObj.transform, false);
+        outlineObj.transform.localPosition = new Vector3(0, 0, -0.1f);
+        _outlineRend = outlineObj.AddComponent<SpriteRenderer>();
+        var outlineOpacity = ChameleonOptions.Outline.OutlineStrengthOption.Value.Opacity();
+        _outlineRend.sprite = CrewmeleonAssets.PlayerSpriteOutline.LoadAsset();
+        _outlineRend.color = new Color(1f, 1f, 1f, outlineOpacity);
+
         // makes a list of transparent pixels so you cant paint outside the mogus
         var pixels = source.GetPixels();
         _paintable = new bool[_width * _height];
@@ -154,7 +164,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (!_initialized || !Player || !_playerRend || !_canvasRend || !_texture)
             return;
 
-        _playerRend.flipX = _canvasRend.flipX = Player.cosmetics.FlipX;
+        _playerRend.flipX = _outlineRend.flipX = _canvasRend.flipX = Player.cosmetics.FlipX;
 
         if (!Player.AmOwner || !Player.HasModifier<PaintingModifier>())
         {
@@ -169,7 +179,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (CustomButtonSingleton<PickColorButton>.Instance.ShouldCommitPick())
         {
             Coroutines.Start(CustomButtonSingleton<PickColorButton>.Instance.CoPickColor(this));
-
+ 
             // CoPickColor clears IsPicking before it yields so without this the button youre
             // still holding starts painting next frame
             _paintBlockedUntilRelease = true;

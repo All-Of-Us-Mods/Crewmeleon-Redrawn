@@ -1,5 +1,8 @@
 using System.Collections;
+using Crewmeleon_Redrawn.Roles;
 using MiraAPI.GameModes;
+using MiraAPI.Roles;
+using MiraAPI.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
@@ -7,11 +10,13 @@ namespace Crewmeleon_Redrawn.GameMode;
 
 public class ChameleonGameMode : AbstractGameMode
 {
+    public static ChameleonGameMode? Instance => CustomGameModeManager.ActiveMode is ChameleonGameMode mode ? mode : null;
+
     public override string Name => "Crewmeleon";
     public override string Description => "You can run, but you can't hide!";
     public override Color Color { get; } = new Color32(150, 255, 90, 255);
 
-    public override bool ShowGameModeIntroCutscene => false;
+    public override bool ShowGameModeIntroCutscene => true;
     public override bool GameModeBodyTypeOverride => true;
     public override bool ShowNormalGameSettings => false;
 
@@ -24,7 +29,6 @@ public class ChameleonGameMode : AbstractGameMode
 
     private readonly ChameleonTimer _timer = new();
     private readonly TauntTimer _tauntTimer = new();
-    private readonly ChameleonPlayerTracker _playerTracker = new();
 
     private int deadPlayerCount;
 
@@ -35,7 +39,7 @@ public class ChameleonGameMode : AbstractGameMode
     }
 
     //Using PostAssignRoles because Initialize doesn't get called, inlining maybe?
-    public override void PostAssignRoles(LogicRoleSelectionNormal logic)
+    public override void Initialize()
     {
         ShipStatus.Instance.BreakEmergencyButton();
 
@@ -45,7 +49,6 @@ public class ChameleonGameMode : AbstractGameMode
 
         _timer.Begin(hud);
         _tauntTimer.Begin(hud);
-        _playerTracker.Begin(hud);
     }
 
     public override void HudUpdate(HudManager instance)
@@ -58,7 +61,6 @@ public class ChameleonGameMode : AbstractGameMode
 
         _timer.Update();
         _tauntTimer.Update();
-        _playerTracker.Update();
     }
 
     public override IEnumerator IntroCutscene(IntroCutscene intro)
@@ -91,7 +93,6 @@ public class ChameleonGameMode : AbstractGameMode
         deadPlayerCount++;
         
         HudManager.Instance.NotifyOfDeath();
-        _playerTracker.OnCrewmateKilled();
         
         var popupPrefab = GameManagerCreator.Instance.HideAndSeekManagerPrefab.DeathPopupPrefab;
         var popup = GameObject.Instantiate(popupPrefab, HudManager.Instance.transform.parent);
@@ -103,7 +104,19 @@ public class ChameleonGameMode : AbstractGameMode
 
     public void OnBeginSpectate(PlayerControl player)
     {
-        _playerTracker.OnSpectate(player);
+    }
+    
+    public void OnStopSpectate(PlayerControl player)
+    {
+    }
+
+    public override void CheckGameEnd(out bool runOriginal, LogicGameFlowNormal instance)
+    {
+        runOriginal = false;
+        if (!PlayerControl.LocalPlayer.IsHost()) return;
+        if (Helpers.GetAlivePlayers().Where(x => x.Data.Role is HiderRole && !x.Data.IsDead).ToArray().Length >
+            0) return;
+        GameManager.Instance.RpcEndGame(GameOverReason.ImpostorsByKill, false);
     }
 
     public override bool CanReport(DeadBody body) => false;

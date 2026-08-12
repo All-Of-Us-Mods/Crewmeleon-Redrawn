@@ -1,5 +1,7 @@
+using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
+using Crewmeleon_Redrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
@@ -9,33 +11,32 @@ namespace Crewmeleon_Redrawn.Buttons.Hider;
 
 public class PaintButton : CustomActionButton
 {
+    private const string PaintText = "Paint";
+    private const string StopPaintingText = "Close";
+
+    public override string Name => PaintText;
+    public override float Cooldown => 1;
+    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+
+    public override bool CanUse() => true;
+
+    public override bool Enabled(RoleBehaviour? role)
+    {
+        return role is HiderRole
+            && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
+    }
+
     protected override void OnClick()
     {
         if (PlayerControl.LocalPlayer.HasModifier<PaintingModifier>())
         {
-            OverrideName("Paint");
             PlayerControl.LocalPlayer.RpcRemoveModifier<PaintingModifier>();
+            OverrideName(PaintText);
         }
         else
         {
-            OverrideName("Stop Painting");
             PlayerControl.LocalPlayer.RpcAddModifier<PaintingModifier>();
+            OverrideName(StopPaintingText);
         }
     }
-
-    public override bool CanUse()
-    {
-        return true;
-    }
-
-    public override bool Enabled(RoleBehaviour? role)
-    {
-        return role is HiderRole;
-    }
-
-    public override string Name => "Paint";
-
-    public override float Cooldown => 1;
-
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
 }

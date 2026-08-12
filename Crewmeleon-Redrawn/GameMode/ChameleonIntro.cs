@@ -1,4 +1,5 @@
 using System.Collections;
+using MiraAPI.GameModes;
 using MiraAPI.Utilities;
 using PowerTools;
 using Reactor.Utilities;
@@ -63,12 +64,15 @@ public static class ChameleonIntro
         intro.ImpostorRules.SetActive(false);
 
         var hideTimer = ChameleonOptions.Gameplay.HideTime.Value;
-
+        
+        CustomGameModeManager.ActiveMode?.Initialize();
         if (ChameleonGameMode.AmImpostor)
             yield return PlaySeekerIntro(intro, hideTimer);
         else
+        {
             PlayHiderIntro(intro, impostor, hideTimer);
-
+            PlayerControl.LocalPlayer.moveable = true;
+        }
         ShipStatus.Instance.StartSFX();
         UnityEngine.Object.Destroy(intro.gameObject);
     }
@@ -76,7 +80,7 @@ public static class ChameleonIntro
     private static IEnumerator PlaySeekerIntro(IntroCutscene intro, float hideTimer)
     {
         intro.HideAndSeekTimerText.gameObject.SetActive(true);
-
+        
         var (poolablePlayer, anim) = GetSeekerVisual(intro);
 
         poolablePlayer.SetBodyCosmeticsVisible(false);
@@ -96,8 +100,10 @@ public static class ChameleonIntro
         {
             intro.HideAndSeekTimerText.text = Mathf.RoundToInt(hideTimer).ToString();
             hideTimer -= Time.deltaTime;
+            CustomGameModeManager.ActiveMode?.HudUpdate(HudManager.Instance);
             yield return null;
         }
+        if (CustomGameModeManager.ActiveMode is not ChameleonGameMode c) yield break;
     }
 
     private static (PoolablePlayer Visual, AnimationClip Anim) GetSeekerVisual(IntroCutscene intro)
