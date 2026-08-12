@@ -7,6 +7,8 @@ namespace Crewmeleon_Redrawn.GameMode;
 
 public class ChameleonGameMode : AbstractGameMode
 {
+    public static ChameleonGameMode? Instance => CustomGameModeManager.ActiveMode is ChameleonGameMode mode ? mode : null;
+
     public override string Name => "Crewmeleon";
     public override string Description => "You can run, but you can't hide!";
     public override Color Color { get; } = new Color32(150, 255, 90, 255);

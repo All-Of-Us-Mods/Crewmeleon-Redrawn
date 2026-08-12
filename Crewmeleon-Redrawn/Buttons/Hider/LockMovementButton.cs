@@ -1,3 +1,4 @@
+using Crewmeleon_Redrawn.GameMode;
 using Crewmeleon_Redrawn.Modifiers;
 using Crewmeleon_Redrawn.Roles;
 using MiraAPI.Hud;
@@ -16,21 +17,26 @@ public class LockMovementButton : CustomActionButton
     public override float Cooldown => 0;
     public override LoadableAsset<Sprite> Sprite => Assets.LockButton;
 
-    public bool Locked { get; private set; } = true;
+    public bool IsLocked { get; private set; } = true;
 
     public override bool CanUse() => true;
 
     public override bool Enabled(RoleBehaviour? role)
-        => role is HiderRole && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>();
+    {
+        return role is HiderRole 
+            && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()
+            && ChameleonGameMode.Instance is not null
+            && ChameleonGameMode.Instance.CurrentStage != TimerStage.Revelation;
+    }
 
     protected override void OnClick()
     {
-        Locked = !Locked;
+        IsLocked = !IsLocked;
 
-        PlayerControl.LocalPlayer.moveable = !Locked;
+        PlayerControl.LocalPlayer.moveable = !IsLocked;
         PlayerControl.LocalPlayer.NetTransform.Halt();
         
-        OverrideName(Locked ? UnlockText : LockText);
-        OverrideSprite(Locked ? Assets.UnlockButton.LoadAsset() : Assets.LockButton.LoadAsset());
+        OverrideName(IsLocked ? UnlockText : LockText);
+        OverrideSprite(IsLocked ? Assets.UnlockButton.LoadAsset() : Assets.LockButton.LoadAsset());
     }
 }
