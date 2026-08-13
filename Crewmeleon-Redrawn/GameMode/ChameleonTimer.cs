@@ -24,7 +24,7 @@ public enum TimerStage
 /// </summary>
 public class ChameleonTimer
 {
-    public TimerStage CurrentStage { get; private set; }
+    public TimerStage CurrentStage { get; private set; } = TimerStage.Hiding;
 
     public bool IsActive => timerBar is not null && timerBar;
 
