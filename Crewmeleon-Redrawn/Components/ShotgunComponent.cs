@@ -26,7 +26,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private int _lastNetworkedAngle = 0;
     private int _networkedThreshold = 15;
     private float _currentCooldown = 0f;
-    private readonly LayerMask _playerLayer = LayerMask.NameToLayer("Players");
+    private readonly LayerMask _uiLayer = LayerMask.NameToLayer("UI");
 
     private void Start()
     {
@@ -76,8 +76,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
 
         if (!Input.GetMouseButtonDown(0)) return;
-        if (PassiveButtonManager.Instance.currentOver != null && PassiveButtonManager.Instance.currentOver.gameObject.layer != _playerLayer) return;
-
+        if (PassiveButtonManager.Instance.currentOver != null && PassiveButtonManager.Instance.currentOver.gameObject.layer == _uiLayer) return;
         var worldPos = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
         Owner.RpcShootShotgun(worldPos, Palette.PlayerColors.Random(), Random.RandomRange(0.06f, 0.14f));
         _currentCooldown = OptionGroupSingleton<GameplayOptions>.Instance.ShotgunCooldown.Value;

@@ -118,13 +118,13 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         var overlayObj = new GameObject("Canvas");
         overlayObj.transform.SetParent(transform, false);
-        overlayObj.transform.localPosition = new Vector3(0, 0, -0.1f);
+        overlayObj.transform.localPosition = new Vector3(0, 0, -0.0001f);
         _canvasRend = overlayObj.AddComponent<SpriteRenderer>();
         _canvasRend.sprite = Sprite.Create(_texture, playerSprite.rect, pivot, playerSprite.pixelsPerUnit);
         
         var outlineObj = new GameObject("Outline");
         outlineObj.transform.SetParent(overlayObj.transform, false);
-        outlineObj.transform.localPosition = new Vector3(0, 0, -0.1f);
+        outlineObj.transform.localPosition = new Vector3(0, 0, -0.0005f);
         _outlineRend = outlineObj.AddComponent<SpriteRenderer>();
         var outlineOpacity = ChameleonOptions.Outline.OutlineStrengthOption.Value.Opacity();
         _outlineRend.sprite = CrewmeleonAssets.PlayerSpriteOutline.LoadAsset();

@@ -40,7 +40,7 @@ public class SplatterComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         {
             transform =
             {
-                position = new Vector3(pos.x, pos.y, 0.01f),
+                position = new Vector3(pos.x, pos.y, -0.1f),
                 localScale = new Vector3(size, size, 1)
             },
             layer = LayerMask.NameToLayer("Players")
