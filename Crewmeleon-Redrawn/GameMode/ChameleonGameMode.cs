@@ -19,6 +19,7 @@ public class ChameleonGameMode : AbstractGameMode
     public override bool ShowGameModeIntroCutscene => true;
     public override bool GameModeBodyTypeOverride => true;
     public override bool ShowNormalGameSettings => false;
+    public override bool ShowNormalRoleSettings => false;
 
     public TimerStage CurrentStage => Timer.CurrentStage;
 

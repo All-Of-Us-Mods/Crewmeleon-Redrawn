@@ -54,7 +54,7 @@ public class PlayerTracker
         _seekersLabel.text = $"Seekers: {alivePlayers.Count(x => x.Data && x.Data.Role && x.Data.Role.IsImpostor)}";
         
         //Positioning logic
-        _aspectPosition.DistanceFromEdge = new Vector3(0.23f, 0.23f, 0f);
+        _aspectPosition.DistanceFromEdge = new Vector3(0.25f, 0.35f, 0f);
         _aspectPosition.AdjustPosition();
         
         //Grid logic
