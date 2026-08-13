@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Components;
+namespace CrewmeleonRedrawn.Components;
 
 /// <summary>local players brush settings, stores HSV, opacity, and size/hardness</summary>
 public class BrushSettings

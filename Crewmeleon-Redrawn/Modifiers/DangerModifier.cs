@@ -4,7 +4,7 @@ using MiraAPI.Utilities;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Crewmeleon_Redrawn.Modifiers;
+namespace CrewmeleonRedrawn.Modifiers;
 
 public class DangerModifier : BaseModifier
 {

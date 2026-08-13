@@ -3,7 +3,7 @@ using Reactor.Networking.Attributes;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Networking;
+namespace CrewmeleonRedrawn.Networking;
 
 public static class TauntRpc
 {

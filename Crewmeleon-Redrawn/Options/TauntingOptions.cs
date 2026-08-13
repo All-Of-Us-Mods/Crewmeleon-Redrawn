@@ -2,7 +2,7 @@ using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
 using MiraAPI.Utilities;
 
-namespace Crewmeleon_Redrawn;
+namespace CrewmeleonRedrawn;
 
 public class TauntingOptions : AbstractOptionGroup
 {

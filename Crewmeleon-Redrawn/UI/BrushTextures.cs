@@ -1,8 +1,8 @@
-using Crewmeleon_Redrawn.Components;
+using CrewmeleonRedrawn.Components;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.UI;
+namespace CrewmeleonRedrawn.UI;
 
 /// <summary>
 /// the brush preview stays generated because it has to show the real falloff. everything else

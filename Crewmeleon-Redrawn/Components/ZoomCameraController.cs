@@ -1,10 +1,10 @@
-using Crewmeleon_Redrawn.Modifiers;
+using CrewmeleonRedrawn.Modifiers;
 using MiraAPI.Modifiers;
 using Reactor.Utilities.Attributes;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Components;
+namespace CrewmeleonRedrawn.Components;
 
 [RegisterInIl2Cpp]
 public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)

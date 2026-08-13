@@ -1,6 +1,6 @@
 using MiraAPI.GameOptions;
 
-namespace Crewmeleon_Redrawn.GameMode;
+namespace CrewmeleonRedrawn.GameMode;
 
 public static class ChameleonOptions
 {

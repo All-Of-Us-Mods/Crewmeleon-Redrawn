@@ -2,7 +2,7 @@ using Reactor.Utilities.Extensions;
 using TMPro;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.GameMode;
+namespace CrewmeleonRedrawn.GameMode;
 
 public static class TimerBarFactory
 {

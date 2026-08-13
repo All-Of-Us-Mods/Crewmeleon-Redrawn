@@ -3,7 +3,7 @@ using Reactor.Utilities.Extensions;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Crewmeleon_Redrawn.Components;
+namespace CrewmeleonRedrawn.Components;
 
 [RegisterInIl2Cpp]
 public class SplatterComponent(nint cppPtr) : MonoBehaviour(cppPtr)

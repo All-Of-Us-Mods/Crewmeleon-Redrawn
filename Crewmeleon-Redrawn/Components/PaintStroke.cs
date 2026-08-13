@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Components;
+namespace CrewmeleonRedrawn.Components;
 
 /// <summary>brush settings baked into a stroke so every client draws it the same</summary>
 public readonly struct BrushStamp(Color32 color, byte radius, byte opacity, byte hardness)

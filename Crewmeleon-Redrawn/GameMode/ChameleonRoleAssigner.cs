@@ -1,12 +1,12 @@
 using AmongUs.GameOptions;
 using BepInEx.Logging;
-using Crewmeleon_Redrawn.Roles;
+using CrewmeleonRedrawn.Roles;
 using MiraAPI.Roles;
 using MiraAPI.Utilities;
 using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 
-namespace Crewmeleon_Redrawn.GameMode;
+namespace CrewmeleonRedrawn.GameMode;
 
 /// <summary>
 /// Picks the seekers (forced first, then random) and assigns everyone else as hiders.

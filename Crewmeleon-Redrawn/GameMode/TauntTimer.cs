@@ -1,7 +1,7 @@
 using MiraAPI.Utilities;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.GameMode;
+namespace CrewmeleonRedrawn.GameMode;
 
 /// <summary>
 /// Drives the taunt cooldown bar and plays the periodic taunt sound.

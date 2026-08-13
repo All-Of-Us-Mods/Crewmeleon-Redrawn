@@ -3,7 +3,7 @@ using MiraAPI.Patches;
 using MiraAPI.Utilities;
 using Object = UnityEngine.Object;
 
-namespace Crewmeleon_Redrawn.Utilities;
+namespace CrewmeleonRedrawn.Utilities;
 
 public static class CustomButtonUtilities
 {

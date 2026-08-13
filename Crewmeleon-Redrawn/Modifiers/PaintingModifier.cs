@@ -1,10 +1,10 @@
 using System.Collections;
-using Crewmeleon_Redrawn.Components;
-using Crewmeleon_Redrawn.Utilities;
+using CrewmeleonRedrawn.Components;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Modifiers;
 using Reactor.Utilities;
 
-namespace Crewmeleon_Redrawn.Modifiers;
+namespace CrewmeleonRedrawn.Modifiers;
 
 public class PaintingModifier : BaseModifier
 {

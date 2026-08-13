@@ -1,13 +1,13 @@
 using System.Collections;
 using AmongUs.GameOptions;
-using Crewmeleon_Redrawn.Modifiers;
+using CrewmeleonRedrawn.Modifiers;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
 using Reactor.Utilities;
 using TMPro;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.GameMode;
+namespace CrewmeleonRedrawn.GameMode;
 
 public enum TimerStage
 {

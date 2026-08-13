@@ -1,14 +1,14 @@
 using AmongUs.GameOptions;
-using Crewmeleon_Redrawn.GameMode;
-using Crewmeleon_Redrawn.Networking;
-using Crewmeleon_Redrawn.Roles;
+using CrewmeleonRedrawn.Roles;
+using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Networking;
 using MiraAPI.Events;
 using MiraAPI.Events.Vanilla.Gameplay;
 using MiraAPI.GameModes;
 using MiraAPI.GameOptions;
 using MiraAPI.Roles;
 
-namespace Crewmeleon_Redrawn.Events;
+namespace CrewmeleonRedrawn.Events;
 
 public static class InfectionEvents
 {

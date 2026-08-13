@@ -1,15 +1,15 @@
 using System.Collections;
 using AmongUs.GameOptions;
 using BepInEx.Unity.IL2CPP.Utils;
-using Crewmeleon_Redrawn.GameMode;
-using Crewmeleon_Redrawn.Roles;
+using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Roles;
 using HarmonyLib;
 using MiraAPI.GameModes;
 using MiraAPI.Roles;
 using Reactor.Networking.Attributes;
 using Object = UnityEngine.Object;
 
-namespace Crewmeleon_Redrawn.Networking;
+namespace CrewmeleonRedrawn.Networking;
 
 public static class InfectionRpc
 {

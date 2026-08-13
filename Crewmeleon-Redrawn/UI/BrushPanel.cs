@@ -1,9 +1,9 @@
-using Crewmeleon_Redrawn.Buttons.Hider;
-using Crewmeleon_Redrawn.Components;
 using MiraAPI.GameOptions;
 using MiraAPI.Hud;
-using Crewmeleon_Redrawn.Modifiers;
-using Crewmeleon_Redrawn.Utilities;
+using CrewmeleonRedrawn.Utilities;
+using CrewmeleonRedrawn.Buttons.Hider;
+using CrewmeleonRedrawn.Components;
+using CrewmeleonRedrawn.Modifiers;
 using MiraAPI.Modifiers;
 using ReactUI.Core;
 using ReactUI.Hooks;
@@ -11,7 +11,7 @@ using UnityEngine;
 using S = ReactUI.Style;
 using static ReactUI.UI;
 
-namespace Crewmeleon_Redrawn.UI;
+namespace CrewmeleonRedrawn.UI;
 
 /// <summary>brush controls, only up while youre painting</summary>
 public static class BrushPanel

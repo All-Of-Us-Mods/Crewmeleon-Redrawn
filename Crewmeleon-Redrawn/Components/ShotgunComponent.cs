@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Linq;
-using Crewmeleon_Redrawn.Networking;
-using Crewmeleon_Redrawn.Utilities;
+using CrewmeleonRedrawn.Networking;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameOptions;
 using MiraAPI.Networking;
 using Reactor.Networking.Attributes;
@@ -11,7 +11,7 @@ using Reactor.Utilities.Extensions;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Crewmeleon_Redrawn.Components;
+namespace CrewmeleonRedrawn.Components;
 
 [RegisterInIl2Cpp]
 public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)

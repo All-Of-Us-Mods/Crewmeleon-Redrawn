@@ -1,7 +1,7 @@
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Components;
+namespace CrewmeleonRedrawn.Components;
 
 /// <summary>swatch of whatever colour is under the pointer while picking</summary>
 public class ColorPickPreview

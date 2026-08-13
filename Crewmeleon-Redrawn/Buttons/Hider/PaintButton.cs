@@ -1,13 +1,13 @@
-using Crewmeleon_Redrawn.GameMode;
-using Crewmeleon_Redrawn.Modifiers;
-using Crewmeleon_Redrawn.Roles;
-using Crewmeleon_Redrawn.Utilities;
+using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Modifiers;
+using CrewmeleonRedrawn.Roles;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Buttons.Hider;
+namespace CrewmeleonRedrawn.Buttons.Hider;
 
 public class PaintButton : CustomActionButton
 {

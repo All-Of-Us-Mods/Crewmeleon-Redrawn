@@ -1,4 +1,4 @@
-namespace Crewmeleon_Redrawn.Networking;
+namespace CrewmeleonRedrawn.Networking;
 
 public enum CrewmeleonRpc : uint
 {

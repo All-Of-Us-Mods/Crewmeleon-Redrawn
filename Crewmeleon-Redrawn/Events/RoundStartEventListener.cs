@@ -1,10 +1,10 @@
 ﻿using System.Collections;
-using Crewmeleon_Redrawn.Utilities;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Events;
 using MiraAPI.Events.Vanilla.Gameplay;
 using Reactor.Utilities;
 
-namespace Crewmeleon_Redrawn.Events;
+namespace CrewmeleonRedrawn.Events;
 
 /**
  * fix for ChameleonGameMode.Instance is not null / ChameleonGameMode.Instance.CurrentStage in button Enabled

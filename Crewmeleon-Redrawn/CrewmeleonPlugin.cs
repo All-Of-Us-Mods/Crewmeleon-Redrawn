@@ -1,7 +1,7 @@
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
-using Crewmeleon_Redrawn.UI;
+using CrewmeleonRedrawn.UI;
 using HarmonyLib;
 using Reactor;
 using Reactor.Networking;
@@ -11,7 +11,7 @@ using ReactUI.Plugin;
 using MiraAPI;
 using MiraAPI.PluginLoading;
 
-namespace Crewmeleon_Redrawn;
+namespace CrewmeleonRedrawn;
 
 [BepInAutoPlugin("dev.allofus.crewmeleon", "Crewmeleon: Redrawn")]
 [BepInProcess("Among Us.exe")]

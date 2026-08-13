@@ -1,7 +1,7 @@
 using UnityEngine;
 using S = ReactUI.Style;
 
-namespace Crewmeleon_Redrawn.UI;
+namespace CrewmeleonRedrawn.UI;
 
 /// <summary>
 /// Among Us styling — near-black fills inside heavy white outlines, with the game mode's green

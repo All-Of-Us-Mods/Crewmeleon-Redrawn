@@ -1,7 +1,7 @@
 using MiraAPI;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Utilities;
+namespace CrewmeleonRedrawn.Utilities;
 
 /// <summary>mouse on desktop, first touch on mobile</summary>
 public static class Pointer

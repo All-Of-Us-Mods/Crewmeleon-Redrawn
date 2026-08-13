@@ -1,7 +1,7 @@
-using Crewmeleon_Redrawn.Buttons.Hider;
-using Crewmeleon_Redrawn.GameMode;
-using Crewmeleon_Redrawn.Modifiers;
-using Crewmeleon_Redrawn.Utilities;
+using CrewmeleonRedrawn.Utilities;
+using CrewmeleonRedrawn.Buttons.Hider;
+using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Modifiers;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using MiraAPI.GameOptions;
 using MiraAPI.Hud;
@@ -13,7 +13,7 @@ using Reactor.Utilities.Extensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Crewmeleon_Redrawn.Components;
+namespace CrewmeleonRedrawn.Components;
 
 [RegisterInIl2Cpp]
 public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)

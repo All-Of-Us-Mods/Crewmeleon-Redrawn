@@ -1,12 +1,12 @@
 using System.Collections;
-using Crewmeleon_Redrawn.Roles;
+using CrewmeleonRedrawn.Roles;
 using MiraAPI.GameModes;
 using MiraAPI.Roles;
 using MiraAPI.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.GameMode;
+namespace CrewmeleonRedrawn.GameMode;
 
 public class ChameleonGameMode : AbstractGameMode
 {

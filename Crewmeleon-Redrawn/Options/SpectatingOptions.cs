@@ -1,7 +1,7 @@
 using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
 
-namespace Crewmeleon_Redrawn;
+namespace CrewmeleonRedrawn;
 
 public class SpectatingOptions : AbstractOptionGroup
 {

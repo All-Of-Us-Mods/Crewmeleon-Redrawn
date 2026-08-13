@@ -1,5 +1,5 @@
 using System.Collections;
-using Crewmeleon_Redrawn.GameMode;
+using CrewmeleonRedrawn.GameMode;
 using MiraAPI.GameModes;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace Crewmeleon_Redrawn.Modifiers;
+namespace CrewmeleonRedrawn.Modifiers;
 
 public class SpectatingModifier : BaseModifier
 {

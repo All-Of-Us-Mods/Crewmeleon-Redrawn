@@ -1,7 +1,7 @@
 using MiraAPI.Utilities.Assets;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn;
+namespace CrewmeleonRedrawn;
 
 public class CrewmeleonAssets
 {

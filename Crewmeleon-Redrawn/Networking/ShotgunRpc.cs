@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
-using Crewmeleon_Redrawn.Components;
-using Crewmeleon_Redrawn.Utilities;
+using CrewmeleonRedrawn.Utilities;
+using CrewmeleonRedrawn.Components;
 using MiraAPI.Networking;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
@@ -9,7 +9,7 @@ using Reactor.Utilities.Extensions;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Crewmeleon_Redrawn.Networking;
+namespace CrewmeleonRedrawn.Networking;
 
 public static class ShotgunRpc
 {

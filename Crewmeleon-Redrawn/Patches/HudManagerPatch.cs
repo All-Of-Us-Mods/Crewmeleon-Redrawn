@@ -1,9 +1,9 @@
-﻿using Crewmeleon_Redrawn.Components;
+﻿using CrewmeleonRedrawn.Components;
 using HarmonyLib;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Patches;
+namespace CrewmeleonRedrawn.Patches;
 
 [HarmonyPatch(typeof(HudManager))]
 public static class HudManagerPatch

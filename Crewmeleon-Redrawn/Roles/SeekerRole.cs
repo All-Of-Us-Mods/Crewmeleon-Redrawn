@@ -3,7 +3,7 @@ using MiraAPI.Patches.Stubs;
 using MiraAPI.Roles;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Roles;
+namespace CrewmeleonRedrawn.Roles;
 
 public class SeekerRole : ImpostorRole, ICustomRole
 {

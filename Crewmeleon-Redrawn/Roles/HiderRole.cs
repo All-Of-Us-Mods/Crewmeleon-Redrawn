@@ -1,12 +1,12 @@
-using Crewmeleon_Redrawn.Components;
-using Crewmeleon_Redrawn.Utilities;
+using CrewmeleonRedrawn.Utilities;
+using CrewmeleonRedrawn.Components;
 using MiraAPI.GameOptions;
 using MiraAPI.Patches.Stubs;
 using MiraAPI.Roles;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Roles;
+namespace CrewmeleonRedrawn.Roles;
 
 public class HiderRole : CrewmateRole, ICustomRole
 {

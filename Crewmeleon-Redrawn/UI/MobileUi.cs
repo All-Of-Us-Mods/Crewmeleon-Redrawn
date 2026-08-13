@@ -1,7 +1,7 @@
 using MiraAPI;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.UI;
+namespace CrewmeleonRedrawn.UI;
 
 /// <summary>drives the mobile layout from a desktop session while working on it</summary>
 public static class MobileUi

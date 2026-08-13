@@ -1,10 +1,9 @@
-﻿
-using Crewmeleon_Redrawn.Components;
+﻿using CrewmeleonRedrawn.Components;
 using HarmonyLib;
 using MiraAPI.GameOptions;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Patches;
+namespace CrewmeleonRedrawn.Patches;
 
 [HarmonyPatch(typeof(PlayerControl))]
 public static class PlayerControlPatch

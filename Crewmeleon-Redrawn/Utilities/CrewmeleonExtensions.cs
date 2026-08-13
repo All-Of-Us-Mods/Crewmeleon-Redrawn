@@ -1,7 +1,7 @@
-﻿using Crewmeleon_Redrawn.Components;
+﻿using CrewmeleonRedrawn.Components;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Utilities;
+namespace CrewmeleonRedrawn.Utilities;
 
 public static class CrewmeleonExtensions
 {

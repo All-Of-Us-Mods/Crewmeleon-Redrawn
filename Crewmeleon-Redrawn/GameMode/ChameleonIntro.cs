@@ -5,7 +5,7 @@ using PowerTools;
 using Reactor.Utilities;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.GameMode;
+namespace CrewmeleonRedrawn.GameMode;
 
 /// <summary>
 /// Replaces the vanilla intro cutscene with the hide and seek seeker/hider sequence.

@@ -1,13 +1,13 @@
-﻿using Crewmeleon_Redrawn.GameMode;
-using Crewmeleon_Redrawn.Modifiers;
-using Crewmeleon_Redrawn.Roles;
-using Crewmeleon_Redrawn.Utilities;
+﻿using CrewmeleonRedrawn.Modifiers;
+using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Roles;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
 using UnityEngine;
 
-namespace Crewmeleon_Redrawn.Buttons.Seeker;
+namespace CrewmeleonRedrawn.Buttons.Seeker;
 
 public class ShotgunButton : CustomActionButton
 {
