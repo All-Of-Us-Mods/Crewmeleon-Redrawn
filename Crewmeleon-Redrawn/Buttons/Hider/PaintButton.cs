@@ -16,7 +16,7 @@ public class PaintButton : CustomActionButton
 
     public override string Name => PaintText;
     public override float Cooldown => 1;
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+    public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.PaintButton;
 
     public override bool CanUse() => true;
 
