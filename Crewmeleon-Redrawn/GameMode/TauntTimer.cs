@@ -1,4 +1,5 @@
 using MiraAPI.Utilities;
+using Reactor.Utilities.Extensions;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.GameMode;
@@ -13,7 +14,7 @@ public class TauntTimer
     private float timeLeft;
     private float maxTime;
 
-    public void Begin(HudManager hud)
+    public void Begin()
     {
         // create the taunt timer bar and label if taunting is enabled
         if (!ChameleonOptions.Taunting.TauntingEnabled)
@@ -22,7 +23,7 @@ public class TauntTimer
         maxTime = ChameleonOptions.Taunting.TauntCooldown.Value;
         timeLeft = maxTime;
 
-        tauntBar = TimerBarFactory.Create(hud, Color.yellow, 0.75f, "NEXT TAUNT", out _);
+        tauntBar = TimerBarFactory.Create(HudManager.Instance, Color.yellow, 0.75f, "NEXT TAUNT", out _);
         tauntBar.transform.localScale *= 0.7f;
     }
 
@@ -45,5 +46,10 @@ public class TauntTimer
         var tauntSfx = GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideCountdownSFX;
         foreach (var playerControl in Helpers.GetAlivePlayers().Where(x => !x.AmOwner))
             AudioSource.PlayClipAtPoint(tauntSfx, playerControl.GetTruePosition(), 0.1f);
+    }
+
+    public void End()
+    {
+        tauntBar?.gameObject.Destroy();
     }
 }

@@ -28,7 +28,7 @@ public class ChameleonGameMode : AbstractGameMode
                                       && (!AmImpostor || ChameleonOptions.Chat.SeekerCanSeeChat.Value);
 
     private readonly ChameleonTimer _timer = new();
-    private readonly TauntTimer _tauntTimer = new();
+    public readonly TauntTimer TauntTimer = new();
 
     private int deadPlayerCount;
 
@@ -48,7 +48,6 @@ public class ChameleonGameMode : AbstractGameMode
         hud.TaskStuff.gameObject.SetActive(false);
 
         _timer.Begin(hud);
-        _tauntTimer.Begin(hud);
     }
 
     public override void HudUpdate(HudManager instance)
@@ -60,7 +59,7 @@ public class ChameleonGameMode : AbstractGameMode
         instance.Chat.gameObject.SetActive(CanUseChat);
 
         _timer.Update();
-        _tauntTimer.Update();
+        TauntTimer.Update();
     }
 
     public override IEnumerator IntroCutscene(IntroCutscene intro)

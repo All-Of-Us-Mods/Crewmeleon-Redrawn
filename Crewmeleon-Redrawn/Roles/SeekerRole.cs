@@ -27,6 +27,6 @@ public class SeekerRole : ImpostorRole, ICustomRole
     {
         RoleBehaviourStubs.Initialize(this, player);
 
-        player.cosmetics.currentBodySprite.BodySprite.transform.parent.localPosition = new Vector3(0, 0, -0.4f);
+        player.cosmetics.currentBodySprite.BodySprite.transform.parent.localPosition = new Vector3(0, 0, -0.5f);
     }
 }

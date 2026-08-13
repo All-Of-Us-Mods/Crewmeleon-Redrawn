@@ -1,6 +1,7 @@
 using System.Collections;
 using AmongUs.GameOptions;
 using CrewmeleonRedrawn.Modifiers;
+using MiraAPI.GameModes;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
 using Reactor.Utilities;
@@ -100,7 +101,10 @@ public class ChameleonTimer
         SetBarColor(Palette.ImpostorRed);
 
         SoundManager.Instance.PlaySound(GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX, false, 1);
-
+        
+        var gamemode = CustomGameModeManager.ActiveMode as ChameleonGameMode;
+        gamemode?.TauntTimer.Begin();
+        
         // allow the seeker to move when the seeking stage starts
         if (ChameleonGameMode.AmImpostor && PlayerControl.LocalPlayer.MyPhysics.Speed <= 0)
         {
@@ -125,6 +129,9 @@ public class ChameleonTimer
         if (PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>())
             PlayerControl.LocalPlayer.RpcRemoveModifier<SpectatingModifier>();
 
+        var gamemode = CustomGameModeManager.ActiveMode as ChameleonGameMode;
+        gamemode?.TauntTimer.End();
+        
         // give each hider a revelation period
         if (ChameleonOptions.Gameplay.RevelationTimePerPlayer.Value > 0 && hiders.Count > 0)
         {
@@ -163,6 +170,9 @@ public class ChameleonTimer
         if (PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>())
             PlayerControl.LocalPlayer.RemoveModifier<SpectatingModifier>();
 
+        PlayerControl.LocalPlayer.moveable = false;
+        PlayerControl.LocalPlayer.NetTransform.Halt();
+        PlayerControl.LocalPlayer.MyPhysics.Speed = 0;
         HudManager.Instance.ShadowQuad.enabled = false;
 
         foreach (var player in players)
