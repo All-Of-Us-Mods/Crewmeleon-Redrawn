@@ -52,7 +52,6 @@ public class ChameleonTimer
 
         timeLeft -= Time.deltaTime;
         timerBar.UpdateTimer(timeLeft, maxTime);
-
         // prevent the seekers from moving in the hiding stage
         if (CurrentStage == TimerStage.Hiding)
             HoldSeekerStill();

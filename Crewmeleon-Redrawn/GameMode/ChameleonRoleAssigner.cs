@@ -53,6 +53,7 @@ public static class ChameleonRoleAssigner
         var seekers = new List<PlayerControl>();
         foreach (var info in forced)
         {
+            if (info == null)  continue;
             if (seekers.Contains(info.Object))
             {
                 Log.LogError($"Failed to assign seeker to {info.PlayerName}, they are already assigned as a seeker.");

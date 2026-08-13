@@ -29,6 +29,7 @@ public class ChameleonGameMode : AbstractGameMode
 
     public readonly ChameleonTimer Timer = new();
     public readonly TauntTimer TauntTimer = new();
+    public readonly PlayerTracker PlayerTracker = new();
 
     private int deadPlayerCount;
 
@@ -50,6 +51,7 @@ public class ChameleonGameMode : AbstractGameMode
         hud.TaskStuff.gameObject.SetActive(false);
 
         Timer.Begin(hud);
+        PlayerTracker.Begin(hud);
     }
 
     public override void HudUpdate(HudManager instance)
@@ -64,6 +66,7 @@ public class ChameleonGameMode : AbstractGameMode
         instance.Chat.gameObject.SetActive(CanUseChat);
 
         Timer.Update();
+        PlayerTracker.Update();
         if (CurrentStage == TimerStage.Seeking) TauntTimer.Update();
     }
 

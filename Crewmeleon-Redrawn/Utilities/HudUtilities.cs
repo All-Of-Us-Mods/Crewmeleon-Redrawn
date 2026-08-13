@@ -17,9 +17,9 @@ public static class HudUtilities
         aspectPosition.Alignment = AspectPosition.EdgeAlignments.Top;
         aspectPosition.DistanceFromEdge = new Vector3(0, distanceFromTop, 0);
         aspectPosition.AdjustPosition();
-
+        
+        bar.timeText.GetComponent<TextTranslatorTMP>().Destroy();
         label = GameObject.Instantiate(bar.timeText, bar.transform);
-        label.GetComponent<TextTranslatorTMP>().Destroy();
         label.transform.position += new Vector3(LabelOffsetX, 0, 0);
         label.alignment = TextAlignmentOptions.Right;
         label.text = text;
