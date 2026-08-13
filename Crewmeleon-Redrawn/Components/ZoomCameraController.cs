@@ -17,7 +17,7 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
     private RenderTexture _camRenderTex;
     private FollowerCamera _followerCamera;
     private float _zoomSize = 1f;
-    private Vector2 centerPosition;
+    private Vector2 _centerPosition;
 
     private const float ZoomRendFraction = 0.75f;
 
@@ -98,8 +98,8 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
        _zoomFrame.gameObject.SetActive(show);
         if (show)
         {
-            centerPosition = _followerCamera.Target.transform.position + (Vector3)_followerCamera.Offset;
-            transform.position = centerPosition;
+            _centerPosition = _followerCamera.Target.transform.position + (Vector3)_followerCamera.Offset;
+            transform.position = _centerPosition;
         }
     }
 
@@ -114,8 +114,8 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         UpdateRendDisplaySize();
         HandleScrollZoom();
 
-        centerPosition = Vector3.Lerp(centerPosition, _followerCamera.Target.transform.position + (Vector3)_followerCamera.Offset, 5f * Time.deltaTime);
-        transform.position = centerPosition;
+        _centerPosition = Vector3.Lerp(_centerPosition, _followerCamera.Target.transform.position + (Vector3)_followerCamera.Offset, 5f * Time.deltaTime);
+        transform.position = _centerPosition;
     }
 
     private void HandleScrollZoom()
