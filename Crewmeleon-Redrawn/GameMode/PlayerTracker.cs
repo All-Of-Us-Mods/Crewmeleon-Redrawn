@@ -31,12 +31,12 @@ public class PlayerTracker
     {
         _tracker = hud.CrewmatesKilled;
         _aspectPosition = _tracker?.gameObject.GetComponent<AspectPosition>();
-        _gridArrange = _tracker?.gameObject.GetComponent<GridArrange>();
+        _gridArrange = _tracker?.gameObject.AddComponent<GridArrange>();
         _gridArrange?.Alignment = GridArrange.StartAlign.Right;
-        _hidersLabel = Helpers.CreateTextLabel("HidersLabel", _tracker.transform, AspectPosition.EdgeAlignments.Left,
+        _hidersLabel = Helpers.CreateTextLabel("HidersLabel", hud.transform, AspectPosition.EdgeAlignments.Left,
             new Vector3(0.5f, 1.23f, 0), textAlignment: TextAlignmentOptions.Left);
         _hidersLabel.color = Palette.CrewmateBlue;
-        _seekersLabel = Helpers.CreateTextLabel("SeekersLabel", _tracker.transform, AspectPosition.EdgeAlignments.Top,
+        _seekersLabel = Helpers.CreateTextLabel("SeekersLabel", hud.transform, AspectPosition.EdgeAlignments.Top,
             new Vector3(1.5f, 1.23f, 0), textAlignment: TextAlignmentOptions.Right);
         _seekersLabel.color = Palette.ImpostorRoleRed;
         allTrackedPlayers = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data && x.Data.Role && !x.Data.Role.IsImpostor).ToList();
@@ -54,11 +54,13 @@ public class PlayerTracker
         _seekersLabel.text = $"Seekers: {alivePlayers.Count(x => x.Data && x.Data.Role && x.Data.Role.IsImpostor)}";
         
         //Positioning logic
-        _aspectPosition.DistanceFromEdge = new Vector3(0.5f, 0.73f, 0f);
+        _aspectPosition.DistanceFromEdge = new Vector3(0.23f, 0.23f, 0f);
+        _aspectPosition.AdjustPosition();
         
         //Grid logic
         _gridArrange.MaxColumns = maxPlayers / 2;
         _gridArrange.CellSize = new Vector2(trackerLength / _gridArrange.cells.Count, -0.75f);
+        _gridArrange.ArrangeChilds();
         
         //Percentage logic
         var deadPlayers = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data && x.Data.IsDead).ToList();
