@@ -14,7 +14,6 @@ public static class HudManagerPatch
     {
         var mainCam = Camera.main!;
         var camObj = new GameObject("ZoomCamera");
-        camObj.transform.SetParent(mainCam.transform, false);
         camObj.AddComponent<ZoomCameraController>();
     }
 }
