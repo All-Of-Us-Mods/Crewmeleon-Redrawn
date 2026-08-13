@@ -26,7 +26,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     private int _lastNetworkedAngle = 0;
     private int _networkedThreshold = 15;
     private float _currentCooldown = 0f;
-    private readonly LayerMask _uiLayerMask = LayerMask.GetMask("UI");
+    private readonly LayerMask _playerLayer = LayerMask.NameToLayer("Players");
 
     private void Start()
     {
@@ -75,10 +75,8 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             return;
         }
 
-        var uiCovered = PassiveButtonManager.Instance.currentOver != null &&
-                        PassiveButtonManager.Instance.currentOver.gameObject.layer == _uiLayerMask;
-
-        if (!Input.GetMouseButtonDown(0) || uiCovered) return;
+        if (!Input.GetMouseButtonDown(0)) return;
+        if (PassiveButtonManager.Instance.currentOver != null && PassiveButtonManager.Instance.currentOver.gameObject.layer != _playerLayer) return;
 
         var worldPos = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
         Owner.RpcShootShotgun(worldPos, Palette.PlayerColors.Random(), Random.RandomRange(0.06f, 0.14f));

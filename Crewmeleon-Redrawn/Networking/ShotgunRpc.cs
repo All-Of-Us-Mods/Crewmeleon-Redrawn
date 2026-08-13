@@ -30,10 +30,12 @@ public static class ShotgunRpc
     {
         if (!shooter.GetPlayerShotgun(out var shotgun)) yield break;
 
-        var shot = Physics2D.OverlapCircle(pos, 0.5f, LayerMask.GetMask("Players"));
+        var shot = Physics2D.OverlapCircle(pos, 0.5f, Constants.LivingPlayersOnlyMask);
         PlayerControl? plr = null;
         if (shot && shot.gameObject.TryGetComponent(out plr))
         {
+            if (plr == shooter) yield break;
+
             shooter.CustomMurder(plr!, MurderResultFlags.Succeeded, teleportMurderer: false);
         }
 
