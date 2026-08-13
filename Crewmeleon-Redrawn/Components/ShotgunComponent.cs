@@ -44,7 +44,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         };
 
         _handsRend = hands.AddComponent<SpriteRenderer>();
-        _handsRend.sprite = Assets.Hands.LoadAsset();
+        _handsRend.sprite = CrewmeleonAssets.Hands.LoadAsset();
         
         var muzzle = new GameObject("Muzzle")
         {
@@ -58,7 +58,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         };
 
         _muzzleRend = muzzle.AddComponent<SpriteRenderer>();
-        _muzzleRend.sprite = Assets.MuzzleFlash.LoadAsset();
+        _muzzleRend.sprite = CrewmeleonAssets.MuzzleFlash.LoadAsset();
         muzzle.gameObject.SetActive(false);
 
         Coroutines.Start(CoUpdateHandColor(Owner, _handsRend));
@@ -161,7 +161,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             layer = player.gameObject.layer
         };
         var spriteRend = shotgunObj.AddComponent<SpriteRenderer>();
-        spriteRend.sprite = Assets.Shotgun.LoadAsset();
+        spriteRend.sprite = CrewmeleonAssets.Shotgun.LoadAsset();
 
         var shotgun = shotgunObj.AddComponent<ShotgunComponent>();
         shotgun.Owner = player;

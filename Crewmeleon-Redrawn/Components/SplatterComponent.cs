@@ -47,7 +47,7 @@ public class SplatterComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         };
 
         var spriteRenderer = obj.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = Assets.SplatterSprites.Random()?.LoadAsset();
+        spriteRenderer.sprite = CrewmeleonAssets.SplatterSprites.Random()?.LoadAsset();
         spriteRenderer.color = new Color32(color.r, color.g, color.b, 150);
 
         obj.AddComponent<SplatterComponent>();

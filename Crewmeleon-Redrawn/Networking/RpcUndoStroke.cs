@@ -5,7 +5,7 @@ using Reactor.Networking.Attributes;
 using Reactor.Networking.Rpc;
 using Reactor.Utilities;
 
-[RegisterCustomRpc((uint)RPCCalls.UndoStroke)]
+[RegisterCustomRpc((uint)CrewmeleonRpc.UndoStroke)]
 public class RpcUndoStroke(CrewmeleonRedrawnPlugin plugin, uint id)
     : PlayerCustomRpc<CrewmeleonRedrawnPlugin>(plugin, id)
 {

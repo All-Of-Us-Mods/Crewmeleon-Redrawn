@@ -1,8 +1,8 @@
 namespace Crewmeleon_Redrawn.Networking;
 
-public enum RPCCalls
+public enum CrewmeleonRpc : uint
 {
-    Taunt = 0,
+    Taunt,
     Infect,
     SendStroke,
     UndoStroke,

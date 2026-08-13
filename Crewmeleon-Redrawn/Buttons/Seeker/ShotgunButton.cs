@@ -30,7 +30,7 @@ public class ShotgunButton : CustomActionButton
         if (!hasShotgun) return;
         
         _equipped = !_equipped;
-        Cursor.SetCursor(_equipped ? Assets.TargetSprite.LoadAsset().texture : null, CursorMode.Auto);
+        Cursor.SetCursor(_equipped ? CrewmeleonAssets.TargetSprite.LoadAsset().texture : null, CursorMode.Auto);
         shotgun!.gameObject.SetActive(_equipped);
     }
 }

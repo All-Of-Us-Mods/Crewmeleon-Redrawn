@@ -13,7 +13,7 @@ namespace Crewmeleon_Redrawn.Networking;
 
 public static class InfectionRpc
 {
-    [MethodRpc((uint)RPCCalls.Infect)]
+    [MethodRpc((uint)CrewmeleonRpc.Infect)]
     public static void RpcInfect(PlayerControl target)
     {
         var seekerRole = RoleId.Get<SeekerRole>();

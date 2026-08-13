@@ -7,7 +7,7 @@ namespace Crewmeleon_Redrawn.Networking;
 
 public static class TauntRpc
 {
-    [MethodRpc((uint)RPCCalls.Taunt)]
+    [MethodRpc((uint)CrewmeleonRpc.Taunt)]
     public static void RpcTaunt(this PlayerControl source)
     {
         AudioSource.PlayClipAtPoint(TauntSounds.Random()?.LoadAsset(), source.GetTruePosition(), 0.4f);

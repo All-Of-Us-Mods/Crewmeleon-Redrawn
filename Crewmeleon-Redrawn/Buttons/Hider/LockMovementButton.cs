@@ -16,7 +16,7 @@ public class LockMovementButton : CustomActionButton
 
     public override string Name => LockText;
     public override float Cooldown => 0;
-    public override LoadableAsset<Sprite> Sprite => Assets.LockButton;
+    public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.LockButton;
 
     public bool IsLocked { get; private set; } = true;
 
@@ -37,6 +37,6 @@ public class LockMovementButton : CustomActionButton
         PlayerControl.LocalPlayer.NetTransform.Halt();
         
         OverrideName(IsLocked ? UnlockText : LockText);
-        OverrideSprite(IsLocked ? Assets.UnlockButton.LoadAsset() : Assets.LockButton.LoadAsset());
+        OverrideSprite(IsLocked ? CrewmeleonAssets.UnlockButton.LoadAsset() : CrewmeleonAssets.LockButton.LoadAsset());
     }
 }

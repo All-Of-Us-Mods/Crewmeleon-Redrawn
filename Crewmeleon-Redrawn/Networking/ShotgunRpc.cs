@@ -13,14 +13,14 @@ namespace Crewmeleon_Redrawn.Networking;
 
 public static class ShotgunRpc
 {
-    [MethodRpc((uint)RPCCalls.SyncShotgun)]
+    [MethodRpc((uint)CrewmeleonRpc.SyncShotgun)]
     public static void RpcSyncShotgun(this PlayerControl player, int zRot)
     {
         if (!player.GetPlayerShotgun(out var shotgun)) return;
         shotgun!.ZRotation = zRot;
     }
 
-    [MethodRpc((uint)RPCCalls.ShootShotgun)]
+    [MethodRpc((uint)CrewmeleonRpc.ShootShotgun)]
     public static void RpcShootShotgun(this PlayerControl shooter, Vector2 position, Color32 splatterColor, float splatterSize)
     {
         Coroutines.Start(CoShoot(shooter, position, splatterColor, splatterSize));
@@ -39,7 +39,7 @@ public static class ShotgunRpc
             shooter.CustomMurder(plr!, MurderResultFlags.Succeeded, teleportMurderer: false);
         }
 
-        AudioSource.PlayClipAtPoint(Assets.ShotgunFireSound.LoadAsset(), shooter.GetTruePosition(), 0.5f);
+        AudioSource.PlayClipAtPoint(CrewmeleonAssets.ShotgunFireSound.LoadAsset(), shooter.GetTruePosition(), 0.5f);
 
         if (shooter.AmOwner)
         {
