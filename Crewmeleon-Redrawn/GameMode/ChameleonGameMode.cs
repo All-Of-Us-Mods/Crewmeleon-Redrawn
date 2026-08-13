@@ -41,7 +41,7 @@ public class ChameleonGameMode : AbstractGameMode
         ChameleonRoleAssigner.AssignRoles();
     }
 
-    public void Setup()
+    public override void Initialize()
     {
         ShipStatus.Instance.BreakEmergencyButton();
 
@@ -70,6 +70,7 @@ public class ChameleonGameMode : AbstractGameMode
         instance.ReportButton.gameObject.SetActive(false);
         instance.SabotageButton.gameObject.SetActive(false);
         instance.ImpostorVentButton.gameObject.SetActive(false);
+        instance.KillButton.gameObject.SetActive(false);
         instance.Chat.gameObject.SetActive(CanUseChat);
 
         Timer.Update();
@@ -79,7 +80,6 @@ public class ChameleonGameMode : AbstractGameMode
 
     public override IEnumerator IntroCutscene(IntroCutscene intro)
     {
-        Setup();
         deadPlayerCount = 0;
         return ChameleonIntro.Play(intro);
     }

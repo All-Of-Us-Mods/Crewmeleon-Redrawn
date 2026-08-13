@@ -39,13 +39,13 @@ public class GameplayOptions : AbstractOptionGroup
         new ModdedNumberOption("Seek Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
 
     public ModdedNumberOption ShotgunCooldown { get; } =
-        new ModdedNumberOption("Seeker Shot Cooldown", 2, 0.5f, 15, 1, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
+        new ModdedNumberOption("Seeker Shot Cooldown", 2.5f, 0.5f, 15, 1, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
     
     public ModdedNumberOption RevelationTimePerPlayer { get; } =
         new ModdedNumberOption("Revelation time per Player", 5, 0, 30, 1, "0", "0", MiraNumberSuffixes.Seconds);
 
     public ModdedToggleOption InfectionMode { get; } =
-        new ModdedToggleOption("InfectionMode", false);
+        new ModdedToggleOption("Infection Mode", false);
     
     public ModdedToggleOption AlwaysOnTop { get; } =
         new ModdedToggleOption("Hiders Always On Top Of Objects", true)

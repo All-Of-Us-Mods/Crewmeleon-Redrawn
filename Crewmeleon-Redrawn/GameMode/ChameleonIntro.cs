@@ -65,7 +65,6 @@ public static class ChameleonIntro
 
         var hideTimer = ChameleonOptions.Gameplay.HideTime.Value;
         
-        //CustomGameModeManager.ActiveMode?.Initialize();
         if (ChameleonGameMode.AmImpostor)
             yield return PlaySeekerIntro(intro, hideTimer);
         else
