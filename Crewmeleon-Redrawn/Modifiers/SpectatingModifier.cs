@@ -1,5 +1,6 @@
 using System.Collections;
 using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameModes;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
@@ -18,9 +19,9 @@ public class SpectatingModifier : BaseModifier
     public override string ModifierName => "Spectating";
     public override bool HideOnUi => true;
 
-    private int targetIndex = 0;
-
-    private GameObject? spectateControls;
+    private int _targetIndex;
+    private GameObject? _spectateControls;
+    private bool _wasMoveable;
 
     public override void OnActivate()
     {
@@ -28,10 +29,13 @@ public class SpectatingModifier : BaseModifier
         {
             chameleon.OnBeginSpectate(Player);
         }
+
         if (!Player.AmOwner) return;
         Coroutines.Start(CoBegin());
         HudManager.Instance.ShadowQuad.enabled = false;
-        this.Player.moveable = false;
+
+        _wasMoveable = Player.moveable;
+        Player.DisableMovement();
     }
 
     public override void OnDeactivate()
@@ -40,10 +44,11 @@ public class SpectatingModifier : BaseModifier
         {
             chameleon.OnStopSpectate(Player);
         }
+
         if (!Player.AmOwner) return;
         Coroutines.Start(CoEnd());
         HudManager.Instance.ShadowQuad.enabled = true;
-        this.Player.moveable = true;
+        Player.moveable = _wasMoveable;
 
         HudManager.Instance.PlayerCam.Target = Player;
     }
@@ -59,10 +64,10 @@ public class SpectatingModifier : BaseModifier
         
         yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.clear, Color.black, 0.5f));
         
-        targetIndex = 0;
+        _targetIndex = 0;
         CreateControls();
 
-        var target = GetSpectateTargets()[targetIndex];
+        var target = GetSpectateTargets()[_targetIndex];
         SnapCamToTarget(target);
 
         yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.5f));
@@ -72,8 +77,8 @@ public class SpectatingModifier : BaseModifier
     {
         yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.clear, Color.black, 0.3f));
         
-        if(spectateControls is not null && spectateControls)
-            spectateControls.gameObject.Destroy();
+        if(_spectateControls is not null && _spectateControls)
+            _spectateControls.gameObject.Destroy();
 
         yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.2f));
         
@@ -88,23 +93,23 @@ public class SpectatingModifier : BaseModifier
     private void CreateControls()
     {
         // create the spectate controls container
-        spectateControls = new GameObject("SpectateControls");
-        spectateControls.transform.SetParent(HudManager.Instance.transform);
+        _spectateControls = new GameObject("SpectateControls");
+        _spectateControls.transform.SetParent(HudManager.Instance.transform);
 
-        var controlsAspectPos = spectateControls.AddComponent<AspectPosition>();
+        var controlsAspectPos = _spectateControls.AddComponent<AspectPosition>();
         controlsAspectPos.Alignment = AspectPosition.EdgeAlignments.LeftBottom;
         controlsAspectPos.DistanceFromEdge = new Vector3(2.5f, 0.75f, 0);
         controlsAspectPos.AdjustPosition();
         
         // create the target player name label
-        var label = Helpers.CreateTextLabel("TargetName", spectateControls.transform, AspectPosition.EdgeAlignments.Bottom, Vector3.down, 4);
-        label.text = GetSpectateTargets()[targetIndex].Data.PlayerName;
+        var label = Helpers.CreateTextLabel("TargetName", _spectateControls.transform, AspectPosition.EdgeAlignments.Bottom, Vector3.down, 4);
+        label.text = GetSpectateTargets()[_targetIndex].Data.PlayerName;
         label.GetComponent<AspectPosition>().Destroy();
         label.transform.localPosition = Vector3.zero;
         
         // create the spectate next player button
         var nextButton = new GameObject("NextButton").AddComponent<PassiveButton>();
-        nextButton.transform.SetParent(spectateControls.transform);
+        nextButton.transform.SetParent(_spectateControls.transform);
         nextButton.gameObject.layer = LayerMask.NameToLayer("UI");
 
         nextButton.OnClick = new Button.ButtonClickedEvent();
@@ -132,15 +137,15 @@ public class SpectatingModifier : BaseModifier
         nextButton.transform.position = label.transform.position + new Vector3(2, 0, 0);
         
         // copy the next player button to create the previous player button
-        var prevButton = GameObject.Instantiate(nextButton, spectateControls.transform, true);
+        var prevButton = GameObject.Instantiate(nextButton, _spectateControls.transform, true);
         prevButton.OnClick = new Button.ButtonClickedEvent();
         prevButton.OnClick.AddListener((UnityAction)(() => SpectatePreviousTarget(label)));
         prevButton.transform.position = label.transform.position - new Vector3(2, 0, 0);
 
-        spectateControls.transform.localScale = Vector3.one * 0.7f;
+        _spectateControls.transform.localScale = Vector3.one * 0.7f;
         
         // create the stop spectating button
-        var stopButton = GameObject.Instantiate(HudManager.Instance.GameMenu.Tabs[0].Content.transform.FindChild("LeaveGameButton"), spectateControls.transform).GetComponent<PassiveButton>();
+        var stopButton = GameObject.Instantiate(HudManager.Instance.GameMenu.Tabs[0].Content.transform.FindChild("LeaveGameButton"), _spectateControls.transform).GetComponent<PassiveButton>();
         stopButton.OnClick = new Button.ButtonClickedEvent();
         stopButton.OnClick.AddListener((UnityAction)(() => Player.RpcRemoveModifier<SpectatingModifier>()));
 
@@ -159,22 +164,22 @@ public class SpectatingModifier : BaseModifier
     {
         var targets = GetSpectateTargets();
 
-        if (++targetIndex >= targets.Count)
-            targetIndex = 0;
+        if (++_targetIndex >= targets.Count)
+            _targetIndex = 0;
 
-        targetLabel.text = targets[targetIndex].Data.PlayerName;
-        SnapCamToTarget(targets[targetIndex]);
+        targetLabel.text = targets[_targetIndex].Data.PlayerName;
+        SnapCamToTarget(targets[_targetIndex]);
     }
 
     private void SpectatePreviousTarget(TextMeshPro targetLabel)
     {
         var targets = GetSpectateTargets();
 
-        if (--targetIndex < 0)
-            targetIndex = targets.Count - 1;
+        if (--_targetIndex < 0)
+            _targetIndex = targets.Count - 1;
 
-        targetLabel.text = targets[targetIndex].Data.PlayerName;
-        SnapCamToTarget(targets[targetIndex]);
+        targetLabel.text = targets[_targetIndex].Data.PlayerName;
+        SnapCamToTarget(targets[_targetIndex]);
     }
 
     private static void SnapCamToTarget(PlayerControl target)

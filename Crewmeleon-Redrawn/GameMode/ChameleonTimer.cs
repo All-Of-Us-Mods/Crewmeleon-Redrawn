@@ -33,7 +33,6 @@ public class ChameleonTimer
 
     private float timeLeft;
     private float maxTime;
-    private float defaultSeekerSpeed;
     private bool paused = true;
     private string StageText => CurrentStage.ToString().ToUpperInvariant();
 
@@ -100,11 +99,7 @@ public class ChameleonTimer
         if (!ChameleonGameMode.AmImpostor || PlayerControl.LocalPlayer.MyPhysics.Speed == 0)
             return;
 
-        defaultSeekerSpeed = PlayerControl.LocalPlayer.MyPhysics.Speed;
-
-        PlayerControl.LocalPlayer.moveable = false;
-        PlayerControl.LocalPlayer.NetTransform.Halt();
-        PlayerControl.LocalPlayer.MyPhysics.Speed = 0;
+        PlayerControl.LocalPlayer.DisableMovement();
     }
 
     private void SetupSeekingStage()
@@ -121,7 +116,6 @@ public class ChameleonTimer
         if (ChameleonGameMode.AmImpostor && PlayerControl.LocalPlayer.MyPhysics.Speed <= 0)
         {
             PlayerControl.LocalPlayer.moveable = true;
-            PlayerControl.LocalPlayer.MyPhysics.Speed = defaultSeekerSpeed;
         }
     }
 
