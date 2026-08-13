@@ -14,16 +14,23 @@ public class PaintButton : CustomActionButton
     private const string PaintText = "Paint";
     private const string StopPaintingText = "Close";
 
+    public override ButtonLocation Location =>
+        CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
+
     public override string Name => PaintText;
     public override float Cooldown => 1;
     public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.PaintButton;
 
-    public override bool CanUse() => true;
+    public override bool CanUse()
+    {
+        return true;
+    }
 
     public override bool Enabled(RoleBehaviour? role)
     {
         return role is HiderRole
-            && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
+               && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } ||
+                   CustomButtonUtilities.IsInPractice());
     }
 
     protected override void OnClick()

@@ -16,17 +16,25 @@ public class LockMovementButton : CustomActionButton
 
     public override string Name => LockText;
     public override float Cooldown => 0;
+
+    public override ButtonLocation Location =>
+        CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
+
     public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.LockButton;
 
     public bool IsLocked { get; private set; } = true;
 
-    public override bool CanUse() => true;
+    public override bool CanUse()
+    {
+        return true;
+    }
 
     public override bool Enabled(RoleBehaviour? role)
     {
         return role is HiderRole
                && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()
-               && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
+               && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } ||
+                   CustomButtonUtilities.IsInPractice());
     }
 
     protected override void OnClick()
@@ -35,7 +43,7 @@ public class LockMovementButton : CustomActionButton
 
         PlayerControl.LocalPlayer.moveable = !IsLocked;
         PlayerControl.LocalPlayer.NetTransform.Halt();
-        
+
         OverrideName(IsLocked ? UnlockText : LockText);
         OverrideSprite(IsLocked ? CrewmeleonAssets.UnlockButton.LoadAsset() : CrewmeleonAssets.LockButton.LoadAsset());
     }

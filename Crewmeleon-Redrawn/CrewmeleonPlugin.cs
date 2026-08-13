@@ -26,11 +26,13 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
     public Harmony Harmony { get; } = new(Id);
 
     public string OptionsTitleText => Name;
+    
+    public static bool IsMobile;
 
     public override void Load()
     {
         Harmony.PatchAll();
-
+        IsMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS(); //iOS :heh:
         ReactorCredits.Register<CrewmeleonRedrawnPlugin>(location => location is ReactorCredits.Location.MainMenu);
 
         ReactUIBootstrap.Initialize();
