@@ -1,33 +1,19 @@
 ﻿using CrewmeleonRedrawn.Components;
-using UnityEngine;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CrewmeleonRedrawn.Utilities;
 
 public static class CrewmeleonExtensions
 {
-    public static bool GetPlayerCanvas(this PlayerControl player, out PlayerCanvasComponent? canvas)
+    public static bool GetPlayerCanvas(this PlayerControl player, [NotNullWhen(true)] out PlayerCanvasComponent? canvas)
     {
-        var playerCanvas = player.GetComponentInChildren<PlayerCanvasComponent>(true);
-        if (playerCanvas == null)
-        {
-            canvas = null;
-            return false;
-        }
-
-        canvas = playerCanvas;
-        return true;
+        canvas = player.GetComponentInChildren<PlayerCanvasComponent>(true);
+        return canvas;
     }
     
-    public static bool GetPlayerShotgun(this PlayerControl player, out ShotgunComponent? shotgun)
+    public static bool GetPlayerShotgun(this PlayerControl player, [NotNullWhen(true)] out ShotgunComponent? shotgun)
     {
-        var plrShotgun = player.GetComponentInChildren<ShotgunComponent>(true);
-        if (plrShotgun == null)
-        {
-            shotgun = null;
-            return false;
-        }
-
-        shotgun = plrShotgun;
-        return true;
+        shotgun = player.GetComponentInChildren<ShotgunComponent>(true);
+        return shotgun;
     }
 }
