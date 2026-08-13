@@ -1,5 +1,6 @@
 ﻿using CrewmeleonRedrawn.Modifiers;
 using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Networking;
 using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
@@ -37,6 +38,6 @@ public class ShotgunButton : CustomActionButton
         
         _equipped = !_equipped;
         Cursor.SetCursor(_equipped ? CrewmeleonAssets.TargetSprite.LoadAsset().texture : null, new Vector2(512, 512), CursorMode.Auto);
-        shotgun!.gameObject.SetActive(_equipped);
+        PlayerControl.LocalPlayer.RpcToggleShotgun(_equipped);
     }
 }

@@ -8,4 +8,5 @@ public enum CrewmeleonRpc : uint
     UndoStroke,
     SyncShotgun,
     ShootShotgun,
+    ToggleShotgun,
 }

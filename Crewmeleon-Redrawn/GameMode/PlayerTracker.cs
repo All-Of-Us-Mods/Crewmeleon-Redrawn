@@ -32,7 +32,7 @@ public class PlayerTracker
         _tracker = hud.CrewmatesKilled;
         _aspectPosition = _tracker?.gameObject.GetComponent<AspectPosition>();
         _gridArrange = _tracker?.gameObject.AddComponent<GridArrange>();
-        _gridArrange?.Alignment = GridArrange.StartAlign.Right;
+        _gridArrange!.Alignment = GridArrange.StartAlign.Right;
         _hidersLabel = Helpers.CreateTextLabel("HidersLabel", hud.transform, AspectPosition.EdgeAlignments.Left,
             new Vector3(0.5f, 1.23f, 0), textAlignment: TextAlignmentOptions.Left);
         _hidersLabel.color = Palette.CrewmateBlue;
@@ -63,9 +63,9 @@ public class PlayerTracker
         _gridArrange.ArrangeChilds();
         
         //Percentage logic
-        var deadPlayers = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data && x.Data.IsDead).ToList();
-        int index = allTrackedPlayers.Count(x => !x.IsNullOrDestroyed()) / deadPlayers.Count * maxPlayers;
-        if (_tracker.crewmateSprites[index] != null && !_tracker.crewmateSprites[index].IsKilled)
+        var deadTrackedCount = allTrackedPlayers.Count(x => !x.IsNullOrDestroyed() && x.Data.IsDead);
+        var index = deadTrackedCount - 1;
+        if (index >= 0 && index < _tracker.crewmateSprites.Count && _tracker.crewmateSprites[index] != null && !_tracker.crewmateSprites[index].IsKilled)
         {
             _tracker.crewmateSprites[index].SetKilled(_tracker.slashAnimations.ToArray().Random());
         }
