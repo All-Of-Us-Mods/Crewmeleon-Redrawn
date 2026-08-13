@@ -3,21 +3,18 @@ using CrewmeleonRedrawn.Components;
 using MiraAPI.GameOptions;
 using MiraAPI.Patches.Stubs;
 using MiraAPI.Roles;
-using Reactor.Utilities.Extensions;
 using UnityEngine;
+using CrewmeleonRedrawn.GameMode;
 
 namespace CrewmeleonRedrawn.Roles;
 
 public class HiderRole : CrewmateRole, ICustomRole
 {
     public string RoleName => "Chameleon";
-
-    public string RoleDescription => "Camouflage to blend in with the map!";
-
+    public string RoleDescription => "Camouflage to blend in with the map.";
     public string RoleLongDescription => RoleDescription;
 
     public Color RoleColor => Palette.CrewmateRoleBlue;
-
     public ModdedRoleTeams Team => ModdedRoleTeams.Crewmate;
 
     public CustomRoleConfiguration Configuration => new(this)
@@ -31,21 +28,27 @@ public class HiderRole : CrewmateRole, ICustomRole
         LayerMask.NameToLayer("Objects")
     ];
 
-    private PlayerCanvasComponent _playerCanvas;
+    private PlayerCanvasComponent? playerCanvas;
 
     public override void Initialize(PlayerControl player)
     {
         RoleBehaviourStubs.Initialize(this, player);
-        Player.cosmetics.TogglePet(false);
+
         if (player.GetPlayerCanvas(out var canvas))
         {
-            canvas!.Enable();
+            canvas.Enable();
+            playerCanvas = canvas;
         }
 
-        if (!player.AmOwner || !OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects.Value) return;
+        if (!player.AmOwner || !ChameleonOptions.Gameplay.HideOnObjects.Value)
+            return;
+
         foreach (var collider in ShipStatus.Instance.GetComponentsInChildren<Collider2D>().Where(x => DisabledColliders.Contains(x.gameObject.layer)))
         {
-            if (collider.transform.parent.TryGetComponent<PlainDoor>(out _) || (collider.transform.TryGetComponent<IUsable>(out _) && !collider.transform.TryGetComponent<Console>(out _))) continue;
+            if (collider.transform.parent.TryGetComponent<PlainDoor>(out _) 
+                || (collider.transform.TryGetComponent<IUsable>(out _) 
+                && !collider.transform.TryGetComponent<Console>(out _)))
+                continue;
 
             collider.enabled = false;
         }
@@ -55,9 +58,7 @@ public class HiderRole : CrewmateRole, ICustomRole
     {
         RoleBehaviourStubs.Deinitialize(this, targetPlayer);
 
-        if (targetPlayer.GetPlayerCanvas(out var canvas))
-        {
-            canvas!.Disable();
-        }
+        if(playerCanvas is not null && playerCanvas)
+            playerCanvas.Disable();
     }
 }

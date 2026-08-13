@@ -1,4 +1,3 @@
-using MiraAPI.GameOptions;
 using MiraAPI.Patches.Stubs;
 using MiraAPI.Roles;
 using UnityEngine;
@@ -8,13 +7,10 @@ namespace CrewmeleonRedrawn.Roles;
 public class SeekerRole : ImpostorRole, ICustomRole
 {
     public string RoleName => "Seeker";
-
-    public string RoleDescription => "Catch the chameleons at all costs!";
-
+    public string RoleDescription => "Catch the chameleons at all costs.";
     public string RoleLongDescription => RoleDescription;
 
     public Color RoleColor => Palette.ImpostorRed;
-
     public ModdedRoleTeams Team => ModdedRoleTeams.Impostor;
 
     public CustomRoleConfiguration Configuration => new(this)

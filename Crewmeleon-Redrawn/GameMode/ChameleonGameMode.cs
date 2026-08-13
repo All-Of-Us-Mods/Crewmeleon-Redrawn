@@ -38,10 +38,12 @@ public class ChameleonGameMode : AbstractGameMode
         ChameleonRoleAssigner.AssignRoles();
     }
 
-    //Using PostAssignRoles because Initialize doesn't get called, inlining maybe?
     public override void Initialize()
     {
         ShipStatus.Instance.BreakEmergencyButton();
+
+        foreach (var player in Helpers.GetAlivePlayers())
+            player.cosmetics.TogglePet(false);
 
         var hud = HudManager.Instance;
         hud.CrewmatesKilled.gameObject.SetActive(true);
