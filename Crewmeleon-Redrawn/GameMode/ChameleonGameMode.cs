@@ -4,6 +4,7 @@ using CrewmeleonRedrawn.Roles;
 using MiraAPI.GameModes;
 using MiraAPI.Roles;
 using MiraAPI.Utilities;
+using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 
@@ -43,7 +44,15 @@ public class ChameleonGameMode : AbstractGameMode
 
     public override void Initialize()
     {
-        ShipStatus.Instance.BreakEmergencyButton();
+        try
+        {
+            ShipStatus.Instance.BreakEmergencyButton();
+        }
+        catch (Exception e)
+        {
+            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Could not find emergency button");
+        }
+
 
         foreach (var player in Helpers.GetAlivePlayers())
             player.cosmetics.TogglePet(false);
@@ -135,6 +144,7 @@ public class ChameleonGameMode : AbstractGameMode
     }
 
     public override bool CanReport(DeadBody body) => false;
+    public override bool CanUseSystemConsole(SystemConsole console) => false;
     public override bool CanUseMapConsole(MapConsole console) => false;
     public override bool CanUseTasks(Console console) => false;
     public override bool ShouldShowSabotageMap(MapBehaviour map) => false;
