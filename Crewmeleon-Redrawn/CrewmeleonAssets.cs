@@ -40,13 +40,14 @@ public class CrewmeleonAssets
 
     public static readonly List<LoadableAudioResourceAsset> TauntSounds =
     [
-        new(SoundsPath + ".taunt_1.wav"),
-        new(SoundsPath + ".taunt_2.wav"),
-        new(SoundsPath + ".taunt_3.wav"),
-        new(SoundsPath + ".taunt_4.wav"),
-        new(SoundsPath + ".taunt_5.wav"),
-        new(SoundsPath + ".taunt_6.wav"),
-        new(SoundsPath + ".taunt_7.wav"),
-        new(SoundsPath + ".taunt_8.wav")
+        new(SoundsPath + ".Taunt1.wav"),
+        new(SoundsPath + ".Taunt2.wav"),
+        new(SoundsPath + ".Taunt3.wav"),
+        new(SoundsPath + ".Taunt4.wav"),
+        new(SoundsPath + ".Taunt5.wav"),
+        new(SoundsPath + ".Taunt6.wav"),
+        new(SoundsPath + ".Taunt7.wav"),
+        new(SoundsPath + ".Taunt8.wav"),
+        new(SoundsPath + ".Taunt9.wav"),
     ];
 }
