@@ -1,4 +1,5 @@
 using System.Collections;
+using CrewmeleonRedrawn.Networking;
 using CrewmeleonRedrawn.Roles;
 using MiraAPI.GameModes;
 using MiraAPI.Roles;
@@ -40,7 +41,7 @@ public class ChameleonGameMode : AbstractGameMode
         ChameleonRoleAssigner.AssignRoles();
     }
 
-    public override void Initialize()
+    public void Setup()
     {
         ShipStatus.Instance.BreakEmergencyButton();
 
@@ -51,8 +52,13 @@ public class ChameleonGameMode : AbstractGameMode
         hud.CrewmatesKilled.gameObject.SetActive(true);
         hud.TaskStuff.gameObject.SetActive(false);
 
-        Timer.Begin(hud);
+        Timer.CreateTimer(hud);
         PlayerTracker.Begin(hud);
+
+        if (AmongUsClient.Instance.AmHost)
+        {
+            PlayerControl.LocalPlayer.RpcUpdateTimerState(TimerStage.Hiding);
+        }
     }
 
     public override void HudUpdate(HudManager instance)
@@ -73,6 +79,7 @@ public class ChameleonGameMode : AbstractGameMode
 
     public override IEnumerator IntroCutscene(IntroCutscene intro)
     {
+        Setup();
         deadPlayerCount = 0;
         return ChameleonIntro.Play(intro);
     }

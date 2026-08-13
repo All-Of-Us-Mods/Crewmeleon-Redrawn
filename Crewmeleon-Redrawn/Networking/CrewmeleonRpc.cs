@@ -9,4 +9,5 @@ public enum CrewmeleonRpc : uint
     SyncShotgun,
     ShootShotgun,
     ToggleShotgun,
+    UpdateTimerState,
 }

@@ -1,7 +1,9 @@
 using System.Collections;
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Modifiers;
+using CrewmeleonRedrawn.Networking;
 using MiraAPI.GameModes;
+using MiraAPI.GameOptions;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
 using Reactor.Utilities;
@@ -14,7 +16,7 @@ public enum TimerStage
 {
     Revelation,
     Seeking,
-    Hiding,
+    Hiding
 }
 
 /// <summary>
@@ -31,34 +33,64 @@ public class ChameleonTimer
 
     private float timeLeft;
     private float maxTime;
-
     private float defaultSeekerSpeed;
-
+    private bool paused = true;
     private string StageText => CurrentStage.ToString().ToUpperInvariant();
 
-    public void Begin(HudManager hud)
+    public void CreateTimer(HudManager hud)
     {
-        CurrentStage = TimerStage.Hiding;
-        maxTime = ChameleonOptions.Gameplay.HideTime.Value;
-        timeLeft = maxTime;
-
         timerBar = HudUtilities.CreateTimerBar(hud, Palette.CrewmateBlue, 0.35f, StageText, out stageLabel);
+    }
+
+    public void SetStage(TimerStage stage)
+    {
+        paused = false;
+        CurrentStage = stage;
+
+        switch (stage)
+        {
+            case TimerStage.Hiding:
+                timeLeft = maxTime = OptionGroupSingleton<GameplayOptions>.Instance.HideTime.Value;
+                break;
+            case TimerStage.Seeking:
+                SetupSeekingStage();
+                break;
+            case TimerStage.Revelation:
+                SetupRevealStage();
+                break;
+        }
+
+        if (stageLabel is not null && stageLabel)
+            stageLabel.text = StageText;
     }
 
     public void Update()
     {
-        if (timerBar is null || !timerBar)
+        if (timerBar is null || !timerBar || paused)
             return;
 
         timeLeft -= Time.deltaTime;
         timerBar.UpdateTimer(timeLeft, maxTime);
-        // prevent the seekers from moving in the hiding stage
+        
         if (CurrentStage == TimerStage.Hiding)
             HoldSeekerStill();
 
-        // end the current stage if the timer has reached 0
-        if (timeLeft <= 0)
-            AdvanceStage();
+        if (timeLeft > 0) return;
+        paused = true;
+
+        if (!AmongUsClient.Instance.AmHost) return;
+        switch (CurrentStage)
+        {
+            case TimerStage.Hiding:
+                PlayerControl.LocalPlayer.RpcUpdateTimerState(TimerStage.Seeking);
+                break;
+            case TimerStage.Seeking:
+                PlayerControl.LocalPlayer.RpcUpdateTimerState(TimerStage.Revelation);
+                break; 
+            case TimerStage.Revelation:
+                GameManager.Instance.RpcEndGame(GameOverReason.HideAndSeek_CrewmatesByTimer, false);
+                break;
+        }
     }
 
     public float GetTimeLeft() => timeLeft;
@@ -70,34 +102,14 @@ public class ChameleonTimer
 
         defaultSeekerSpeed = PlayerControl.LocalPlayer.MyPhysics.Speed;
 
-        // surely there's a better way?
         PlayerControl.LocalPlayer.moveable = false;
         PlayerControl.LocalPlayer.NetTransform.Halt();
         PlayerControl.LocalPlayer.MyPhysics.Speed = 0;
     }
 
-    private void AdvanceStage()
+    private void SetupSeekingStage()
     {
-        if (CurrentStage == TimerStage.Hiding)
-            OnHidingStageEnd();
-        else if (CurrentStage == TimerStage.Seeking)
-            OnSeekingStageEnd();
-        else if (CurrentStage == TimerStage.Revelation)
-            OnRevelationStageEnd();
-        
-        if (stageLabel is not null && stageLabel)
-            stageLabel.text = StageText;
-    }
-
-    /// <summary>
-    /// End the hiding stage and start the seeking stage.
-    /// </summary>
-    private void OnHidingStageEnd()
-    {
-        CurrentStage = TimerStage.Seeking;
-
-        maxTime = ChameleonOptions.Gameplay.SeekTime.Value;
-        timeLeft = maxTime;
+        timeLeft = maxTime = ChameleonOptions.Gameplay.SeekTime.Value;
 
         SetBarColor(Palette.ImpostorRed);
 
@@ -106,7 +118,6 @@ public class ChameleonTimer
         var gamemode = CustomGameModeManager.ActiveMode as ChameleonGameMode;
         gamemode?.TauntTimer.Begin();
         
-        // allow the seeker to move when the seeking stage starts
         if (ChameleonGameMode.AmImpostor && PlayerControl.LocalPlayer.MyPhysics.Speed <= 0)
         {
             PlayerControl.LocalPlayer.moveable = true;
@@ -114,10 +125,7 @@ public class ChameleonTimer
         }
     }
 
-    /// <summary>
-    /// End the seeking stage and start the revelation stage.
-    /// </summary>
-    private void OnSeekingStageEnd()
+    private void SetupRevealStage()
     {
         CurrentStage = TimerStage.Revelation;
 
@@ -147,17 +155,6 @@ public class ChameleonTimer
 
         maxTime = 0;
         timeLeft = 0;
-    }
-
-    /// <summary>
-    /// End the revelation stage and end the game.
-    /// </summary>
-    private static void OnRevelationStageEnd()
-    {
-        if (!PlayerControl.LocalPlayer.IsHost())
-            return;
-
-        GameManager.Instance.RpcEndGame(GameOverReason.HideAndSeek_CrewmatesByTimer, false);
     }
 
     private void SetBarColor(Color color)
