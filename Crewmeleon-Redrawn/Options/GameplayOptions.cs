@@ -33,10 +33,10 @@ public class GameplayOptions : AbstractOptionGroup
         };
     
     public ModdedNumberOption HideTime { get; } =
-        new ModdedNumberOption("Initial Hide Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
+        new ModdedNumberOption("Initial Hide Time", 80, 0, 300, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
     
     public ModdedNumberOption SeekTime { get; } =
-        new ModdedNumberOption("Seek Time", 80, 0, 200, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
+        new ModdedNumberOption("Seek Time", 80, 0, 600, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
 
     public ModdedNumberOption ShotgunCooldown { get; } =
         new ModdedNumberOption("Seeker Shot Cooldown", 2, 0.5f, 15, 1, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
