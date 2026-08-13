@@ -1,5 +1,5 @@
 using System.Collections;
-using AmongUs.GameOptions;
+using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Modifiers;
 using MiraAPI.GameModes;
 using MiraAPI.Modifiers;
@@ -42,7 +42,7 @@ public class ChameleonTimer
         maxTime = ChameleonOptions.Gameplay.HideTime.Value;
         timeLeft = maxTime;
 
-        timerBar = TimerBarFactory.Create(hud, Palette.CrewmateBlue, 0.35f, StageText, out stageLabel);
+        timerBar = HudUtilities.CreateTimerBar(hud, Palette.CrewmateBlue, 0.35f, StageText, out stageLabel);
     }
 
     public void Update()

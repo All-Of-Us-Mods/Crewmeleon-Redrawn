@@ -1,5 +1,6 @@
-using MiraAPI.Utilities;
+using CrewmeleonRedrawn.Utilities;
 using Reactor.Utilities.Extensions;
+using MiraAPI.Utilities;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.GameMode;
@@ -23,7 +24,7 @@ public class TauntTimer
         maxTime = ChameleonOptions.Taunting.TauntCooldown.Value;
         timeLeft = maxTime;
 
-        tauntBar = TimerBarFactory.Create(HudManager.Instance, Color.yellow, 0.75f, "NEXT TAUNT", out _);
+        tauntBar = HudUtilities.CreateTimerBar(HudManager.Instance, Color.yellow, 0.75f, "NEXT TAUNT", out _);
         tauntBar.transform.localScale *= 0.7f;
     }
 
