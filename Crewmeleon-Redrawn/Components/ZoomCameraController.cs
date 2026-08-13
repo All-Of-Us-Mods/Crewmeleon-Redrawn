@@ -60,14 +60,14 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
 
         _camRenderTex = new RenderTexture(512, 512, 16);
         _zoomCamera.targetTexture = _camRenderTex;
-        
+
         var displayObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
         displayObj.name = "ZoomCamDisplay";
         displayObj.layer = LayerMask.NameToLayer("UI");
         displayObj.transform.SetParent(mainCam.transform, false);
         displayObj.transform.localPosition = new Vector3(0, 0, 5);
         displayObj.GetComponent<Collider>().Destroy();
-        
+
         _zoomRend = displayObj.GetComponent<MeshRenderer>();
 
         // Sprites/Default blends so the quad mixed with the world behind it however opaque the
@@ -85,7 +85,7 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         _zoomFrame.sortingOrder = short.MaxValue;
 
         UpdateRendDisplaySize();
-        
+
         gameObject.SetActive(false);
         displayObj.SetActive(false);
         frameObj.SetActive(false);
@@ -93,9 +93,9 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
 
     public void ToggleDisplay(bool show = true)
     {
-       gameObject.SetActive(show);
-       _zoomRend.gameObject.SetActive(show);
-       _zoomFrame.gameObject.SetActive(show);
+        gameObject.SetActive(show);
+        _zoomRend.gameObject.SetActive(show);
+        _zoomFrame.gameObject.SetActive(show);
         if (show)
         {
             _centerPosition = _followerCamera.Target.transform.position + (Vector3)_followerCamera.Offset;
@@ -163,7 +163,7 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         size = zoomIn ? size / step : size * step;
         _zoomSize = _zoomCamera.orthographicSize = Mathf.Clamp(size, ZoomRange.min, ZoomRange.max);
     }
-    
+
     private void UpdateRendDisplaySize()
     {
         var worldSize = Camera.main!.orthographicSize * 2f * ZoomRendFraction;
@@ -178,7 +178,7 @@ public class ZoomCameraController(nint cppPtr) : MonoBehaviour(cppPtr)
         var frameScale = worldSize / (spriteWidth * FrameInnerFraction);
         _zoomFrame.transform.localScale = new Vector3(frameScale, frameScale, 1f);
     }
-    
+
     public static Rect GetRendScreenRect()
     {
         var size = Screen.height * ZoomRendFraction;
