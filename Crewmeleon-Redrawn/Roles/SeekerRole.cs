@@ -16,9 +16,10 @@ public class SeekerRole : ImpostorRole, ICustomRole
     public CustomRoleConfiguration Configuration => new(this)
     {
         RoleHintType = RoleHintType.None,
-        CanUseVent = false,
-        HideSettings = true
+        CanUseVent = false
     };
+    
+    public Func<bool> VisibleInSettings => () => false;
     
     public override void Initialize(PlayerControl player)
     {

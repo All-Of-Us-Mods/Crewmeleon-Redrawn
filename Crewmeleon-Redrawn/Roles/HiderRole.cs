@@ -19,9 +19,10 @@ public class HiderRole : CrewmateRole, ICustomRole
 
     public CustomRoleConfiguration Configuration => new(this)
     {
-        RoleHintType = RoleHintType.None,
-        HideSettings = true
+        RoleHintType = RoleHintType.None
     };
+
+    public Func<bool> VisibleInSettings => () => false;
 
     private static readonly LayerMask[] DisabledColliders =
     [
