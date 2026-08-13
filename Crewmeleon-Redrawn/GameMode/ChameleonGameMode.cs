@@ -64,7 +64,7 @@ public class ChameleonGameMode : AbstractGameMode
         instance.Chat.gameObject.SetActive(CanUseChat);
 
         Timer.Update();
-        TauntTimer.Update();
+        if (CurrentStage == TimerStage.Seeking) TauntTimer.Update();
     }
 
     public override IEnumerator IntroCutscene(IntroCutscene intro)

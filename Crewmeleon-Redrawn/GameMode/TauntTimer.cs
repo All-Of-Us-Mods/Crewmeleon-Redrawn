@@ -44,7 +44,7 @@ public class TauntTimer
 
         timeLeft = maxTime;
 
-        var tauntSfx = GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideCountdownSFX;
+        var tauntSfx = GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX;
         foreach (var playerControl in Helpers.GetAlivePlayers().Where(x => !x.AmOwner))
             AudioSource.PlayClipAtPoint(tauntSfx, playerControl.GetTruePosition(), 0.1f);
     }

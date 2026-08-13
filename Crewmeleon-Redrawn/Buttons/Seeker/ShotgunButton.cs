@@ -24,6 +24,12 @@ public class ShotgunButton : CustomActionButton
                && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } || CustomButtonUtilities.IsInPractice());
     }
 
+    public override void CreateButton(Transform parent)
+    {
+        base.CreateButton(parent);
+        _equipped = false;
+    }
+
     protected override void OnClick()
     {
         var hasShotgun = PlayerControl.LocalPlayer.GetPlayerShotgun(out var shotgun);

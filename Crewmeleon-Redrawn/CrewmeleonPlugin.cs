@@ -10,6 +10,9 @@ using Reactor.Utilities;
 using ReactUI.Plugin;
 using MiraAPI;
 using MiraAPI.PluginLoading;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 namespace CrewmeleonRedrawn;
 
@@ -34,6 +37,12 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
         CrewmeleonStyles.Register();
         BrushPanel.Mount();
         ReactUIBehaviour.OnUpdate += BrushPanel.Tick;
+        
+        SceneManager.activeSceneChanged += (UnityAction<Scene, Scene>) new System.Action<Scene, Scene>((s1, s2) =>
+        {
+            Log.LogInfo($"Scene changed from {s1} to {s2}, Resetting cursor...");
+            Cursor.SetCursor(null, CursorMode.Auto);
+        });
     }
 
     public override bool Unload()
