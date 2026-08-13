@@ -4,4 +4,8 @@ public enum RPCCalls
 {
     Taunt = 0,
     Infect,
+    SendStroke,
+    UndoStroke,
+    SyncShotgun,
+    ShootShotgun,
 }
