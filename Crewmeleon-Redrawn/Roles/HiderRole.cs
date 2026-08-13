@@ -1,6 +1,5 @@
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Components;
-using MiraAPI.GameOptions;
 using MiraAPI.Patches.Stubs;
 using MiraAPI.Roles;
 using UnityEngine;
@@ -44,16 +43,10 @@ public class HiderRole : CrewmateRole, ICustomRole
 
         if (!player.AmOwner || !ChameleonOptions.Gameplay.HideOnObjects.Value)
             return;
-
-        foreach (var collider in ShipStatus.Instance.GetComponentsInChildren<Collider2D>().Where(x => DisabledColliders.Contains(x.gameObject.layer)))
-        {
-            if (collider.transform.parent.TryGetComponent<PlainDoor>(out _) 
-                || (collider.transform.TryGetComponent<IUsable>(out _) 
-                && !collider.transform.TryGetComponent<Console>(out _)))
-                continue;
-
-            collider.enabled = false;
-        }
+        
+        var layerMask = 0;
+        foreach (var layer in DisabledColliders) layerMask |= 1 << layer;
+        Player.Collider.excludeLayers = layerMask;
     }
 
     public override void Deinitialize(PlayerControl targetPlayer)
