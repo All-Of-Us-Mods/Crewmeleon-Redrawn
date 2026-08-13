@@ -94,12 +94,19 @@ public static class ChameleonIntro
 
         poolablePlayer.gameObject.SetActive(true);
         poolablePlayer.ToggleName(false);
-        poolablePlayer.GetComponent<SpriteAnim>().Play(anim, 1f);
+        var spriteAnim = poolablePlayer.GetComponent<SpriteAnim>();
+        spriteAnim.Play(anim, 1f);
+        spriteAnim.SetTime(5);
+        spriteAnim.Pause();
 
         while (hideTimer > 0f)
         {
             intro.HideAndSeekTimerText.text = Mathf.RoundToInt(hideTimer).ToString();
             hideTimer -= Time.deltaTime;
+            if (hideTimer <= 5f && spriteAnim.Paused)
+            {
+                spriteAnim.Resume();
+            }
             CustomGameModeManager.ActiveMode?.HudUpdate(HudManager.Instance);
             yield return null;
         }
@@ -135,7 +142,6 @@ public static class ChameleonIntro
             return (visual, intro.HnSSeekerSpawnLongAnim);
         }
 
-        // we can prob delay the getting up portion no until the last 5ish seconds?
         visual.SetBodyType(PlayerBodyTypes.Seeker);
         return (visual, intro.HnSSeekerSpawnAnim);
     }
@@ -160,5 +166,21 @@ public static class ChameleonIntro
             impostor.AnimateCustom(intro.HnSSeekerSpawnAnim);
             impostor.cosmetics.SetBodyCosmeticsVisible(false);
         }
+
+        Coroutines.Start(CoPauseSeekerAnim(impostor.MyPhysics.Animations.Animator));
+    }
+
+    private static IEnumerator CoPauseSeekerAnim(SpriteAnim animator)
+    {
+        var timer = (CustomGameModeManager.ActiveMode as ChameleonGameMode)?.Timer;
+
+        animator.SetTime(5);
+        animator.Pause();
+        
+        while (timer?.GetTimeLeft() >= 5f)
+        {
+            yield return null;
+        }
+        animator.Resume();
     }
 }

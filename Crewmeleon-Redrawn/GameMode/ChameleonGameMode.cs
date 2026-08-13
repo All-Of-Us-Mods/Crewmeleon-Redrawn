@@ -20,14 +20,14 @@ public class ChameleonGameMode : AbstractGameMode
     public override bool GameModeBodyTypeOverride => true;
     public override bool ShowNormalGameSettings => false;
 
-    public TimerStage CurrentStage => _timer.CurrentStage;
+    public TimerStage CurrentStage => Timer.CurrentStage;
 
     internal static bool AmImpostor => PlayerControl.LocalPlayer.Data.Role.IsImpostor;
 
     private static bool CanUseChat => ChameleonOptions.Chat.ChatEnabled
                                       && (!AmImpostor || ChameleonOptions.Chat.SeekerCanSeeChat.Value);
 
-    private readonly ChameleonTimer _timer = new();
+    public readonly ChameleonTimer Timer = new();
     public readonly TauntTimer TauntTimer = new();
 
     private int deadPlayerCount;
@@ -49,18 +49,21 @@ public class ChameleonGameMode : AbstractGameMode
         hud.CrewmatesKilled.gameObject.SetActive(true);
         hud.TaskStuff.gameObject.SetActive(false);
 
-        _timer.Begin(hud);
+        Timer.Begin(hud);
     }
 
     public override void HudUpdate(HudManager instance)
     {
-        if (!_timer.IsActive)
+        if (!Timer.IsActive)
             return;
 
         instance.TaskStuff.gameObject.SetActive(false);
+        instance.ReportButton.gameObject.SetActive(false);
+        instance.SabotageButton.gameObject.SetActive(false);
+        instance.ImpostorVentButton.gameObject.SetActive(false);
         instance.Chat.gameObject.SetActive(CanUseChat);
 
-        _timer.Update();
+        Timer.Update();
         TauntTimer.Update();
     }
 

@@ -62,6 +62,8 @@ public class ChameleonTimer
             AdvanceStage();
     }
 
+    public float GetTimeLeft() => timeLeft;
+
     private void HoldSeekerStill()
     {
         if (!ChameleonGameMode.AmImpostor || PlayerControl.LocalPlayer.MyPhysics.Speed == 0)
