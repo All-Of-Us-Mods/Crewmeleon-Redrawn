@@ -37,7 +37,7 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
     {
         Harmony.PatchAll();
         IsMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS(); //iOS :heh:
-        ReactorCredits.Register<CrewmeleonRedrawnPlugin>(location => location is ReactorCredits.Location.MainMenu);
+        ReactorCredits.Register<CrewmeleonRedrawnPlugin>(ReactorCredits.AlwaysShow);
 
         ReactUIBootstrap.Initialize();
         CrewmeleonStyles.Register();
