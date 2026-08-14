@@ -17,7 +17,7 @@ public static class PlayerControlPatch
         if (__instance.AmOwner)
             ChameleonMovement.RegisterBlocks(__instance);
         
-        if (ChameleonGameModeManager.Instance == null && !CustomButtonUtilities.IsInPractice()) return;
+        // if (ChameleonGameModeManager.Instance == null && !CustomButtonUtilities.IsInPractice()) return;
         
         var zValue = OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects
                      || OptionGroupSingleton<GameplayOptions>.Instance.AlwaysOnTop
