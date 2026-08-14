@@ -149,4 +149,10 @@ public class SpectatingModifier : BaseModifier
 
         return players.Where(p => p.Data.Role.IsImpostor).ToList();
     }
+
+    public override void OnDeath(DeathReason reason)
+    {
+        _wasMoveable = true;
+        ModifierComponent?.RemoveModifier(this);
+    }
 }

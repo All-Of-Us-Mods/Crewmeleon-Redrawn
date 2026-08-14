@@ -14,7 +14,7 @@ public class GameplayOptions : AbstractOptionGroup<ChameleonGameMode>
         new ModdedToggleOption("Allow Undo", false);
 
     public ModdedNumberOption SeekersCount { get; } =
-        new ModdedNumberOption("Seekers Count", 1, 1, 3, 1, "0", "0", MiraNumberSuffixes.None);
+        new ModdedNumberOption("Seekers Count", 1, 1, 15, 1, "0", "0", MiraNumberSuffixes.None);
     
     public ModdedPlayerOption Seeker1 { get; } =
         new("Forced Seeker #1")
