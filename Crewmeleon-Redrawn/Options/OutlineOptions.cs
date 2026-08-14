@@ -1,9 +1,10 @@
-﻿using MiraAPI.GameOptions;
+﻿using CrewmeleonRedrawn.GameMode;
+using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
 
 namespace CrewmeleonRedrawn;
 
-public class OutlineOptions : AbstractOptionGroup
+public class OutlineOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Outline";
 

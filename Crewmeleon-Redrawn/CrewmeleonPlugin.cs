@@ -25,6 +25,7 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 {
     public Harmony Harmony { get; } = new(Id);
 
+    public bool DisplayOnOptionsMenu => false;
     public string OptionsTitleText => Name;
     
     public static bool IsMobile;

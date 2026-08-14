@@ -1,10 +1,11 @@
+using CrewmeleonRedrawn.GameMode;
 using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
 using MiraAPI.Utilities;
 
 namespace CrewmeleonRedrawn;
 
-public class TauntingOptions : AbstractOptionGroup
+public class TauntingOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Taunting Options";
 

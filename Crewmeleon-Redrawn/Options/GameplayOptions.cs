@@ -1,10 +1,11 @@
+using CrewmeleonRedrawn.GameMode;
 using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
 using MiraAPI.Utilities;
 
 namespace CrewmeleonRedrawn;
 
-public class GameplayOptions : AbstractOptionGroup
+public class GameplayOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Gameplay Options";
 

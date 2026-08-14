@@ -1,9 +1,10 @@
+using CrewmeleonRedrawn.GameMode;
 using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
 
 namespace CrewmeleonRedrawn;
 
-public class SpectatingOptions : AbstractOptionGroup
+public class SpectatingOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Spectating Options";
 

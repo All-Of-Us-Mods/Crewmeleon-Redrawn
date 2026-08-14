@@ -1,9 +1,10 @@
+using CrewmeleonRedrawn.GameMode;
 using MiraAPI.GameOptions;
 using MiraAPI.GameOptions.OptionTypes;
 
 namespace CrewmeleonRedrawn;
 
-public class ChatOptions : AbstractOptionGroup
+public class ChatOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Chat Options";
 
