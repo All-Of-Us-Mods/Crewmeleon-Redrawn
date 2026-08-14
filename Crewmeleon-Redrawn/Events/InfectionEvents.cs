@@ -15,17 +15,14 @@ public static class InfectionEvents
     [RegisterEvent]
     public static void BeforeMurderEventHandler(BeforeMurderEvent @event)
     {
-        if (!CustomGameModeManager.IsActiveGameMode<ChameleonGameMode>()
+        if (!AmongUsClient.Instance.AmHost || !CustomGameModeManager.IsActiveGameMode<ChameleonGameMode>()
             || !OptionGroupSingleton<GameplayOptions>.Instance.InfectionMode)
         {
             return;
         }
 
-        @event.Cancel();
-
-        if (!AmongUsClient.Instance.AmHost) return;
-
         var player = @event.Target;
         InfectionRpc.RpcInfect(player);
+        @event.Cancel();
     }
 }
