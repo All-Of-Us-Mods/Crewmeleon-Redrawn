@@ -110,7 +110,11 @@ public class ChameleonTimer
         SoundUtilities.Play(GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX);
         
         ChameleonGameModeManager.Instance?.TauntTimer.Begin();
-        
+
+        if (ChameleonGameModeManager.Instance is not null)
+            PlayerControl.LocalPlayer.MyPhysics.Speed =
+                    ChameleonGameModeManager.Instance.GetPlayerSpeed(PlayerControl.LocalPlayer);
+
         if (ChameleonGameMode.AmImpostor)
         {
             PlayerControl.LocalPlayer.moveable = true;

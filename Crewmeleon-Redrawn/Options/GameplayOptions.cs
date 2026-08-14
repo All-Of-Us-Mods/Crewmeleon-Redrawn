@@ -12,7 +12,13 @@ public class GameplayOptions : AbstractOptionGroup<ChameleonGameMode>
 
     public ModdedToggleOption AllowUndo { get; } =
         new ModdedToggleOption("Allow Undo", false);
-
+    
+    public ModdedNumberOption HiderSpeed { get; } =
+        new ModdedNumberOption("Hider Speed", 1, 0.5f, 3, 0.25f, "0", "0", MiraNumberSuffixes.Multiplier);
+    
+    public ModdedNumberOption SeekerSpeed { get; } =
+        new ModdedNumberOption("Seeker Speed", 1, 0.5f, 3, 0.25f, "0", "0", MiraNumberSuffixes.Multiplier);
+    
     public ModdedNumberOption SeekersCount { get; } =
         new ModdedNumberOption("Seekers Count", 1, 1, 15, 1, "0", "0", MiraNumberSuffixes.None);
     

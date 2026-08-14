@@ -1,3 +1,4 @@
+using CrewmeleonRedrawn.Roles;
 using MiraAPI.Utilities;
 using Reactor.Utilities.Attributes;
 using Reactor.Utilities.Extensions;
@@ -99,4 +100,7 @@ public class ChameleonGameModeManager(nint cppPtr) : MonoBehaviour(cppPtr)
         popup.text.text = infected ? "HAS BEEN INFECTED" : "HAS BEEN KILLED";
         popup.Show(player, _deadPlayerCount);
     }
+    
+    public float GetPlayerSpeed(PlayerControl pc) => pc.Data.Role is SeekerRole ? ChameleonOptions.Gameplay.SeekerSpeed.Value :
+        CurrentStage == TimerStage.Hiding ? ChameleonOptions.Gameplay.SeekerSpeed.Value : ChameleonOptions.Gameplay.HiderSpeed.Value;
 }
