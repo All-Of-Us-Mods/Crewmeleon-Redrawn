@@ -25,7 +25,7 @@ public class PickColorButton : CustomActionButton
 
     public override string Name => "Pick";
     public override float Cooldown => 0;
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+    public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.PickColorButton;
 
     public override ButtonLocation Location =>
         CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
