@@ -1,4 +1,5 @@
 using System.Collections;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameModes;
 using MiraAPI.Utilities;
 using PowerTools;
@@ -71,7 +72,9 @@ public static class ChameleonIntro
             PlayerControl.LocalPlayer.moveable = true;
         }
         ShipStatus.Instance.StartSFX();
-        UnityEngine.Object.Destroy(intro.gameObject);
+        UnityEngine.Object.Destroy(intro.gameObject); // warning: this causes intro end events to never fire on mobile
+        ChameleonGameModeManager.Create();
+        CustomButtonUtilities.RefreshVisibilityDeferred();
     }
 
     private static IEnumerator PlaySeekerIntro(IntroCutscene intro, float hideTimer)

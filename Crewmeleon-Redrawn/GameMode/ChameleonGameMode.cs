@@ -27,7 +27,7 @@ public class ChameleonGameMode : AbstractGameMode
 
     public override void Initialize()
     {
-        new GameObject("ChameleonGameModeManager").AddComponent<ChameleonGameModeManager>();
+        ChameleonGameModeManager.Create();
     }
 
     public override IEnumerator IntroCutscene(IntroCutscene intro)

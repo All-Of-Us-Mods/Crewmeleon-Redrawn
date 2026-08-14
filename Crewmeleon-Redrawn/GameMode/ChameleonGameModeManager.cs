@@ -4,7 +4,6 @@ using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace CrewmeleonRedrawn.GameMode;
 
@@ -12,6 +11,13 @@ namespace CrewmeleonRedrawn.GameMode;
 public class ChameleonGameModeManager(nint cppPtr) : MonoBehaviour(cppPtr)
 {
     public static ChameleonGameModeManager? Instance { get; private set; }
+
+    public static void Create()
+    {
+        if (Instance != null) return;
+
+        new GameObject("ChameleonGameModeManager").AddComponent<ChameleonGameModeManager>();
+    }
 
     public TimerStage CurrentStage => Timer.CurrentStage;
 

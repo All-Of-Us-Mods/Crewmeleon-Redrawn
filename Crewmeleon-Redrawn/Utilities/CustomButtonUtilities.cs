@@ -1,6 +1,8 @@
+using System.Collections;
 using MiraAPI.Hud;
 using MiraAPI.Patches;
 using MiraAPI.Utilities;
+using Reactor.Utilities;
 using Object = UnityEngine.Object;
 
 namespace CrewmeleonRedrawn.Utilities;
@@ -8,6 +10,19 @@ namespace CrewmeleonRedrawn.Utilities;
 public static class CustomButtonUtilities
 {
     private static readonly Dictionary<CustomActionButton, DateTimeOffset> LastVisible = new();
+
+    public static void RefreshVisibilityDeferred()
+    {
+        if (PlayerControl.LocalPlayer == null) return;
+
+        Coroutines.Start(CoRefreshVisibility());
+    }
+
+    private static IEnumerator CoRefreshVisibility()
+    {
+        yield return null;
+        RefreshVisibility();
+    }
 
     /// <summary>
     /// re checks every buttons Enabled(role) right now. without it the row keeps its old layout
