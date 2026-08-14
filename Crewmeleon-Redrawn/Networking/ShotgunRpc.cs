@@ -28,6 +28,9 @@ public static class ShotgunRpc
     [MethodRpc((uint)CrewmeleonRpc.ShootShotgun)]
     public static void RpcShootShotgun(this PlayerControl shooter, Vector2 position, Color32 splatterColor, float splatterSize)
     {
+        if (ChameleonGameModeManager.Instance == null 
+            || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) return;
+        
         Coroutines.Start(CoShoot(shooter, position, splatterColor, splatterSize));
     }
     
