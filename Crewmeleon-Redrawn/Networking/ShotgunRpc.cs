@@ -2,12 +2,12 @@
 using BepInEx.Unity.IL2CPP.Utils.Collections;
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Components;
+using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Roles;
 using MiraAPI.Networking;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
-using Reactor.Utilities.Extensions;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace CrewmeleonRedrawn.Networking;
 
@@ -50,14 +50,23 @@ public static class ShotgunRpc
             Logger<CrewmeleonRedrawnPlugin>.Instance.LogError($"{shooter.Data.PlayerName} attempted to shoot but shotgun is null.");
             yield break;
         }
+        
+        // ReSharper disable once Unity.PreferNonAllocApi
+        // pre-sizing array is too much of a headache to get correctly, unity already sizes the array with the specific amount of colliders hit
+        // player also has a large ass collider anyways (its a trigger collider), but we can use that as the full hitbox instead of expanding it
+        var hitPlayerColliders = Physics2D.OverlapCircleAll(pos, 0.0001f, Constants.LivingPlayersOnlyMask);
 
-        var shot = Physics2D.OverlapCircle(pos, 0.5f, Constants.LivingPlayersOnlyMask);
-        PlayerControl? plr = null;
-        if (shot && shot.gameObject.TryGetComponent(out plr))
+        var killedPlayers = 0;
+        foreach (var playerCollider in hitPlayerColliders)
         {
-            if (plr == shooter) yield break;
+            if (killedPlayers >= ChameleonOptions.Gameplay.ShotgunKillsPerShot) break;
+            var victim = playerCollider.GetComponent<PlayerControl>();
+            if (!victim || !victim.Data) continue;
+            if (victim.Data.Role is SeekerRole) continue;
 
-            shooter.CustomMurder(plr!, MurderResultFlags.Succeeded, teleportMurderer: false);
+            shooter.CustomMurder(victim, MurderResultFlags.Succeeded, teleportMurderer: false);
+            SplatterComponent.CreateSplatter(pos, Palette.PlayerColors[victim.cosmetics.ColorId], splatterSize);
+            killedPlayers++;
         }
 
         SoundUtilities.PlayAtPosition(CrewmeleonAssets.ShotgunFireSound.LoadAsset(), shooter.GetTruePosition(), 0.5f);
@@ -67,7 +76,6 @@ public static class ShotgunRpc
             Coroutines.Start(HudManager.Instance.PlayerCam.CoShakeScreen(0.5f, 1).WrapToManaged());   
         }
 
-        SplatterComponent.CreateSplatter(pos, plr ? Palette.PlayerColors[plr!.cosmetics.ColorId] : splatterColor, splatterSize);
 
         yield return shotgun!.CoFlashMuzzle();
     }
