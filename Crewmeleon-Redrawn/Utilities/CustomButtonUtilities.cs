@@ -60,4 +60,22 @@ public static class CustomButtonUtilities
     {
         return Object.FindObjectOfType<TutorialManager>() != null;
     }
+
+    /// <summary>
+    /// MiraAPI updates ActiveModifiers after the modifier hooks run, so HasModifier<T>() still reports
+    /// the old state. Waiting a frame lets the buttons see the new one.
+    /// </summary>
+    public static void RefreshActionButtonsDeferred(PlayerControl player)
+    {
+        if (!player || !player.AmOwner)
+            return;
+
+        Coroutines.Start(CoRefreshButtons());
+    }
+
+    private static IEnumerator CoRefreshButtons()
+    {
+        yield return null;
+        RefreshVisibility();
+    }
 }

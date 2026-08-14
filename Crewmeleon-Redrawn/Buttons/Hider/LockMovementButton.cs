@@ -33,6 +33,7 @@ public class LockMovementButton : CustomActionButton
     {
         return role is HiderRole
                && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()
+               && !PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>()
                && (ChameleonGameModeManager.Instance is { CurrentStage: not TimerStage.Revelation } ||
                    CustomButtonUtilities.IsInPractice());
     }
