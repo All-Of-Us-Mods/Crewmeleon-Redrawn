@@ -1,7 +1,6 @@
 ﻿using Reactor.Utilities.Attributes;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace CrewmeleonRedrawn.Components;
 

@@ -18,7 +18,7 @@ public static class ShotgunRpc
     {
         if (!shooter.GetPlayerShotgun(out var shotgun))
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError($"Attempted to sync shotgun for {shooter.Data.PlayerName} but shotgun is null.");
+            Error($"Attempted to sync shotgun for {shooter.Data.PlayerName} but shotgun is null.");
             return;
         }
 
@@ -36,7 +36,7 @@ public static class ShotgunRpc
     {
         if (!shooter.GetPlayerShotgun(out var shotgun))
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError($"Attempted to toggle shotgun for {shooter.Data.PlayerName} but shotgun is null.");
+            Error($"Attempted to toggle shotgun for {shooter.Data.PlayerName} but shotgun is null.");
             return;
         }
         
@@ -47,7 +47,7 @@ public static class ShotgunRpc
     {
         if (!shooter.GetPlayerShotgun(out var shotgun))
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError($"{shooter.Data.PlayerName} attempted to shoot but shotgun is null.");
+            Error($"{shooter.Data.PlayerName} attempted to shoot but shotgun is null.");
             yield break;
         }
         
