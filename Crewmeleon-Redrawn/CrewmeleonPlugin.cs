@@ -2,6 +2,7 @@ global using static Reactor.Utilities.Logger<CrewmeleonRedrawn.CrewmeleonRedrawn
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
+using CrewmeleonRedrawn.States;
 using CrewmeleonRedrawn.UI;
 using HarmonyLib;
 using Reactor;
@@ -48,6 +49,7 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
         {
             Log.LogInfo($"Scene changed from {s1} to {s2}, Resetting cursor...");
             Cursor.SetCursor(null, CursorMode.Auto);
+            StateManager.ClearAll();
         });
     }
 

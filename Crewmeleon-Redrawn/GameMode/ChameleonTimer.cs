@@ -69,9 +69,6 @@ public class ChameleonTimer
 
         timeLeft -= Time.deltaTime;
         timerBar.UpdateTimer(timeLeft, maxTime);
-        
-        if (CurrentStage == TimerStage.Hiding)
-            HoldSeekerStill();
 
         if (timeLeft > 0) return;
         paused = true;
@@ -93,14 +90,6 @@ public class ChameleonTimer
 
     public float GetTimeLeft() => timeLeft;
 
-    private void HoldSeekerStill()
-    {
-        if (!ChameleonGameMode.AmImpostor || PlayerControl.LocalPlayer.MyPhysics.Speed == 0)
-            return;
-
-        PlayerControl.LocalPlayer.DisableMovement();
-    }
-
     private void SetupSeekingStage()
     {
         timeLeft = maxTime = ChameleonOptions.Gameplay.SeekTime.Value;
@@ -110,11 +99,6 @@ public class ChameleonTimer
         SoundUtilities.Play(GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX);
         
         ChameleonGameModeManager.Instance?.TauntTimer.Begin();
-        
-        if (ChameleonGameMode.AmImpostor)
-        {
-            PlayerControl.LocalPlayer.moveable = true;
-        }
     }
 
     private void SetupRevealStage()
@@ -159,9 +143,6 @@ public class ChameleonTimer
         if (PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>())
             PlayerControl.LocalPlayer.RemoveModifier<SpectatingModifier>();
 
-        PlayerControl.LocalPlayer.moveable = false;
-        PlayerControl.LocalPlayer.NetTransform.Halt();
-        PlayerControl.LocalPlayer.MyPhysics.Speed = 0;
         HudManager.Instance.ShadowQuad.enabled = false;
 
         foreach (var player in players)

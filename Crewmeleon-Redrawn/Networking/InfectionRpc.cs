@@ -3,6 +3,7 @@ using AmongUs.GameOptions;
 using BepInEx.Unity.IL2CPP.Utils;
 using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Roles;
+using CrewmeleonRedrawn.States;
 using HarmonyLib;
 using MiraAPI.Roles;
 using Reactor.Networking.Attributes;
@@ -70,9 +71,7 @@ public static class InfectionRpc
 
     private static IEnumerator PlaySeekerAnimation(PlayerControl player)
     {
-        player.moveable = false;
-        player.NetTransform.Halt();
+        using var movementBlock = player.BlockMovement("seeker spawn animation");
         yield return player.MyPhysics.CoAnimateCustom(HudManager.Instance.IntroPrefab.HnSSeekerSpawnAnim);
-        player.moveable = true;
     }
 }

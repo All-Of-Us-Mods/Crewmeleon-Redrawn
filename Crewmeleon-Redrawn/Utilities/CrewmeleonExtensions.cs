@@ -16,10 +16,4 @@ public static class CrewmeleonExtensions
         shotgun = player.GetComponentInChildren<ShotgunComponent>(true);
         return shotgun;
     }
-
-    public static void DisableMovement(this PlayerControl player)
-    {
-        player.moveable = false;
-        player.NetTransform.Halt();
-    }
 }
