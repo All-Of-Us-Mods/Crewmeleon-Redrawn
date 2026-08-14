@@ -16,6 +16,7 @@ using MiraAPI.Utilities.Assets;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using CrewmeleonRedrawn.Integrations;
 
 namespace CrewmeleonRedrawn;
 
@@ -23,6 +24,7 @@ namespace CrewmeleonRedrawn;
 [BepInProcess("Among Us.exe")]
 [BepInDependency(ReactorPlugin.Id)]
 [BepInDependency(MiraApiPlugin.Id)]
+[BepInDependency("com.edgetel.perfectcomms", BepInDependency.DependencyFlags.SoftDependency)]
 [ReactorModFlags(ModFlags.RequireOnAllClients)]
 public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 {
@@ -50,11 +52,17 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
             Cursor.SetCursor(null, CursorMode.Auto);
             StateManager.ClearAll();
         });
+        if (PerfectCommsIntegration.IsLoaded())
+            PerfectCommsIntegration.Register();
     }
 
     public override bool Unload()
     {
         Harmony.UnpatchSelf();
+
+        if (PerfectCommsIntegration.IsLoaded())
+            PerfectCommsIntegration.Unregister();
+ 
 
         return base.Unload();
     }
