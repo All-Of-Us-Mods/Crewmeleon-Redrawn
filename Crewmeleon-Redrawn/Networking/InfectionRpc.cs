@@ -4,7 +4,6 @@ using BepInEx.Unity.IL2CPP.Utils;
 using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Roles;
 using HarmonyLib;
-using MiraAPI.GameModes;
 using MiraAPI.Roles;
 using Reactor.Networking.Attributes;
 using Object = UnityEngine.Object;
@@ -19,7 +18,7 @@ public static class InfectionRpc
         var seekerRole = RoleId.Get<SeekerRole>();
         ChangeRole(target, seekerRole);
         target.StartCoroutine(PlaySeekerAnimation(target));
-        (CustomGameModeManager.ActiveMode as ChameleonGameMode)!.NotifyOfDeath(target, infected: true);
+        ChameleonGameModeManager.Instance!.NotifyOfDeath(target, infected: true);
     }
     
     private static void ChangeRole(PlayerControl player, ushort newRoleType)

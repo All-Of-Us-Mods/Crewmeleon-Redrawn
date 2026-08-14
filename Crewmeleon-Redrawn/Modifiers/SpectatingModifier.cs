@@ -1,7 +1,6 @@
 using System.Collections;
 using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Utilities;
-using MiraAPI.GameModes;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
 using MiraAPI.Utilities.Assets;
@@ -25,11 +24,6 @@ public class SpectatingModifier : BaseModifier
 
     public override void OnActivate()
     {
-        if (CustomGameModeManager.ActiveMode is ChameleonGameMode chameleon)
-        {
-            chameleon.OnBeginSpectate(Player);
-        }
-
         if (!Player.AmOwner) return;
         Coroutines.Start(CoBegin());
         HudManager.Instance.ShadowQuad.enabled = false;
@@ -40,11 +34,6 @@ public class SpectatingModifier : BaseModifier
 
     public override void OnDeactivate()
     {
-        if (CustomGameModeManager.ActiveMode is ChameleonGameMode chameleon)
-        {
-            chameleon.OnStopSpectate(Player);
-        }
-
         if (!Player.AmOwner) return;
         Coroutines.Start(CoEnd());
         HudManager.Instance.ShadowQuad.enabled = true;

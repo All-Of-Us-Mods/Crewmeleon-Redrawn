@@ -2,7 +2,6 @@ using System.Collections;
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Modifiers;
 using CrewmeleonRedrawn.Networking;
-using MiraAPI.GameModes;
 using MiraAPI.GameOptions;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
@@ -110,8 +109,7 @@ public class ChameleonTimer
 
         SoundManager.Instance.PlaySound(GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX, false, 1);
         
-        var gamemode = CustomGameModeManager.ActiveMode as ChameleonGameMode;
-        gamemode?.TauntTimer.Begin();
+        ChameleonGameModeManager.Instance?.TauntTimer.Begin();
         
         if (ChameleonGameMode.AmImpostor && PlayerControl.LocalPlayer.MyPhysics.Speed <= 0)
         {
@@ -132,8 +130,7 @@ public class ChameleonTimer
         if (PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>())
             PlayerControl.LocalPlayer.RpcRemoveModifier<SpectatingModifier>();
 
-        var gamemode = CustomGameModeManager.ActiveMode as ChameleonGameMode;
-        gamemode?.TauntTimer.End();
+        ChameleonGameModeManager.Instance?.TauntTimer.End();
         
         // give each hider a revelation period
         if (ChameleonOptions.Gameplay.RevelationTimePerPlayer.Value > 0 && hiders.Count > 0)

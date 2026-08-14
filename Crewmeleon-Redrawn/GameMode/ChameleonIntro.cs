@@ -104,7 +104,7 @@ public static class ChameleonIntro
             {
                 spriteAnim.Resume();
             }
-            CustomGameModeManager.ActiveMode?.HudUpdate(HudManager.Instance);
+            ChameleonGameModeManager.Instance?.HudUpdate(HudManager.Instance);
             yield return null;
         }
         if (CustomGameModeManager.ActiveMode is not ChameleonGameMode c) yield break;
@@ -169,7 +169,7 @@ public static class ChameleonIntro
 
     private static IEnumerator CoPauseSeekerAnim(SpriteAnim animator)
     {
-        var timer = (CustomGameModeManager.ActiveMode as ChameleonGameMode)?.Timer;
+        var timer = ChameleonGameModeManager.Instance?.Timer;
 
         animator.SetTime(5);
         animator.Pause();

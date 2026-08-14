@@ -7,7 +7,7 @@ using Reactor.Utilities;
 namespace CrewmeleonRedrawn.Events;
 
 /**
- * fix for ChameleonGameMode.Instance is not null / ChameleonGameMode.Instance.CurrentStage in button Enabled
+ * this shouldn't be needed anymore, keeping it as a load bearing coconut 
  */
 public static class RoundStartEventListener
 {
