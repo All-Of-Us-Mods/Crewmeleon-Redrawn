@@ -13,7 +13,7 @@ public class ColorPickPreview
 
     public void Show(Vector2 screenPosition, Color color)
     {
-        _renderer ??= Create();
+        if (!_renderer) _renderer = Create();
 
         var cam = Camera.main!;
         

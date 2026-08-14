@@ -115,7 +115,12 @@ public class PickColorButton : CustomActionButton
         var x = Mathf.Clamp((int)screenPosition.x, 0, Screen.width - 1);
         var y = Mathf.Clamp((int)screenPosition.y, 0, Screen.height - 1);
 
-        Sampler ??= new Texture2D(1, 1, TextureFormat.RGB24, false);
+        if (!Sampler || !Sampler!.isReadable) // textures become unreadable after time by unity automatically, so i check for that and replace it with a new one
+        {
+            if (Sampler) UnityEngine.Object.Destroy(Sampler);
+            Sampler = new Texture2D(1, 1, TextureFormat.RGB24, false);
+        }
+
         Sampler.ReadPixels(new Rect(x, y, 1, 1), 0, 0, false);
         Sampler.Apply();
 

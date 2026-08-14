@@ -111,7 +111,7 @@ public class ChameleonTimer
         
         ChameleonGameModeManager.Instance?.TauntTimer.Begin();
         
-        if (ChameleonGameMode.AmImpostor && PlayerControl.LocalPlayer.MyPhysics.Speed <= 0)
+        if (ChameleonGameMode.AmImpostor)
         {
             PlayerControl.LocalPlayer.moveable = true;
         }

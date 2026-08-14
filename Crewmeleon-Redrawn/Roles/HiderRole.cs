@@ -55,5 +55,7 @@ public class HiderRole : CrewmateRole, ICustomRole
 
         if(playerCanvas is not null && playerCanvas)
             playerCanvas.Disable();
+
+        Player.Collider.excludeLayers = 0;
     }
 }
