@@ -24,11 +24,8 @@ public class LockMovementButton : CustomActionButton
     public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.LockButton;
     public override MiraKeybind? Keybind => MiraGlobalKeybinds.TertiaryAbility;
 
-    public bool IsLocked { get; private set; } = true;
-
-    
     public bool IsLocked { get; private set; }
-    
+
     public override void CreateButton(Transform parent)
     {
         base.CreateButton(parent);

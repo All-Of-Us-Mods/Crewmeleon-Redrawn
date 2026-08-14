@@ -14,6 +14,9 @@ public static class PlayerControlPatch
     [HarmonyPostfix]
     public static void PlayerControlStart(PlayerControl __instance)
     {
+        if (__instance.AmOwner)
+            ChameleonMovement.RegisterBlocks(__instance);
+        
         if (ChameleonGameModeManager.Instance == null && !CustomButtonUtilities.IsInPractice()) return;
         
         var zValue = OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects
@@ -35,8 +38,5 @@ public static class PlayerControlPatch
         var _playerCanvas = newBody.AddComponent<PlayerCanvasComponent>();
         _playerCanvas.Player = __instance;
         ShotgunComponent.CreateShotgun(__instance);
-        
-        if (__instance.AmOwner)
-            ChameleonMovement.RegisterBlocks(__instance);
     }
 }
