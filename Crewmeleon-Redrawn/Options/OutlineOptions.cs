@@ -7,7 +7,7 @@ namespace CrewmeleonRedrawn;
 public class OutlineOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Outline";
-
+    public override uint GroupPriority => 4;
     public ModdedEnumOption<OutlineStrength> OutlineStrengthOption { get; } =
         new("Outline Strength", OutlineStrength.Strong);
 
