@@ -8,6 +8,7 @@ namespace CrewmeleonRedrawn;
 public class GameplayOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Gameplay Options";
+    public override uint GroupPriority => 1;
 
     public ModdedToggleOption AllowUndo { get; } =
         new ModdedToggleOption("Allow Undo", false);

@@ -8,7 +8,7 @@ namespace CrewmeleonRedrawn;
 public class TauntingOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Taunting Options";
-
+    public override uint GroupPriority => 3;
     public ModdedToggleOption TauntingEnabled { get; } =
         new ModdedToggleOption("Taunting Enabled", true);
     public ModdedNumberOption TauntCooldown { get; } =
