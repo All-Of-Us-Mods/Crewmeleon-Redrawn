@@ -4,6 +4,8 @@ using MiraAPI.GameModes;
 using MiraAPI.Utilities;
 using PowerTools;
 using Reactor.Utilities;
+using Reactor.Utilities.Extensions;
+using TMPro;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.GameMode;
@@ -28,6 +30,10 @@ public static class ChameleonIntro
         intro.ImpostorTitle.gameObject.SetActive(true);
         intro.TeamTitle.gameObject.SetActive(false);
         intro.BackgroundBar.enabled = false;
+
+        var modeTitle = intro.transform.Find("HnS Stuff/Mode Title Background/Mode Title").GetComponent<TextMeshPro>();
+        modeTitle.gameObject.GetComponent<TextTranslatorTMP>().Destroy();
+        modeTitle.text = "Crewmeleon";
 
         var impostor = PlayerControl.AllPlayerControls.ToArray().FirstOrDefault(x => x.Data.Role.IsImpostor);
 

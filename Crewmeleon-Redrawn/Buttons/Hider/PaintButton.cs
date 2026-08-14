@@ -3,6 +3,7 @@ using CrewmeleonRedrawn.Modifiers;
 using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
+using MiraAPI.Keybinds;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
 using UnityEngine;
@@ -20,6 +21,7 @@ public class PaintButton : CustomActionButton
     public override string Name => PaintText;
     public override float Cooldown => 1;
     public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.PaintButton;
+    public override MiraKeybind? Keybind => MiraGlobalKeybinds.PrimaryAbility;
 
     public override bool CanUse()
     {

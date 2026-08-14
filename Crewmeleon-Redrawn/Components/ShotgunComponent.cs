@@ -63,10 +63,11 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         Coroutines.Start(CoUpdateHandColor(Owner, _handsRend));
         gameObject.SetActive(false);
     }
-
+    
     private void Update()
     {
-        if (!Owner.AmOwner) return;
+        _rend.enabled = _handsRend.enabled = _muzzleRend.enabled = !Owner.onLadder;
+        if (Owner.onLadder || !Owner.AmOwner) return;
 
         if (_currentCooldown > 0f)
         {
