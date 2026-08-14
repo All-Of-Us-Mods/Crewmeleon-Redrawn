@@ -51,11 +51,8 @@ public class ChameleonGameModeManager(nint cppPtr) : MonoBehaviour(cppPtr)
 
         Timer.CreateTimer(hud);
         PlayerTracker.Begin(hud);
-
-        if (AmongUsClient.Instance.AmHost)
-        {
-            PlayerControl.LocalPlayer.RpcUpdateTimerState(TimerStage.Hiding);
-        }
+        
+        Timer.SetStage(TimerStage.Hiding);
     }
 
     private void OnDestroy()

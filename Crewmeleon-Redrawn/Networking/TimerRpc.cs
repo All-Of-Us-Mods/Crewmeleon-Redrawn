@@ -18,14 +18,14 @@ public static class TimerRpc
             return;
         }
 
-        if (ChameleonGameModeManager.Instance is { } mode)
+        if (ChameleonGameModeManager.Instance)
         {
             Logger<CrewmeleonRedrawnPlugin>.Instance.LogInfo($"Host updated timer stage to {stage.ToString()}");
-            mode.Timer.SetStage(stage);
+            ChameleonGameModeManager.Instance!.Timer.SetStage(stage);
         }
         else
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Cannot update timer state because gamemode is not Crewmeleon.");
+            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Cannot update timer state because Crewmeleon gamemode is not initialized.");
         }
     }
     
@@ -44,10 +44,10 @@ public static class TimerRpc
             return;
         }
 
-        if (ChameleonGameModeManager.Instance is { } mode)
+        if (ChameleonGameModeManager.Instance)
         {
             Logger<CrewmeleonRedrawnPlugin>.Instance.LogInfo($"Host updated taunt timer");
-            mode.TauntTimer.ResetTimer();
+            ChameleonGameModeManager.Instance!.TauntTimer.ResetTimer();
 
             var tauntSfx = GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX;
             foreach (var playerControl in Helpers.GetAlivePlayers().Where(x => !x.AmOwner))
@@ -55,7 +55,7 @@ public static class TimerRpc
         }
         else
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Cannot update taunt timer state because gamemode is not Crewmeleon.");
+            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Cannot update taunt timer state because Crewmeleon gamemode is not initialized.");
         }
     }
 }
