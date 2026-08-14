@@ -29,7 +29,6 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 
     public bool DisplayOnOptionsMenu => false;
     public string OptionsTitleText => Name;
-    public LoadableAsset<Sprite>? ModIcon => CrewmeleonAssets.PaintButton;
 
     public static bool IsMobile;
 

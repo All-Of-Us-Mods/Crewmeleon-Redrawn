@@ -2,6 +2,8 @@ using System.Collections;
 using CrewmeleonRedrawn.Roles;
 using MiraAPI.GameModes;
 using MiraAPI.Utilities;
+using MiraAPI.Utilities.Assets;
+using UnityEngine;
 
 namespace CrewmeleonRedrawn.GameMode;
 
@@ -9,6 +11,7 @@ public class ChameleonGameMode : AbstractGameMode
 {
     public override string Name => "Crewmeleon";
     public override string Description => "Paint yourself, blend in with your surroundings\nand survive for as long as possible!";
+    public override LoadableAsset<Sprite>? Icon => CrewmeleonAssets.PaintButton;
 
     public override bool ShowGameModeIntroCutscene => true;
     public override bool GameModeBodyTypeOverride => true;
