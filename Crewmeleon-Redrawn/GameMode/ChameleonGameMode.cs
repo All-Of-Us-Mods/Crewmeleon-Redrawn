@@ -10,7 +10,6 @@ public class ChameleonGameMode : AbstractGameMode
 {
     public override string Name => "Crewmeleon";
     public override string Description => "Paint yourself, blend in with your surroundings\nand survive for as long as possible!";
-    public override Color Color { get; } = new Color32(150, 255, 90, 255);
 
     public override bool ShowGameModeIntroCutscene => true;
     public override bool GameModeBodyTypeOverride => true;

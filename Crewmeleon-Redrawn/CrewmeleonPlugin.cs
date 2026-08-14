@@ -10,6 +10,7 @@ using Reactor.Utilities;
 using ReactUI.Plugin;
 using MiraAPI;
 using MiraAPI.PluginLoading;
+using MiraAPI.Utilities.Assets;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -27,7 +28,8 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 
     public bool DisplayOnOptionsMenu => false;
     public string OptionsTitleText => Name;
-    
+    public LoadableAsset<Sprite>? ModIcon => CrewmeleonAssets.PaintButton;
+
     public static bool IsMobile;
 
     public override void Load()
