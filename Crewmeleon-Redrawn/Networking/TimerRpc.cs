@@ -1,10 +1,8 @@
 ﻿using CrewmeleonRedrawn.GameMode;
-using MiraAPI.GameModes;
 using MiraAPI.GameOptions;
 using MiraAPI.Utilities;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
-using Reactor.Utilities.Extensions;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.Networking;
@@ -20,7 +18,7 @@ public static class TimerRpc
             return;
         }
 
-        if (CustomGameModeManager.ActiveMode is ChameleonGameMode mode)
+        if (ChameleonGameModeManager.Instance is { } mode)
         {
             Logger<CrewmeleonRedrawnPlugin>.Instance.LogInfo($"Host updated timer stage to {stage.ToString()}");
             mode.Timer.SetStage(stage);
@@ -46,7 +44,7 @@ public static class TimerRpc
             return;
         }
 
-        if (CustomGameModeManager.ActiveMode is ChameleonGameMode mode)
+        if (ChameleonGameModeManager.Instance is { } mode)
         {
             Logger<CrewmeleonRedrawnPlugin>.Instance.LogInfo($"Host updated taunt timer");
             mode.TauntTimer.ResetTimer();

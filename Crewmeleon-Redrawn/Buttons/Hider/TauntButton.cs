@@ -28,7 +28,7 @@ public class TauntButton : CustomActionButton
     {
         return role is HiderRole
                && !PlayerControl.LocalPlayer.HasModifier<PaintingModifier>()
-               && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } ||
+               && (ChameleonGameModeManager.Instance is { CurrentStage: not TimerStage.Revelation } ||
                    CustomButtonUtilities.IsInPractice());
     }
 

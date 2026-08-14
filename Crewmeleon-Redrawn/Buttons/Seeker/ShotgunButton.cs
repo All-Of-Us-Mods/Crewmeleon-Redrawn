@@ -25,7 +25,7 @@ public class ShotgunButton : CustomActionButton
     public override bool Enabled(RoleBehaviour? role)
     {
         return role is SeekerRole
-               && (ChameleonGameMode.Instance is { CurrentStage: not TimerStage.Revelation } ||
+               && (ChameleonGameModeManager.Instance is { CurrentStage: not TimerStage.Revelation } ||
                    CustomButtonUtilities.IsInPractice());
     }
 
