@@ -25,15 +25,7 @@ public class SpectateButton : CustomActionButton
     public override ButtonLocation Location =>
         CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
 
-    private bool _canSpectate = false;
-
-    public override void CreateButton(Transform parent)
-    {
-        base.CreateButton(parent);
-        _canSpectate = SpectatingModifier.GetSpectateTargets().Count > 0;
-    }
-
-    public override bool CanUse() => _canSpectate;
+    public override bool CanUse() => true;
 
     public override bool Enabled(RoleBehaviour? role)
     {
@@ -65,8 +57,6 @@ public class SpectateButton : CustomActionButton
 
         yield return new WaitForSeconds(0.05f);
         yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.2f));
-
-        _canSpectate = true;
     }
 
     private IEnumerator CoStopSpectating()
@@ -79,7 +69,5 @@ public class SpectateButton : CustomActionButton
 
         yield return new WaitForSeconds(0.05f);
         yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.2f));
-
-        _canSpectate = SpectatingModifier.GetSpectateTargets().Count > 0;
     }
 }
