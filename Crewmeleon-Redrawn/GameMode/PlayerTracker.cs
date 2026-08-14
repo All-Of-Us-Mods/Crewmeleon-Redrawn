@@ -25,6 +25,7 @@ public class PlayerTracker
     private GridArrange? _gridArrange;
     private TextMeshPro? _hidersLabel;
     private TextMeshPro? _seekersLabel;
+    private static List<PlayerControl> allTrackedPlayers = new();
 
     public void Begin(HudManager hud)
     {
@@ -38,15 +39,7 @@ public class PlayerTracker
         _seekersLabel = Helpers.CreateTextLabel("SeekersLabel", hud.transform, AspectPosition.EdgeAlignments.Top,
             new Vector3(1.5f, 1.23f, 0), textAlignment: TextAlignmentOptions.Right);
         _seekersLabel.color = Palette.ImpostorRoleRed;
-        if (_tracker.crewmateSprites.Count > maxPlayers)
-        {
-            var toBeKept = _tracker.crewmateSprites.ToArray().Take(maxPlayers).ToArray();
-            foreach (var crewmateSprite in _tracker.crewmateSprites)
-            {
-                if (toBeKept.Contains(crewmateSprite)) continue;
-                else crewmateSprite.gameObject.SetActive(false);
-            }
-        }
+        allTrackedPlayers = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data && x.Data.Role && !x.Data.Role.IsImpostor).ToList();
     }
 
     public void Update()
@@ -68,5 +61,13 @@ public class PlayerTracker
         _gridArrange.MaxColumns = maxPlayers / 2;
         _gridArrange.CellSize = new Vector2(trackerLength / _gridArrange.cells.Count, -0.75f);
         _gridArrange.ArrangeChilds();
+        
+        //Percentage logic
+        var deadTrackedCount = allTrackedPlayers.Count(x => !x.IsNullOrDestroyed() && x.Data.IsDead);
+        var index = deadTrackedCount - 1;
+        if (index >= 0 && index < _tracker.crewmateSprites.Count && _tracker.crewmateSprites[index] != null && !_tracker.crewmateSprites[index].IsKilled)
+        {
+            _tracker.crewmateSprites[index].SetKilled(_tracker.slashAnimations.ToArray().Random());
+        }
     }
 }
