@@ -156,6 +156,7 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         if (!_initialized) return;
 
         Player.cosmetics.lockVisible = false;
+        Player.cosmetics.Visible = true;
         gameObject.SetActive(false);
     }
 
