@@ -3,6 +3,7 @@ using CrewmeleonRedrawn.Modifiers;
 using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
+using MiraAPI.Keybinds;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
 using UnityEngine;
@@ -21,6 +22,7 @@ public class LockMovementButton : CustomActionButton
         CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
 
     public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.LockButton;
+    public override MiraKeybind? Keybind => MiraGlobalKeybinds.TertiaryAbility;
 
     public bool IsLocked { get; private set; } = true;
 
