@@ -19,64 +19,42 @@ public class SpectatingModifier : BaseModifier
     public override bool HideOnUi => true;
 
     private int _targetIndex;
-    private GameObject? _spectateControls;
     private bool _wasMoveable;
+    private GameObject? _spectateControls;
 
     public override void OnActivate()
     {
-        if (!Player.AmOwner) return;
-        Coroutines.Start(CoBegin());
-        HudManager.Instance.ShadowQuad.enabled = false;
+        if (!Player.AmOwner)
+            return;
 
-        _wasMoveable = Player.moveable;
-        Player.DisableMovement();
-    }
-
-    public override void OnDeactivate()
-    {
-        if (!Player.AmOwner) return;
-        Coroutines.Start(CoEnd());
-        HudManager.Instance.ShadowQuad.enabled = true;
-        Player.moveable = _wasMoveable;
-
-        HudManager.Instance.PlayerCam.Target = Player;
-    }
-
-    private IEnumerator CoBegin()
-    {
-        var buttonsParent = HudManager.Instance.transform.FindChild("Buttons");
-        var bottomRight = buttonsParent.FindChild("BottomRight");
-        var bottomLeft = buttonsParent.FindChild("BottomLeft");
-
-        HudManager.Instance.StartCoroutine(Effects.Slide2D(bottomRight, bottomRight.transform.localPosition, bottomRight.transform.localPosition + Vector3.down * 10, 0.75f));
-        HudManager.Instance.StartCoroutine(Effects.Slide2D(bottomLeft, bottomLeft.transform.localPosition, bottomLeft.transform.localPosition + Vector3.down * 10, 0.75f));
-        
-        yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.clear, Color.black, 0.5f));
-        
         _targetIndex = 0;
         CreateControls();
 
         var target = GetSpectateTargets()[_targetIndex];
         SnapCamToTarget(target);
 
-        yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.5f));
+        HudManager.Instance.ShadowQuad.enabled = false;
+
+        _wasMoveable = Player.moveable;
+        Player.DisableMovement();
+
+        CustomButtonUtilities.RefreshActionButtonsDeferred(Player);
     }
 
-    private IEnumerator CoEnd()
+    public override void OnDeactivate()
     {
-        yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.clear, Color.black, 0.3f));
-        
-        if(_spectateControls is not null && _spectateControls)
+        if (!Player.AmOwner)
+            return;
+
+        if (_spectateControls is not null && _spectateControls)
             _spectateControls.gameObject.Destroy();
 
-        yield return HudManager.Instance.StartCoroutine(HudManager.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.2f));
-        
-        var buttonsParent = HudManager.Instance.transform.FindChild("Buttons");
-        var bottomRight = buttonsParent.FindChild("BottomRight");
-        var bottomLeft = buttonsParent.FindChild("BottomLeft");
+        HudManager.Instance.ShadowQuad.enabled = true;
+        HudManager.Instance.PlayerCam.Target = Player;
 
-        HudManager.Instance.StartCoroutine(Effects.Slide2D(bottomRight, bottomRight.transform.localPosition, bottomRight.transform.localPosition - Vector3.down * 10, 0.75f));
-        HudManager.Instance.StartCoroutine(Effects.Slide2D(bottomLeft, bottomLeft.transform.localPosition, bottomLeft.transform.localPosition - Vector3.down * 10, 0.75f));
+        Player.moveable = _wasMoveable;
+
+        CustomButtonUtilities.RefreshActionButtonsDeferred(Player);
     }
 
     private void CreateControls()
@@ -86,8 +64,8 @@ public class SpectatingModifier : BaseModifier
         _spectateControls.transform.SetParent(HudManager.Instance.transform);
 
         var controlsAspectPos = _spectateControls.AddComponent<AspectPosition>();
-        controlsAspectPos.Alignment = AspectPosition.EdgeAlignments.LeftBottom;
-        controlsAspectPos.DistanceFromEdge = new Vector3(2.5f, 0.75f, 0);
+        controlsAspectPos.Alignment = AspectPosition.EdgeAlignments.Bottom;
+        controlsAspectPos.DistanceFromEdge = new Vector3(0, 0.75f, 0);
         controlsAspectPos.AdjustPosition();
         
         // create the target player name label
@@ -130,23 +108,10 @@ public class SpectatingModifier : BaseModifier
         prevButton.OnClick = new Button.ButtonClickedEvent();
         prevButton.OnClick.AddListener((UnityAction)(() => SpectatePreviousTarget(label)));
         prevButton.transform.position = label.transform.position - new Vector3(2, 0, 0);
+        prevButton.activeSprites.transform.localEulerAngles = new Vector3(0f, 180f, 0f);
+        prevButton.inactiveSprites.transform.localEulerAngles = new Vector3(0f, 180f, 0f);
 
         _spectateControls.transform.localScale = Vector3.one * 0.7f;
-        
-        // create the stop spectating button
-        var stopButton = GameObject.Instantiate(HudManager.Instance.GameMenu.Tabs[0].Content.transform.FindChild("LeaveGameButton"), _spectateControls.transform).GetComponent<PassiveButton>();
-        stopButton.OnClick = new Button.ButtonClickedEvent();
-        stopButton.OnClick.AddListener((UnityAction)(() => Player.RpcRemoveModifier<SpectatingModifier>()));
-
-        var stopBtnAspectPos = stopButton.gameObject.AddComponent<AspectPosition>();
-        stopBtnAspectPos.Alignment = AspectPosition.EdgeAlignments.Right;
-        stopBtnAspectPos.DistanceFromEdge = new Vector3(-3.5f, 0, 0);
-        stopBtnAspectPos.AdjustPosition();
-
-        HudManager.Instance.StartCoroutine(Effects.ActionAfterDelay(0.05f, new System.Action(() =>
-        {
-            stopButton.transform.GetChild(1).GetComponent<TextMeshPro>().text = "Stop Spectating";
-        })));
     }
 
     private void SpectateNextTarget(TextMeshPro targetLabel)

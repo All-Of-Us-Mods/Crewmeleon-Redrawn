@@ -5,6 +5,7 @@ using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
+using Reactor.Utilities;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.Buttons.Hider;
@@ -29,8 +30,9 @@ public class PaintButton : CustomActionButton
     public override bool Enabled(RoleBehaviour? role)
     {
         return role is HiderRole
-               && (ChameleonGameModeManager.Instance is { CurrentStage: not TimerStage.Revelation } ||
-                   CustomButtonUtilities.IsInPractice());
+            && !PlayerControl.LocalPlayer.HasModifier<SpectatingModifier>()
+            && (ChameleonGameModeManager.Instance is { CurrentStage: not TimerStage.Revelation } || 
+                CustomButtonUtilities.IsInPractice());
     }
 
     protected override void OnClick()
