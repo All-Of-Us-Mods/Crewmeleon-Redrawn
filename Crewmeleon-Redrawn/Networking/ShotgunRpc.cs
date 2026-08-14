@@ -60,7 +60,7 @@ public static class ShotgunRpc
             shooter.CustomMurder(plr!, MurderResultFlags.Succeeded, teleportMurderer: false);
         }
 
-        AudioSource.PlayClipAtPoint(CrewmeleonAssets.ShotgunFireSound.LoadAsset(), shooter.GetTruePosition(), 0.5f);
+        SoundUtilities.PlayAtPosition(CrewmeleonAssets.ShotgunFireSound.LoadAsset(), shooter.GetTruePosition(), 0.5f);
 
         if (shooter.AmOwner)
         {

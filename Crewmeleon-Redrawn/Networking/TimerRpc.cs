@@ -1,9 +1,9 @@
 ﻿using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameOptions;
 using MiraAPI.Utilities;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
-using UnityEngine;
 
 namespace CrewmeleonRedrawn.Networking;
 
@@ -51,7 +51,7 @@ public static class TimerRpc
 
             var tauntSfx = GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX;
             foreach (var playerControl in Helpers.GetAlivePlayers().Where(x => !x.AmOwner))
-                AudioSource.PlayClipAtPoint(tauntSfx, playerControl.GetTruePosition(), 0.1f);
+                SoundUtilities.PlayAtPosition(tauntSfx, playerControl.GetTruePosition(), 0.1f);
         }
         else
         {

@@ -46,7 +46,11 @@ public class HiderRole : CrewmateRole, ICustomRole
         
         var layerMask = 0;
         foreach (var layer in DisabledColliders) layerMask |= 1 << layer;
-        Player.Collider.excludeLayers = layerMask;
+        //Player.Collider.excludeLayers = layerMask;
+        foreach (var playerControl in PlayerControl.AllPlayerControls)
+        {
+            playerControl.Collider.excludeLayers = layerMask;
+        }
     }
 
     public override void Deinitialize(PlayerControl targetPlayer)
