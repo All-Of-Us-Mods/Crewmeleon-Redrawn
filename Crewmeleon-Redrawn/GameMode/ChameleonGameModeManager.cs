@@ -76,11 +76,12 @@ public class ChameleonGameModeManager(nint cppPtr) : MonoBehaviour(cppPtr)
 
         // todo: maybe move this out into a HudManager patch instead of update looping
         instance.TaskStuff.gameObject.SetActive(false);
+        instance.PetButton.gameObject.SetActive(false);
         instance.ReportButton.gameObject.SetActive(false);
         instance.SabotageButton.gameObject.SetActive(false);
         instance.ImpostorVentButton.gameObject.SetActive(false);
         instance.KillButton.gameObject.SetActive(false);
-        instance.Chat.gameObject.SetActive(CanUseChat);
+        instance.Chat.gameObject.SetActive(CanUseChat); 
 
         Timer.Update();
         PlayerTracker.Update();
