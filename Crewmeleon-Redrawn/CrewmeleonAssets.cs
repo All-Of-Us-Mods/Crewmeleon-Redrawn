@@ -31,6 +31,8 @@ public class CrewmeleonAssets
     public static readonly LoadableAsset<Sprite> TargetSprite = new LoadableResourceAsset(ShotgunSpritesPath + ".Target.png");
     public static readonly LoadableAudioResourceAsset ShotgunFireSound = new(SoundsPath + ".Shotgun.wav");
 
+    public static readonly LoadableAsset<Sprite> GamemodeIcon = new LoadableResourceAsset(SpritesPath + ".UI.CrewmeleonGamemodeIcon.png");
+    
     private const string SplatterSpritesPath = SpritesPath + ".Splatters";
     public static readonly List<LoadableResourceAsset> SplatterSprites =
     [
