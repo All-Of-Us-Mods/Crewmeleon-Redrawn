@@ -3,7 +3,6 @@ using BepInEx.Unity.IL2CPP.Utils.Collections;
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Components;
 using CrewmeleonRedrawn.GameMode;
-using CrewmeleonRedrawn.Roles;
 using MiraAPI.Networking;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
@@ -28,10 +27,36 @@ public static class ShotgunRpc
     [MethodRpc((uint)CrewmeleonRpc.ShootShotgun)]
     public static void RpcShootShotgun(this PlayerControl shooter, Vector2 position, Color32 splatterColor, float splatterSize)
     {
-        if (ChameleonGameModeManager.Instance == null 
-            || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) return;
+        if ((ChameleonGameModeManager.Instance == null 
+            || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) 
+            && !CustomButtonUtilities.IsInPractice()) return;
         
-        Coroutines.Start(CoShoot(shooter, position, splatterColor, splatterSize));
+        Coroutines.Start(CoShoot(shooter));
+        if (splatterSize > 0f)
+        {
+            SplatterComponent.CreateSplatter(position, splatterColor, splatterSize);
+        }
+    }
+
+    [MethodRpc((uint)CrewmeleonRpc.SplatKill)]
+    public static void RpcSplatKill(this PlayerControl shooter, byte[] victimIds, float splatterSize)
+    {
+        if ((ChameleonGameModeManager.Instance == null 
+             || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) 
+            && !CustomButtonUtilities.IsInPractice()) return;
+        
+        foreach (var victimId in victimIds)
+        {
+            var victim = GameData.Instance.GetPlayerById(victimId)?.Object;
+            if (!victim)
+            {
+                Error($"{shooter.Data.PlayerName} shot player {victimId} but they could not be found.");
+                continue;
+            }
+
+            shooter.CustomMurder(victim, MurderResultFlags.Succeeded, teleportMurderer: false);
+            SplatterComponent.CreateSplatter(victim.GetTruePosition(), Palette.PlayerColors[victim.cosmetics.ColorId], splatterSize);
+        }
     }
     
     [MethodRpc((uint)CrewmeleonRpc.ToggleShotgun)]
@@ -46,30 +71,12 @@ public static class ShotgunRpc
         shotgun.gameObject.SetActive(visible);
     }
     
-    private static IEnumerator CoShoot(PlayerControl shooter, Vector2 pos, Color32 splatterColor, float splatterSize)
+    private static IEnumerator CoShoot(PlayerControl shooter)
     {
         if (!shooter.GetPlayerShotgun(out var shotgun))
         {
             Error($"{shooter.Data.PlayerName} attempted to shoot but shotgun is null.");
             yield break;
-        }
-        
-        // ReSharper disable once Unity.PreferNonAllocApi
-        // pre-sizing array is too much of a headache to get correctly, unity already sizes the array with the specific amount of colliders hit
-        // player also has a large ass collider anyways (its a trigger collider), but we can use that as the full hitbox instead of expanding it
-        var hitPlayerColliders = Physics2D.OverlapCircleAll(pos, 0.0001f, Constants.LivingPlayersOnlyMask);
-
-        var killedPlayers = 0;
-        foreach (var playerCollider in hitPlayerColliders)
-        {
-            if (killedPlayers >= ChameleonOptions.Gameplay.ShotgunKillsPerShot) break;
-            var victim = playerCollider.GetComponent<PlayerControl>();
-            if (!victim || !victim.Data) continue;
-            if (victim.Data.Role is SeekerRole) continue;
-
-            shooter.CustomMurder(victim, MurderResultFlags.Succeeded, teleportMurderer: false);
-            SplatterComponent.CreateSplatter(pos, Palette.PlayerColors[victim.cosmetics.ColorId], splatterSize);
-            killedPlayers++;
         }
 
         SoundUtilities.PlayAtPosition(CrewmeleonAssets.ShotgunFireSound.LoadAsset(), shooter.GetTruePosition(), 0.5f);
@@ -78,8 +85,7 @@ public static class ShotgunRpc
         {
             Coroutines.Start(HudManager.Instance.PlayerCam.CoShakeScreen(0.5f, 1).WrapToManaged());   
         }
-
-
+        
         yield return shotgun!.CoFlashMuzzle();
     }
 }
