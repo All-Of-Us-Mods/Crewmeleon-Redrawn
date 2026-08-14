@@ -12,6 +12,7 @@ public class CrewmeleonAssets
     public static readonly LoadableAsset<Sprite> LockButton     = new LoadableResourceAsset(ButtonSpritesPath + ".Lock.png");
     public static readonly LoadableAsset<Sprite> UnlockButton   = new LoadableResourceAsset(ButtonSpritesPath + ".Unlock.png");
     public static readonly LoadableAsset<Sprite> PaintButton    = new LoadableResourceAsset(ButtonSpritesPath + ".Paint.png");
+    public static readonly LoadableAsset<Sprite> SpectateButton = new LoadableResourceAsset(ButtonSpritesPath + ".Spectate.png");
 
     private const string PaintingUISpritesPath = SpritesPath + ".UI.Painting";
     public static readonly LoadableAsset<Sprite> PlayerSprite           = new LoadableResourceAsset(PaintingUISpritesPath + ".PlayerSprite.png");

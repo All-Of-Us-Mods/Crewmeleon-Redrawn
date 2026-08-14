@@ -13,7 +13,7 @@ public class SpectateButton : CustomActionButton
 {
     public override string Name => "Spectate";
     public override float Cooldown => 5;
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+    public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.SpectateButton;
 
     public override ButtonLocation Location =>
         CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
