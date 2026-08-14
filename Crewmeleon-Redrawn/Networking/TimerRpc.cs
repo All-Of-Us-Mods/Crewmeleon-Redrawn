@@ -1,9 +1,8 @@
 ﻿using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameOptions;
 using MiraAPI.Utilities;
 using Reactor.Networking.Attributes;
-using Reactor.Utilities;
-using UnityEngine;
 
 namespace CrewmeleonRedrawn.Networking;
 
@@ -14,18 +13,18 @@ public static class TimerRpc
     {
         if (!source.IsHost())
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Only host can update the timer state.");
+            Error("Only host can update the timer state.");
             return;
         }
 
         if (ChameleonGameModeManager.Instance)
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogInfo($"Host updated timer stage to {stage.ToString()}");
+            Info($"Host updated timer stage to {stage.ToString()}");
             ChameleonGameModeManager.Instance!.Timer.SetStage(stage);
         }
         else
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Cannot update timer state because Crewmeleon gamemode is not initialized.");
+            Error("Cannot update timer state because Crewmeleon gamemode is not initialized.");
         }
     }
     
@@ -34,28 +33,28 @@ public static class TimerRpc
     {
         if (!source.IsHost())
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Only host can update the taunt timer state.");
+            Error("Only host can update the taunt timer state.");
             return;
         }
 
         if (!OptionGroupSingleton<TauntingOptions>.Instance.TauntingEnabled)
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Tried to update taunt timer but taunting is disabled.");
+            Error("Tried to update taunt timer but taunting is disabled.");
             return;
         }
 
         if (ChameleonGameModeManager.Instance)
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogInfo($"Host updated taunt timer");
+            Info($"Host updated taunt timer");
             ChameleonGameModeManager.Instance!.TauntTimer.ResetTimer();
 
             var tauntSfx = GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX;
             foreach (var playerControl in Helpers.GetAlivePlayers().Where(x => !x.AmOwner))
-                AudioSource.PlayClipAtPoint(tauntSfx, playerControl.GetTruePosition(), 0.1f);
+                SoundUtilities.PlayAtPosition(tauntSfx, playerControl.GetTruePosition(), 0.1f);
         }
         else
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Cannot update taunt timer state because Crewmeleon gamemode is not initialized.");
+            Error("Cannot update taunt timer state because Crewmeleon gamemode is not initialized.");
         }
     }
 }

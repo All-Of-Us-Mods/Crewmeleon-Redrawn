@@ -1,10 +1,7 @@
 ﻿using System.Collections;
-using System.Linq;
+using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Networking;
-using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameOptions;
-using MiraAPI.Networking;
-using Reactor.Networking.Attributes;
 using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
 using Reactor.Utilities.Extensions;
@@ -76,6 +73,8 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
 
         if (!Input.GetMouseButtonDown(0)) return;
+        if (ChameleonGameModeManager.Instance == null 
+            || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) return;
         if (PassiveButtonManager.Instance.currentOver != null && PassiveButtonManager.Instance.currentOver.gameObject.layer == _uiLayer) return;
         var worldPos = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
         Owner.RpcShootShotgun(worldPos, Palette.PlayerColors.Random(), Random.RandomRange(0.06f, 0.14f));

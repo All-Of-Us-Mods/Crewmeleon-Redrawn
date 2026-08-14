@@ -35,5 +35,10 @@ public class PaintingModifier : BaseModifier
         CustomButtonUtilities.RefreshActionButtonsDeferred(Player);
 
         base.OnDeactivate();
-    }  
+    }
+
+    public override void OnDeath(DeathReason reason)
+    {
+        Player.RpcRemoveModifier<PaintingModifier>();
+    }
 }

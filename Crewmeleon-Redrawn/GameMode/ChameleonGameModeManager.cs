@@ -1,6 +1,4 @@
-using CrewmeleonRedrawn.Networking;
 using MiraAPI.Utilities;
-using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
@@ -40,7 +38,7 @@ public class ChameleonGameModeManager(nint cppPtr) : MonoBehaviour(cppPtr)
         }
         catch (Exception _)
         {
-            Logger<CrewmeleonRedrawnPlugin>.Instance.LogError("Could not find emergency button");
+            Error("Could not find emergency button");
         }
         
         foreach (var player in Helpers.GetAlivePlayers())

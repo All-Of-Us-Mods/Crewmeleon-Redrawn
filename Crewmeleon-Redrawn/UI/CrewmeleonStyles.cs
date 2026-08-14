@@ -61,15 +61,9 @@ public static class CrewmeleonStyles
 
     public static float Scale { get; private set; } = 1f;
 
-    public static float PanelTop { get; private set; }
-
     public static float PanelWidth { get; private set; }
 
     public static float LogicalHeight { get; private set; }
-
-    /// <summary>the inset that centres a panel once layout has told us how tall it really is</summary>
-    public static float CentreTop(float height) =>
-        Mathf.Max(Mathf.Round((LogicalHeight - height) / 2f), ScreenGutter);
 
     /// <summary>what a section has left inside the panel once every border and padding is paid</summary>
     public static float SectionContentWidth =>
@@ -116,9 +110,6 @@ public static class CrewmeleonStyles
         var designHeight = MobileUi.Active ? DesignHeightSplit : DesignHeightSingle;
 
         Scale = Mathf.Clamp(Mathf.Min(PanelWidth / DesignWidth, availableHeight / designHeight), 0.5f, 4f);
-
-        // only the opening position — the ticker re-centres on the measured height once laid out
-        PanelTop = CentreTop(designHeight * Scale);
     }
 
     public static void Register()

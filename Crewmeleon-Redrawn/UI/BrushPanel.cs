@@ -34,25 +34,15 @@ public static class BrushPanel
     private static bool lastPainting;
     private static bool lastPicking;
 
-    private static RenderHandle? colourHandle;
-    private static RenderHandle? brushHandle;
-    private static RenderHandle? fullHandle;
-
-    private static float colourTop;
-    private static float brushTop;
-    private static float fullTop;
-
     /// <summary>
     /// Mobile splits into two roots so neither covers the screen and blocks game clicks. All three
     /// mount up front and pick themselves out by layout, so the dev toggle can switch live.
     /// </summary>
     public static void Mount()
     {
-        colourHandle = Render(ColourRoot);
-        brushHandle = Render(BrushRoot);
-        fullHandle = Render(FullRoot);
-
-        colourTop = brushTop = fullTop = CrewmeleonStyles.PanelTop;
+        Render(ColourRoot);
+        Render(BrushRoot);
+        Render(FullRoot);
     }
 
     /// <summary>watches the state the panel draws from and redraws only when it changes</summary>
@@ -65,15 +55,11 @@ public static class BrushPanel
 
         var resized = CrewmeleonStyles.RefreshIfResolutionChanged();
 
-        var recentred = Recentre(colourHandle, ref colourTop)
-                        | Recentre(brushHandle, ref brushTop)
-                        | Recentre(fullHandle, ref fullTop);
-
         var painting = IsPainting();
         var picking = CustomButtonSingleton<PickColorButton>.Instance.IsPicking;
         var version = BrushStore.Local.Version;
 
-        if (!toggled && !resized && !recentred
+        if (!toggled && !resized
             && painting == lastPainting && picking == lastPicking && version == lastVersion) return;
 
         lastPainting = painting;
@@ -84,33 +70,17 @@ public static class BrushPanel
     }
 
     private static VNode RenderColour() =>
-        Visible(MobileUi.Active) ? Panel(LeftInset(colourTop), ColorSection(BrushStore.Local)) : Div();
+        Visible(MobileUi.Active) ? Panel(LeftInset, ColorSection(BrushStore.Local)) : Div();
 
     private static VNode RenderBrush() =>
-        Visible(MobileUi.Active) ? Panel(RightInset(brushTop), BrushSection(BrushStore.Local)) : Div();
+        Visible(MobileUi.Active) ? Panel(RightInset, BrushSection(BrushStore.Local)) : Div();
 
     private static VNode RenderFull()
     {
         if (!Visible(!MobileUi.Active)) return Div();
 
         var brush = BrushStore.Local;
-        return Panel(LeftInset(fullTop), ColorSection(brush), BrushSection(brush), KeybindsSection());
-    }
-
-    /// <summary>
-    /// The panels are content-height, so their real height only exists after layout. Re-centring
-    /// off the measured rect only moves them, never resizes them, so it settles in one pass.
-    /// </summary>
-    private static bool Recentre(RenderHandle? handle, ref float top)
-    {
-        var height = handle?.RootNode?.ScreenRect.Height ?? 0f;
-        if (height <= 0f) return false;
-
-        var wanted = CrewmeleonStyles.CentreTop(height);
-        if (Mathf.Abs(wanted - top) < 0.5f) return false;
-
-        top = wanted;
-        return true;
+        return Panel(LeftInset, ColorSection(brush), BrushSection(brush), KeybindsSection());
     }
 
     /// <summary>the brush changes outside React, so each root registers for the ticker's redraws</summary>
@@ -122,11 +92,11 @@ public static class BrushPanel
         return inThisLayout && IsPainting();
     }
 
-    private static S.EdgeValues LeftInset(float top) =>
-        new(top, float.NaN, float.NaN, CrewmeleonStyles.ScreenGutter);
+    private static S.EdgeValues LeftInset =>
+        new(CrewmeleonStyles.ScreenGutter, float.NaN, float.NaN, CrewmeleonStyles.ScreenGutter);
 
-    private static S.EdgeValues RightInset(float top) =>
-        new(top, CrewmeleonStyles.ScreenGutter, float.NaN, float.NaN);
+    private static S.EdgeValues RightInset =>
+        new(CrewmeleonStyles.ScreenGutter, CrewmeleonStyles.ScreenGutter, float.NaN, float.NaN);
 
     private static VNode Panel(S.EdgeValues inset, params VNode[] sections)
     {

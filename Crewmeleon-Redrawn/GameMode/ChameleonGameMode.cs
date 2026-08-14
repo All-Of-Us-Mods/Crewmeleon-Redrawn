@@ -2,7 +2,6 @@ using System.Collections;
 using CrewmeleonRedrawn.Roles;
 using MiraAPI.GameModes;
 using MiraAPI.Utilities;
-using UnityEngine;
 
 namespace CrewmeleonRedrawn.GameMode;
 

@@ -1,3 +1,4 @@
+global using static Reactor.Utilities.Logger<CrewmeleonRedrawn.CrewmeleonRedrawnPlugin>;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
@@ -43,7 +44,7 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
         BrushPanel.Mount();
         ReactUIBehaviour.OnUpdate += BrushPanel.Tick;
         
-        SceneManager.activeSceneChanged += (UnityAction<Scene, Scene>) new System.Action<Scene, Scene>((s1, s2) =>
+        SceneManager.activeSceneChanged += (UnityAction<Scene, Scene>) new Action<Scene, Scene>((s1, s2) =>
         {
             Log.LogInfo($"Scene changed from {s1} to {s2}, Resetting cursor...");
             Cursor.SetCursor(null, CursorMode.Auto);

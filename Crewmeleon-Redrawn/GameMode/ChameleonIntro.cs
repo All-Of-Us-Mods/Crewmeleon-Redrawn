@@ -15,7 +15,7 @@ public static class ChameleonIntro
 {
     public static IEnumerator Play(IntroCutscene intro)
     {
-        SoundManager.Instance.PlaySound(intro.IntroStinger, false, 1f, null);
+        SoundUtilities.Play(intro.IntroStinger);
         Logger.GlobalInstance.Info("IntroCutscene :: CoBegin() :: Game Mode: Hide and Seek (MiraAPI)", null);
 
         intro.LogPlayerRoleData();

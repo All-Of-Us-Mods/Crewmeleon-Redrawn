@@ -1,4 +1,3 @@
-using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Buttons.Hider;
 using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Modifiers;
@@ -11,7 +10,6 @@ using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace CrewmeleonRedrawn.Components;
 

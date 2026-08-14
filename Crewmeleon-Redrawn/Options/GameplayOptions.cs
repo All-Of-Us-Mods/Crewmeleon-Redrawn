@@ -43,6 +43,9 @@ public class GameplayOptions : AbstractOptionGroup<ChameleonGameMode>
     public ModdedNumberOption ShotgunCooldown { get; } =
         new ModdedNumberOption("Seeker Shot Cooldown", 2.5f, 0.5f, 15, 1, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
     
+    public ModdedNumberOption ShotgunKillsPerShot { get; } =
+        new ModdedNumberOption("Max Kills per Shot", 3, 1, 15, 1, MiraNumberSuffixes.None);
+    
     public ModdedNumberOption RevelationTimePerPlayer { get; } =
         new ModdedNumberOption("Revelation time per Player", 5, 0, 30, 1, "0", "0", MiraNumberSuffixes.Seconds);
 

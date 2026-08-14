@@ -107,7 +107,7 @@ public class ChameleonTimer
 
         SetBarColor(Palette.ImpostorRed);
 
-        SoundManager.Instance.PlaySound(GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX, false, 1);
+        SoundUtilities.Play(GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX);
         
         ChameleonGameModeManager.Instance?.TauntTimer.Begin();
         

@@ -5,7 +5,6 @@ using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
-using Reactor.Utilities;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.Buttons.Hider;

@@ -4,7 +4,6 @@ using CrewmeleonRedrawn.Roles;
 using MiraAPI.Roles;
 using MiraAPI.Utilities;
 using Reactor.Utilities;
-using Reactor.Utilities.Extensions;
 
 namespace CrewmeleonRedrawn.GameMode;
 
