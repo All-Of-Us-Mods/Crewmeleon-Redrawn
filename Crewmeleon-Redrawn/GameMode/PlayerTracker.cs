@@ -1,11 +1,5 @@
-using System.Collections;
-using CrewmeleonRedrawn.Utilities;
-using CrewmeleonRedrawn.Modifiers;
 using CrewmeleonRedrawn.Roles;
-using MiraAPI.GameModes;
-using MiraAPI.Modifiers;
 using MiraAPI.Utilities;
-using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 using Rewired.Utils;
 using TMPro;
@@ -18,20 +12,20 @@ namespace CrewmeleonRedrawn.GameMode;
 /// </summary>
 public class PlayerTracker
 {
-    private static int maxPlayers = 25;
-    private static float trackerLength = 1.5f;
-    private CrewmatesKilledTracker? _tracker;
-    private AspectPosition? _aspectPosition;
-    private GridArrange? _gridArrange;
-    private TextMeshPro? _hidersLabel;
-    private TextMeshPro? _seekersLabel;
-    private static List<PlayerControl> allTrackedPlayers = new();
+    private const int MaxPlayers = 25;
+    private const float TrackerLength = 1.5f;
+    private CrewmatesKilledTracker _tracker = null!;
+    private AspectPosition _aspectPosition = null!;
+    private GridArrange _gridArrange = null!;
+    private TextMeshPro _hidersLabel = null!;
+    private TextMeshPro _seekersLabel = null!;
+    private List<PlayerControl> _allTrackedPlayers = [];
 
     public void Begin(HudManager hud)
     {
         _tracker = hud.CrewmatesKilled;
-        _aspectPosition = _tracker?.gameObject.GetComponent<AspectPosition>();
-        _gridArrange = _tracker?.gameObject.AddComponent<GridArrange>();
+        _aspectPosition = _tracker.gameObject.GetComponent<AspectPosition>();
+        _gridArrange = _tracker.gameObject.AddComponent<GridArrange>();
         _gridArrange!.Alignment = GridArrange.StartAlign.Right;
         _hidersLabel = Helpers.CreateTextLabel("HidersLabel", hud.transform, AspectPosition.EdgeAlignments.Left,
             new Vector3(0.5f, 1.23f, 0), textAlignment: TextAlignmentOptions.Left);
@@ -39,7 +33,7 @@ public class PlayerTracker
         _seekersLabel = Helpers.CreateTextLabel("SeekersLabel", hud.transform, AspectPosition.EdgeAlignments.Top,
             new Vector3(1.5f, 1.23f, 0), textAlignment: TextAlignmentOptions.Right);
         _seekersLabel.color = Palette.ImpostorRoleRed;
-        allTrackedPlayers = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data && x.Data.Role && !x.Data.Role.IsImpostor).ToList();
+        _allTrackedPlayers = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data && x.Data.Role && !x.Data.Role.IsImpostor).ToList();
     }
 
     public void Update()
@@ -58,12 +52,12 @@ public class PlayerTracker
         _aspectPosition.AdjustPosition();
         
         //Grid logic
-        _gridArrange.MaxColumns = maxPlayers / 2;
-        _gridArrange.CellSize = new Vector2(trackerLength / _gridArrange.cells.Count, -0.75f);
+        _gridArrange.MaxColumns = MaxPlayers / 2;
+        _gridArrange.CellSize = new Vector2(TrackerLength / _gridArrange.cells.Count, -0.75f);
         _gridArrange.ArrangeChilds();
         
         //Percentage logic
-        var deadTrackedCount = allTrackedPlayers.Count(x => !x.IsNullOrDestroyed() && x.Data.IsDead);
+        var deadTrackedCount = _allTrackedPlayers.Count(x => !x.IsNullOrDestroyed() && x.Data.IsDead);
         var index = deadTrackedCount - 1;
         if (index >= 0 && index < _tracker.crewmateSprites.Count && _tracker.crewmateSprites[index] != null && !_tracker.crewmateSprites[index].IsKilled)
         {

@@ -1,6 +1,5 @@
 ﻿using CrewmeleonRedrawn.Components;
 using HarmonyLib;
-using Reactor.Utilities.Extensions;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.Patches;

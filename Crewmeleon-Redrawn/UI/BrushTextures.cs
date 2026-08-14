@@ -13,18 +13,21 @@ public static class BrushTextures
     private const int PreviewSize = 72;
     private const int CheckerSquare = 6;
 
-    private static Texture2D? brushPreview;
+    private static Texture2D brushPreview = null!;
     private static Vector4 lastState = new(-1, -1, -1, -1);
     private static Color lastColor = new(-1, -1, -1);
 
     /// <summary>checkerboard with the brush drawn centred on it, using the same falloff as painting</summary>
     public static Texture2D BrushPreview(BrushSettings brush)
     {
-        brushPreview ??= new Texture2D(PreviewSize, PreviewSize, TextureFormat.RGBA32, false)
+        if (!brushPreview)
         {
-            filterMode = FilterMode.Bilinear,
-            wrapMode = TextureWrapMode.Clamp
-        };
+            brushPreview = new Texture2D(PreviewSize, PreviewSize, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp
+            };   
+        }
 
         var state = new Vector4(brush.Radius, brush.Hardness, brush.Opacity, 0);
         if (state == lastState && brush.Color == lastColor) return brushPreview;
