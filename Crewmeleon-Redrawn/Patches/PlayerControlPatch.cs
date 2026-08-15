@@ -1,4 +1,6 @@
-﻿using CrewmeleonRedrawn.Components;
+using CrewmeleonRedrawn.Components;
+using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Utilities;
 using HarmonyLib;
 using MiraAPI.GameOptions;
 using UnityEngine;
@@ -12,6 +14,11 @@ public static class PlayerControlPatch
     [HarmonyPostfix]
     public static void PlayerControlStart(PlayerControl __instance)
     {
+        if (__instance.AmOwner)
+            ChameleonMovement.RegisterBlocks(__instance);
+        
+        // if (ChameleonGameModeManager.Instance == null && !CustomButtonUtilities.IsInPractice()) return;
+        
         var zValue = OptionGroupSingleton<GameplayOptions>.Instance.HideOnObjects
                      || OptionGroupSingleton<GameplayOptions>.Instance.AlwaysOnTop
             ? -0.3f

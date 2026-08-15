@@ -2,6 +2,7 @@ global using static Reactor.Utilities.Logger<CrewmeleonRedrawn.CrewmeleonRedrawn
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
+using CrewmeleonRedrawn.States;
 using CrewmeleonRedrawn.UI;
 using HarmonyLib;
 using Reactor;
@@ -29,7 +30,6 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
 
     public bool DisplayOnOptionsMenu => false;
     public string OptionsTitleText => Name;
-    public LoadableAsset<Sprite>? ModIcon => CrewmeleonAssets.PaintButton;
 
     public static bool IsMobile;
 
@@ -37,7 +37,7 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
     {
         Harmony.PatchAll();
         IsMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS(); //iOS :heh:
-        ReactorCredits.Register<CrewmeleonRedrawnPlugin>(location => location is ReactorCredits.Location.MainMenu);
+        ReactorCredits.Register<CrewmeleonRedrawnPlugin>(ReactorCredits.AlwaysShow);
 
         ReactUIBootstrap.Initialize();
         CrewmeleonStyles.Register();
@@ -48,6 +48,7 @@ public partial class CrewmeleonRedrawnPlugin : BasePlugin, IMiraPlugin
         {
             Log.LogInfo($"Scene changed from {s1} to {s2}, Resetting cursor...");
             Cursor.SetCursor(null, CursorMode.Auto);
+            StateManager.ClearAll();
         });
     }
 

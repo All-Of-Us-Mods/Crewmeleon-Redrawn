@@ -17,7 +17,6 @@ public class SpectatingModifier : BaseModifier
     public override bool HideOnUi => true;
 
     private int _targetIndex;
-    private bool _wasMoveable;
     private GameObject? _spectateControls;
 
     public override void OnActivate()
@@ -33,9 +32,6 @@ public class SpectatingModifier : BaseModifier
 
         HudManager.Instance.ShadowQuad.enabled = false;
 
-        _wasMoveable = Player.moveable;
-        Player.DisableMovement();
-
         CustomButtonUtilities.RefreshActionButtonsDeferred(Player);
     }
 
@@ -49,8 +45,6 @@ public class SpectatingModifier : BaseModifier
 
         HudManager.Instance.ShadowQuad.enabled = true;
         HudManager.Instance.PlayerCam.Target = Player;
-
-        Player.moveable = _wasMoveable;
 
         CustomButtonUtilities.RefreshActionButtonsDeferred(Player);
     }
@@ -144,7 +138,7 @@ public class SpectatingModifier : BaseModifier
     {
         var players = Helpers.GetAlivePlayers();
 
-        if (ChameleonOptions.Spectating.SpectateHiders)
+        if (ChameleonOptions.Spectating.SpectateHiders || CustomButtonUtilities.IsInPractice())
             return players;
 
         return players.Where(p => p.Data.Role.IsImpostor).ToList();
@@ -152,7 +146,6 @@ public class SpectatingModifier : BaseModifier
 
     public override void OnDeath(DeathReason reason)
     {
-        _wasMoveable = true;
         ModifierComponent?.RemoveModifier(this);
     }
 }

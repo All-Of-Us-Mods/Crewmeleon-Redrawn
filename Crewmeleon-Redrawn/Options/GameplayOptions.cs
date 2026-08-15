@@ -9,10 +9,13 @@ public class GameplayOptions : AbstractOptionGroup<ChameleonGameMode>
 {
     public override string GroupName => "Gameplay Options";
     public override uint GroupPriority => 1;
-
-    public ModdedToggleOption AllowUndo { get; } =
-        new ModdedToggleOption("Allow Undo", false);
-
+    
+    public ModdedNumberOption HiderSpeed { get; } =
+        new ModdedNumberOption("Hider Speed during Seeking", 0.5f, 0.5f, 1.25f, 0.25f, MiraNumberSuffixes.Multiplier, formatString: "0.00");
+    
+    public ModdedNumberOption SeekerSpeed { get; } =
+        new ModdedNumberOption("Seeker Speed", 1.25f, 0.5f, 3, 0.25f, MiraNumberSuffixes.Multiplier, formatString: "0.00");
+    
     public ModdedNumberOption SeekersCount { get; } =
         new ModdedNumberOption("Seekers Count", 1, 1, 15, 1, "0", "0", MiraNumberSuffixes.None);
     
@@ -41,7 +44,7 @@ public class GameplayOptions : AbstractOptionGroup<ChameleonGameMode>
         new ModdedNumberOption("Seek Time", 80, 0, 600, 10, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
 
     public ModdedNumberOption ShotgunCooldown { get; } =
-        new ModdedNumberOption("Seeker Shot Cooldown", 2.5f, 0.5f, 15, 1, "0", "0", MiraNumberSuffixes.Seconds, halfIncrements: true);
+        new ModdedNumberOption("Seeker Shot Cooldown", 2f, 0.5f, 15, 0.5f, MiraNumberSuffixes.Seconds, formatString: "0.0");
     
     public ModdedNumberOption ShotgunKillsPerShot { get; } =
         new ModdedNumberOption("Max Kills per Shot", 3, 1, 15, 1, MiraNumberSuffixes.None);
@@ -51,6 +54,9 @@ public class GameplayOptions : AbstractOptionGroup<ChameleonGameMode>
 
     public ModdedToggleOption InfectionMode { get; } =
         new ModdedToggleOption("Infection Mode", false);
+    
+    public ModdedToggleOption AllowUndo { get; } =
+        new ModdedToggleOption("Allow Undo", false);
     
     public ModdedToggleOption AlwaysOnTop { get; } =
         new ModdedToggleOption("Hiders Always On Top Of Objects", true)

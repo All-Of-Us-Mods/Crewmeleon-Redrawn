@@ -33,6 +33,11 @@ public static class ChameleonIntro
         intro.BackgroundBar.enabled = false;
 
         var impostors = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data.Role.IsImpostor).ToList();
+        var modeTitle = intro.transform.Find("HnS Stuff/Mode Title Background/Mode Title").GetComponent<TextMeshPro>();
+        modeTitle.gameObject.GetComponent<TextTranslatorTMP>().Destroy();
+        modeTitle.text = "Crewmeleon";
+
+        var impostor = PlayerControl.AllPlayerControls.ToArray().FirstOrDefault(x => x.Data.Role.IsImpostor);
 
         if (impostors.Count == 0)
             Logger.GlobalInstance.Error("IntroCutscene :: CoBegin() :: no impostors found", null);

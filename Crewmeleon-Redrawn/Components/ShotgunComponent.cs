@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Networking;
+using CrewmeleonRedrawn.Roles;
+using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameOptions;
 using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
@@ -61,10 +63,11 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         Coroutines.Start(CoUpdateHandColor(Owner, _handsRend));
         gameObject.SetActive(false);
     }
-
+    
     private void Update()
     {
-        if (!Owner.AmOwner) return;
+        _rend.enabled = _handsRend.enabled = _muzzleRend.enabled = !Owner.onLadder;
+        if (Owner.onLadder || !Owner.AmOwner) return;
 
         if (_currentCooldown > 0f)
         {
@@ -73,11 +76,31 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         }
 
         if (!Input.GetMouseButtonDown(0)) return;
-        if (ChameleonGameModeManager.Instance == null 
-            || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) return;
+        if ((ChameleonGameModeManager.Instance == null 
+            || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation)
+            && !CustomButtonUtilities.IsInPractice()) return;
+        
         if (PassiveButtonManager.Instance.currentOver != null && PassiveButtonManager.Instance.currentOver.gameObject.layer == _uiLayer) return;
         var worldPos = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
-        Owner.RpcShootShotgun(worldPos, Palette.PlayerColors.Random(), Random.RandomRange(0.06f, 0.14f));
+        
+        // ReSharper disable once Unity.PreferNonAllocApi
+        // pre-sizing array is too much of a headache to get correctly, unity already sizes the array with the specific amount of colliders hit
+        // player also has a large ass collider anyways (its a trigger collider), but we can use that as the full hitbox instead of expanding it
+        var hitPlayerColliders = Physics2D.OverlapCircleAll(worldPos, 0.0001f, Constants.LivingPlayersOnlyMask);
+
+        var victimIds = new List<byte>();
+        foreach (var playerCollider in hitPlayerColliders)
+        {
+            if (victimIds.Count >= ChameleonOptions.Gameplay.ShotgunKillsPerShot) break;
+            var victim = playerCollider.GetComponent<PlayerControl>();
+            if (!victim || !victim.Data) continue;
+            if (victim.Data.Role is SeekerRole) continue;
+            victimIds.Add(victim.PlayerId);
+        }
+
+        Owner.RpcShootShotgun(worldPos, Palette.PlayerColors.Random(), victimIds.Count == 0 ? Random.RandomRange(0.05f, 0.10f) : 0f);
+        if (victimIds.Count > 0) Owner.RpcSplatKill(victimIds.ToArray(), Random.RandomRange(0.06f, 0.14f));
+        
         _currentCooldown = OptionGroupSingleton<GameplayOptions>.Instance.ShotgunCooldown.Value;
     }
 

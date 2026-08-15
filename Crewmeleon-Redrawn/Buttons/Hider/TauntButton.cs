@@ -4,6 +4,7 @@ using CrewmeleonRedrawn.Networking;
 using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
+using MiraAPI.Keybinds;
 using MiraAPI.Modifiers;
 using MiraAPI.Utilities.Assets;
 using UnityEngine;
@@ -14,10 +15,11 @@ public class TauntButton : CustomActionButton
 {
     public override string Name => "Taunt";
     public override float Cooldown => 5;
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+    public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.TauntButton;
 
     public override ButtonLocation Location =>
         CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
+    public override MiraKeybind? Keybind => MiraGlobalKeybinds.SecondaryAbility;
 
     public override bool CanUse()
     {

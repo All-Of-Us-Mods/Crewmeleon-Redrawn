@@ -9,15 +9,9 @@ public class PaintingModifier : BaseModifier
     public override string ModifierName => "Painting";
     public override bool HideOnUi => true;
 
-    private bool wasMoveable;
-
     public override void OnActivate()
     {
         base.OnActivate();
-
-        wasMoveable = Player.moveable;
-        Player.moveable = false;
-        Player.NetTransform.Halt();
 
         if (Player.AmOwner)
             ZoomCameraController.Instance?.ToggleDisplay(true);
@@ -27,8 +21,6 @@ public class PaintingModifier : BaseModifier
 
     public override void OnDeactivate()
     {
-        Player.moveable = wasMoveable;
-
         if (Player.AmOwner)
             ZoomCameraController.Instance?.ToggleDisplay(false);
 
