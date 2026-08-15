@@ -48,7 +48,7 @@ public static class TimerRpc
             Info($"Host updated taunt timer");
             ChameleonGameModeManager.Instance!.TauntTimer.ResetTimer();
 
-            var tauntSfx = GameManagerCreator.Instance.HideAndSeekManagerPrefab.FinalHideAlertSFX;
+            var tauntSfx = CrewmeleonAssets.AutomatedTauntSound.LoadAsset();
             foreach (var playerControl in Helpers.GetAlivePlayers().Where(x => !x.AmOwner))
                 SoundUtilities.PlayAtPosition(tauntSfx, playerControl.GetTruePosition(), 0.1f);
         }

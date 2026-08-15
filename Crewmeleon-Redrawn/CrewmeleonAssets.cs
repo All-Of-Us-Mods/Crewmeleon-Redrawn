@@ -59,6 +59,8 @@ public static class CrewmeleonAssets
         new(SoundsPath + ".Taunt9.wav"),
     ];
     
+    public static readonly LoadableAsset<AudioClip> AutomatedTauntSound = new LoadableAudioResourceAsset(SoundsPath + ".whistle.wav");
+    
     private const string CrewmateRulesPath = SpritesPath + ".Intro.Crewmates";
     public static readonly List<LoadableResourceAsset> CrewmateRules =
     [
