@@ -15,7 +15,7 @@ public class ShotgunButton : CustomActionButton
     public override string Name => "Shotgun";
     public override float Cooldown => 1;
     public override MiraKeybind? Keybind => MiraGlobalKeybinds.PrimaryAbility;
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+    public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.ShotgunButton;
     public override ButtonLocation Location =>
         CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
 
