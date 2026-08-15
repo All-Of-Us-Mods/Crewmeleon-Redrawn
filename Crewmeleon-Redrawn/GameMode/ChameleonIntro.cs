@@ -56,11 +56,33 @@ public static class ChameleonIntro
 
         if (ChameleonGameMode.AmImpostor)
         {
+            string[] descStrings =
+            [
+                "Wait until the hiders have found their hiding spots!",
+                "It's SEEKING TIME! Use your shotgun to shoot players, and AIM FOR THE HEAD.",
+                "Players may taunt you, use it to your advantage to find their location."
+            ];
+            string[] stageStrings = ["HIDING", "SEEKING", "TAUNTS"];
+            for (int i = 0; i < 3; i++)
+            {
+                var sprite = intro.ImpostorRules.transform.GetChild(i).GetComponent<SpriteRenderer>();
+                sprite.sprite = CrewmeleonAssets.ImpostorRules[i].LoadAsset();
+                var descText = sprite.transform.FindChild($"P{i + 1}Text");
+                descText.GetComponent<TextMeshPro>().text = descStrings[i];
+                var headerText = sprite.transform.FindChild($"Rule {i + 1}");
+                headerText.GetComponent<TextMeshPro>().text = stageStrings[i];
+                //Using findchild because innersloth decided to move the gameobjects around so GetChild(index) can't be accurate, ffs
+            }
         }
         else
         {
-            string[] descStrings = ["During hiding, find a good spot and try drawing to blend in!", "It's SEEKING TIME! Spectate the seeker's POV while they search for hiders", "Revelation Time! Check out everyone's hiding spots!" ];
-            string[] stageStrings = ["HIDING", "SEEKING", "REVELATION" ];
+            string[] descStrings =
+            [
+                "During hiding, find a good spot and try drawing to blend in!",
+                "It's SEEKING TIME! Spectate the seeker's POV while they search for hiders",
+                "Revelation Time! Check out everyone's hiding spots!"
+            ];
+            string[] stageStrings = ["HIDING", "SEEKING", "REVELATION"];
             for (int i = 0; i < 3; i++)
             {
                 var sprite = intro.CrewmateRules.transform.GetChild(i).GetComponent<SpriteRenderer>();
@@ -69,10 +91,10 @@ public static class ChameleonIntro
                 descText.GetComponent<TextMeshPro>().text = descStrings[i];
                 var headerText = sprite.transform.FindChild($"Rule {i + 1}");
                 headerText.GetComponent<TextMeshPro>().text = stageStrings[i];
-                //Using findchild because innersloth decided to move the gameobjects around so GetChild(index) can't be accurate, ffs.
+                //Using findchild because innersloth decided to move the gameobjects around so GetChild(index) can't be accurate, ffs
             }
-            
         }
+
         yield return ShipStatus.Instance.CosmeticsCache.PopulateFromPlayers();
         yield return new WaitForSeconds(6f);
 

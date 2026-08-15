@@ -53,11 +53,19 @@ public class CrewmeleonAssets
         new(SoundsPath + ".Taunt9.wav"),
     ];
     
-    private const string CrewmateRulesPath = "Crewmeleon-Redrawn.Resources.Sprites.Intro.Crewmates";
+    private const string CrewmateRulesPath = SpritesPath + ".Intro.Crewmates";
     public static readonly List<LoadableResourceAsset> CrewmateRules =
     [
-        new(CrewmateRulesPath + ".image1.png", 750),
-        new(CrewmateRulesPath + ".image2.png", 750),
-        new(CrewmateRulesPath + ".image3.png", 750)
+        new(CrewmateRulesPath + ".image1.png", 600),
+        new(CrewmateRulesPath + ".image2.png", 400),
+        new(CrewmateRulesPath + ".image3.png", 400)
+    ];
+    
+    private const string ImpostorRulesPath = SpritesPath + ".Intro.Impostors";
+    public static readonly List<LoadableResourceAsset> ImpostorRules =
+    [
+        new(ImpostorRulesPath + ".image1.png", 300),
+        new(ImpostorRulesPath + ".image2.png", 350),
+        new(ImpostorRulesPath + ".image3.png", 400)
     ];
 }
