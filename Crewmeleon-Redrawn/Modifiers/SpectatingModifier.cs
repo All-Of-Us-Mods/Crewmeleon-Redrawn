@@ -31,6 +31,7 @@ public class SpectatingModifier : BaseModifier
         SnapCamToTarget(target);
 
         HudManager.Instance.ShadowQuad.enabled = false;
+        HudManager.Instance.roomTracker.enabled = false;
 
         CustomButtonUtilities.RefreshActionButtonsDeferred(Player);
     }
@@ -45,6 +46,7 @@ public class SpectatingModifier : BaseModifier
 
         HudManager.Instance.ShadowQuad.enabled = true;
         HudManager.Instance.PlayerCam.Target = Player;
+        HudManager.Instance.roomTracker.enabled = true;
 
         CustomButtonUtilities.RefreshActionButtonsDeferred(Player);
     }
