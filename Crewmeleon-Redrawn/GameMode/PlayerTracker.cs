@@ -29,12 +29,14 @@ public class PlayerTracker
         _aspectPosition = _tracker.gameObject.GetComponent<AspectPosition>();
         _gridArrange = _tracker.gameObject.AddComponent<GridArrange>();
         _gridArrange!.Alignment = GridArrange.StartAlign.Right;
-        _hidersLabel = Helpers.CreateTextLabel("HidersLabel", hud.transform, _aspectPosition.Alignment,
-            _aspectPosition.DistanceFromEdge + new Vector3(0.5f, 1.2f), textAlignment: TextAlignmentOptions.Left);
-        _hidersLabel.color = Palette.CrewmateBlue;
-        _seekersLabel = Helpers.CreateTextLabel("SeekersLabel", hud.transform, AspectPosition.EdgeAlignments.Left,
-            new Vector3(1f, 1.73f, 0), textAlignment: TextAlignmentOptions.Right);
-        _seekersLabel.color = Palette.ImpostorRoleRed;
+        _hidersLabel = UnityEngine.Object.Instantiate(hud.KillButton.buttonLabelText, hud.transform);
+        _hidersLabel.GetComponent<TextTranslatorTMP>()?.Destroy();
+        _hidersLabel.color = Color.white;
+        _hidersLabel.SetOutlineColor(Palette.CrewmateBlue);
+        _seekersLabel = UnityEngine.Object.Instantiate(hud.KillButton.buttonLabelText, hud.transform);
+        _seekersLabel.GetComponent<TextTranslatorTMP>()?.Destroy();
+        _seekersLabel.color = Color.white;
+        _seekersLabel.SetOutlineColor(Palette.ImpostorRoleRed);
         _allTrackedPlayers = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data && x.Data.Role && !x.Data.Role.IsImpostor).ToList();
         _tracker.StartCoroutine(Effects.ActionAfterDelay(0.05f, new System.Action(() =>
         {
@@ -57,6 +59,8 @@ public class PlayerTracker
         var aliveHiders = alivePlayers.Where(x => x.Data && x.Data.Role && x.Data.Role is HiderRole);
         _hidersLabel.text = $"Hiders: {aliveHiders.Count()}";
         _seekersLabel.text = $"Seekers: {alivePlayers.Count(x => x.Data && x.Data.Role && x.Data.Role.IsImpostor)}";
+        _hidersLabel.transform.position = new Vector3(_tracker.gameObject.transform.position.x + .75f, _tracker.crewmateSprites.ToArray().Last().transform.position.y - 1.5f, -50);
+        _seekersLabel.transform.position = new Vector3(_tracker.gameObject.transform.position.x + .75f, _tracker.crewmateSprites.ToArray().Last().transform.position.y - 1, -50);
         
         //Positioning logic
         _aspectPosition.DistanceFromEdge = new Vector3(0.25f, 0.35f, 0f);
