@@ -35,31 +35,33 @@ public static class ChameleonRoleAssigner
         var seekers = GetForcedSeekers();
 
         players = players.Randomize();
-        players.RemoveAll(seekers.Contains);
+        var forcedSeekerCount = players.RemoveAll(player => seekers.Any(seeker => seeker.PlayerId == player.PlayerId));
+        //var forcedCount = players.RemoveAll(seekers.Contains);
 
         var maxRandom = Math.Max(0, players.Count - 1);
-        var randomSeekerCount = Math.Clamp(ChameleonOptions.Gameplay.SeekersCount - seekers.Count, 0, maxRandom);
+        var randomSeekerCount = Math.Clamp(ChameleonOptions.Gameplay.SeekersCount.Value - seekers.Count, 0, maxRandom);
 
         for (var i = 0; i < randomSeekerCount; i++)
         {
             seekers.Add(players[i]);
             Log.LogMessage($"Randomly assigned seeker to {players[i].Data.PlayerName}.");
         }
-
-        var hiders = players.Where(x => !seekers.Contains(x)).ToList();
+        
+        var hiders = players.Where(player => seekers.All(seeker => seeker.PlayerId != player.PlayerId)).ToList();
+        //var hiders = players.Where(x => !seekers.Contains(x)).ToList();
 
         if (hiders.Count == 0)
         {
             Log.LogWarning("Every player ended up as a seeker (0 hiders). Check SeekersCount vs lobby size.");
         }
-
+        
         AssignTeamRoles(hiders, (RoleTypes) RoleId.Get<HiderRole>());
-        AssignTeamRoles(seekers, (RoleTypes) RoleId.Get<SeekerRole>());
-
-        Log.LogMessage($"Crewmeleon RoleGen: Target seekers: {ChameleonOptions.Gameplay.SeekersCount}, " +
-                        $"Forced: {seekers.Count - randomSeekerCount}, Random: {randomSeekerCount}, " +
+        AssignTeamRoles(seekers, (RoleTypes)RoleId.Get<SeekerRole>());
+        
+        Log.LogMessage($"Crewmeleon RoleGen: Seekers count: {ChameleonOptions.Gameplay.SeekersCount.Value}, " +
+                        $"Forced: {forcedSeekerCount}, Random: {randomSeekerCount}, " +
                         $"Total seekers: {seekers.Count}, Total hiders: {hiders.Count}, " +
-                        $"Total players: {players.Count + (seekers.Count - randomSeekerCount)}");
+                        $"Total players: {players.Count + forcedSeekerCount}");
     }
 
     private static List<PlayerControl> GetForcedSeekers()
