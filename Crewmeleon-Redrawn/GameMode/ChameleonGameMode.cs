@@ -17,7 +17,14 @@ public class ChameleonGameMode : AbstractGameMode
     public override bool GameModeBodyTypeOverride => true;
     public override bool ShowNormalGameSettings => false;
     public override bool ShowNormalRoleSettings => false;
-    internal static bool AmImpostor => PlayerControl.LocalPlayer.Data.Role.IsImpostor;
+    internal static bool AmImpostor
+    {
+        get
+        {
+            var local = PlayerControl.LocalPlayer;
+            return local && local.Data && local.Data.Role && local.Data.Role.IsImpostor;
+        }
+    }
 
     public override void AssignRoles(out bool runOriginal, LogicRoleSelectionNormal instance)
     {

@@ -14,7 +14,7 @@ public static class ChameleonMovement
     
     private static bool IsBlocked(PlayerControl player)
     {
-        if (!player.Data || player.Data.IsDead) // NRE safety and 
+        if (!player.Data || player.Data.IsDead)
             return false;
         
         if (player.HasModifier<PaintingModifier>() || player.HasModifier<SpectatingModifier>()) // block painters / spectators from moving
