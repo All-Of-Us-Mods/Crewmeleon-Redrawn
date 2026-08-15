@@ -1,5 +1,6 @@
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Components;
+using Il2CppInterop.Runtime;
 using MiraAPI.Patches.Stubs;
 using MiraAPI.Roles;
 using UnityEngine;
@@ -29,6 +30,14 @@ public class HiderRole : CrewmateRole, ICustomRole
         LayerMask.NameToLayer("Objects")
     ];
 
+    private static readonly Dictionary<Type, string[]> ColliderWhitelist = new()
+    {
+        [typeof(PolusShipStatus)] =
+        [
+            "blockrock"
+        ]
+    };
+
     private PlayerCanvasComponent? playerCanvas;
 
     public override void Initialize(PlayerControl player)
@@ -46,6 +55,21 @@ public class HiderRole : CrewmateRole, ICustomRole
         
         var layerMask = 0;
         foreach (var layer in DisabledColliders) layerMask |= 1 << layer;
+
+        var shipLayer = LayerMask.NameToLayer("Ship");
+        foreach (var (mapType, colliderWhitelist) in ColliderWhitelist)
+        {
+            if (ShipStatus.Instance.ObjectClass != Il2CppClassPointerStore.GetNativeClassPointer(mapType)) continue;
+
+            foreach (var path in colliderWhitelist)
+            {
+                var whitelistedObject = ShipStatus.Instance.transform.Find(path);
+                if (whitelistedObject) whitelistedObject.gameObject.layer = shipLayer;
+            }
+
+            break;
+        }
+
         //Player.Collider.excludeLayers = layerMask;
         foreach (var playerControl in PlayerControl.AllPlayerControls)
         {
