@@ -17,7 +17,7 @@ public class LockMovementButton : CustomActionButton
     private const string UnlockText = "Unlock";
     
     public override string Name => LockText;
-    public override float Cooldown => 0;
+    public override float Cooldown => 3;
     
     public override ButtonLocation Location =>
         CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;
