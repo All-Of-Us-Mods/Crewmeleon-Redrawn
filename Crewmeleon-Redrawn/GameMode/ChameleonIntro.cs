@@ -2,8 +2,11 @@ using System.Collections;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameModes;
 using MiraAPI.Utilities;
+using MiraAPI.Utilities.Assets;
 using PowerTools;
 using Reactor.Utilities;
+using Reactor.Utilities.Extensions;
+using TMPro;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.GameMode;
@@ -29,34 +32,49 @@ public static class ChameleonIntro
         intro.TeamTitle.gameObject.SetActive(false);
         intro.BackgroundBar.enabled = false;
 
-        var impostor = PlayerControl.AllPlayerControls.ToArray().FirstOrDefault(x => x.Data.Role.IsImpostor);
+        var impostors = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data.Role.IsImpostor).ToList();
 
-        if (impostor == null)
-            Logger.GlobalInstance.Error("IntroCutscene :: CoBegin() :: impostor is NULL", null);
+        if (impostors.Count == 0)
+            Logger.GlobalInstance.Error("IntroCutscene :: CoBegin() :: no impostors found", null);
 
-        GameManager.Instance.SetSpecialCosmetics(impostor);
-        intro.ImpostorName.text = impostor != null ? impostor.Data.PlayerName : "???";
+        intro.ImpostorName.text = "SEEKERS";
 
         yield return new WaitForSecondsRealtime(0.1f);
-
-        PoolablePlayer? playerSlot = null;
-
-        if (impostor != null)
+        
+        intro.HideAndSeekPlayerVisual.gameObject.SetActive(false);
+        
+        int maxDepth = Mathf.CeilToInt(7.5f);
+        List<PoolablePlayer> poolablePlayers = [];
+        for (int i = 0; i < impostors.Count; i++)
         {
-            intro.ImpostorTitle.text = impostor.Data.Role.GetRoleName();
-
-            playerSlot = intro.CreatePlayer(1, 1, impostor.Data, false);
-            playerSlot.SetBodyType(PlayerBodyTypes.Normal);
-            playerSlot.SetFlipX(false);
-            playerSlot.transform.localPosition = intro.impostorPos;
-            playerSlot.transform.localScale = Vector3.one * intro.impostorScale;
+            var impostor = impostors[i];
+            var player = intro.CreatePlayer(i, maxDepth, impostor.Data, true);
+            poolablePlayers.Add(player);
+            player.SetBodyType(PlayerBodyTypes.Seeker);
+            player.transform.localPosition -= new Vector3(1.23f, 0f, 27);
         }
 
+        if (ChameleonGameMode.AmImpostor)
+        {
+        }
+        else
+        {
+            string[] descStrings = ["During hiding, find a good spot and try drawing to blend in!", "It's SEEKING TIME! Spectate the seeker's POV while they search for hiders", "Revelation Time! Check out everyone's hiding spots!" ];
+            string[] stageStrings = ["HIDING", "SEEKING", "REVELATION" ];
+            for (int i = 0; i < 3; i++)
+            {
+                var sprite = intro.CrewmateRules.transform.GetChild(i).GetComponent<SpriteRenderer>();
+                sprite.sprite = CrewmeleonAssets.CrewmateRules[i].LoadAsset();
+                var descText = sprite.transform.FindChild($"P{i + 1}Text");
+                descText.GetComponent<TextMeshPro>().text = descStrings[i];
+                var headerText = sprite.transform.FindChild($"Rule {i + 1}");
+                headerText.GetComponent<TextMeshPro>().text = stageStrings[i];
+                //Using findchild because innersloth decided to move the gameobjects around so GetChild(index) can't be accurate, ffs.
+            }
+            
+        }
         yield return ShipStatus.Instance.CosmeticsCache.PopulateFromPlayers();
-        yield return new WaitForSecondsRealtime(6f);
-
-        if (playerSlot != null)
-            playerSlot.gameObject.SetActive(false);
+        yield return new WaitForSeconds(6f);
 
         intro.HideAndSeekPanels.SetActive(false);
         intro.CrewmateRules.SetActive(false);
@@ -65,10 +83,16 @@ public static class ChameleonIntro
         var hideTimer = ChameleonOptions.Gameplay.HideTime.Value;
         
         if (ChameleonGameMode.AmImpostor)
+        {
+            foreach (var poolablePlayer in poolablePlayers)
+            {
+                poolablePlayer.gameObject.DeepDestroy();
+            }
             yield return PlaySeekerIntro(intro, hideTimer);
+        }
         else
         {
-            PlayHiderIntro(intro, impostor, hideTimer);
+            PlayHiderIntro(intro, impostors, hideTimer);
             PlayerControl.LocalPlayer.moveable = true;
         }
         ShipStatus.Instance.StartSFX();
@@ -146,28 +170,31 @@ public static class ChameleonIntro
         return (visual, intro.HnSSeekerSpawnAnim);
     }
 
-    private static void PlayHiderIntro(IntroCutscene intro, PlayerControl? impostor, float hideTimer)
+    private static void PlayHiderIntro(IntroCutscene intro, List<PlayerControl> impostors, float hideTimer)
     {
         ShipStatus.Instance.HideCountdown = hideTimer;
 
-        if (impostor == null)
-            return;
+        foreach (var impostor in impostors)
+        {
+            if (impostor == null)
+                return;
 
-        if (AprilFoolsMode.ShouldHorseAround())
-        {
-            impostor.AnimateCustom(intro.HnSSeekerSpawnHorseInGameAnim);
-        }
-        else if (AprilFoolsMode.ShouldLongAround())
-        {
-            impostor.AnimateCustom(intro.HnSSeekerSpawnLongInGameAnim);
-        }
-        else
-        {
-            impostor.AnimateCustom(intro.HnSSeekerSpawnAnim);
-            impostor.cosmetics.SetBodyCosmeticsVisible(false);
-        }
+            if (AprilFoolsMode.ShouldHorseAround())
+            {
+                impostor.AnimateCustom(intro.HnSSeekerSpawnHorseInGameAnim);
+            }
+            else if (AprilFoolsMode.ShouldLongAround())
+            {
+                impostor.AnimateCustom(intro.HnSSeekerSpawnLongInGameAnim);
+            }
+            else
+            {
+                impostor.AnimateCustom(intro.HnSSeekerSpawnAnim);
+                impostor.cosmetics.SetBodyCosmeticsVisible(false);
+            }
 
-        Coroutines.Start(CoPauseSeekerAnim(impostor.MyPhysics.Animations.Animator));
+            Coroutines.Start(CoPauseSeekerAnim(impostor.MyPhysics.Animations.Animator));
+        }
     }
 
     private static IEnumerator CoPauseSeekerAnim(SpriteAnim animator)

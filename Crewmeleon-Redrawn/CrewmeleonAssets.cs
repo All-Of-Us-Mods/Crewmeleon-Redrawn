@@ -52,4 +52,12 @@ public class CrewmeleonAssets
         new(SoundsPath + ".Taunt8.wav"),
         new(SoundsPath + ".Taunt9.wav"),
     ];
+    
+    private const string CrewmateRulesPath = "Crewmeleon-Redrawn.Resources.Sprites.Intro.Crewmates";
+    public static readonly List<LoadableResourceAsset> CrewmateRules =
+    [
+        new(CrewmateRulesPath + ".image1.png", 750),
+        new(CrewmateRulesPath + ".image2.png", 750),
+        new(CrewmateRulesPath + ".image3.png", 750)
+    ];
 }
