@@ -3,9 +3,11 @@ using AmongUs.GameOptions;
 using BepInEx.Unity.IL2CPP.Utils;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
 using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Modifiers;
 using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.States;
 using HarmonyLib;
+using MiraAPI.Modifiers;
 using MiraAPI.Roles;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
@@ -20,6 +22,8 @@ public static class ChameleonInfection
         var seekerRole = RoleId.Get<SeekerRole>();
         ChangeRole(target, seekerRole);
         target.StartCoroutine(PlaySeekerAnimation(target));
+        if (target.HasModifier<SpectatingModifier>()) target.GetModifierComponent().RemoveModifier<SpectatingModifier>();
+        if (target.HasModifier<PaintingModifier>()) target.GetModifierComponent().RemoveModifier<PaintingModifier>();
         ChameleonGameModeManager.Instance!.NotifyOfDeath(target, infected: true);
         if (target.AmOwner)
         {
