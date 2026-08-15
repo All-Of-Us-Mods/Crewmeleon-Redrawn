@@ -53,6 +53,7 @@ public static class ChameleonIntro
             var player = intro.CreatePlayer(i, maxDepth, impostor.Data, true);
             poolablePlayers.Add(player);
             player.SetBodyType(PlayerBodyTypes.Seeker);
+            player.cosmetics.gameObject.SetActive(false);
             player.transform.localPosition -= new Vector3(1.23f, 0f, 27);
         }
 
