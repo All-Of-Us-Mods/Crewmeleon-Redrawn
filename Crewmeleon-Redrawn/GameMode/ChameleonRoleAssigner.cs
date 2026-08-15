@@ -28,40 +28,42 @@ public static class ChameleonRoleAssigner
 
         if (players.Count == 1)
         {
-            players[0].RpcSetRole((RoleTypes) RoleId.Get<SeekerRole>(), false);
+            players[0].RpcSetRole((RoleTypes)RoleId.Get<SeekerRole>(), false);
             return;
         }
 
         var seekers = GetForcedSeekers();
 
         players = players.Randomize();
-        var forcedSeekerCount = players.RemoveAll(player => seekers.Any(seeker => seeker.PlayerId == player.PlayerId));
-        //var forcedCount = players.RemoveAll(seekers.Contains);
+        players.RemoveAll(seekers.Contains);
 
-        var maxRandom = Math.Max(0, players.Count - 1);
-        var randomSeekerCount = Math.Clamp(ChameleonOptions.Gameplay.SeekersCount.Value - seekers.Count, 0, maxRandom);
+        var maxRandom = players.Count;
+        var randomSeekerCount = Math.Clamp(
+            ChameleonOptions.Gameplay.SeekersCount - seekers.Count,
+            0,
+            maxRandom
+        );
 
         for (var i = 0; i < randomSeekerCount; i++)
         {
             seekers.Add(players[i]);
             Log.LogMessage($"Randomly assigned seeker to {players[i].Data.PlayerName}.");
         }
-        
-        var hiders = players.Where(player => seekers.All(seeker => seeker.PlayerId != player.PlayerId)).ToList();
-        //var hiders = players.Where(x => !seekers.Contains(x)).ToList();
+
+        var hiders = players.Where(x => !seekers.Contains(x)).ToList();
 
         if (hiders.Count == 0)
         {
             Log.LogWarning("Every player ended up as a seeker (0 hiders). Check SeekersCount vs lobby size.");
         }
-        
-        AssignTeamRoles(hiders, (RoleTypes) RoleId.Get<HiderRole>());
+
+        AssignTeamRoles(hiders, (RoleTypes)RoleId.Get<HiderRole>());
         AssignTeamRoles(seekers, (RoleTypes)RoleId.Get<SeekerRole>());
-        
-        Log.LogMessage($"Crewmeleon RoleGen: Seekers count: {ChameleonOptions.Gameplay.SeekersCount.Value}, " +
-                        $"Forced: {forcedSeekerCount}, Random: {randomSeekerCount}, " +
-                        $"Total seekers: {seekers.Count}, Total hiders: {hiders.Count}, " +
-                        $"Total players: {players.Count + forcedSeekerCount}");
+
+        Log.LogMessage($"Crewmeleon RoleGen: Target seekers: {ChameleonOptions.Gameplay.SeekersCount}, " +
+                       $"Forced: {seekers.Count - randomSeekerCount}, Random: {randomSeekerCount}, " +
+                       $"Total seekers: {seekers.Count}, Total hiders: {hiders.Count}, " +
+                       $"Total players: {players.Count + seekers.Count}");
     }
 
     private static List<PlayerControl> GetForcedSeekers()
@@ -74,20 +76,22 @@ public static class ChameleonRoleAssigner
         }.OfType<NetworkedPlayerInfo>();
 
         var seekers = new List<PlayerControl>();
+
         foreach (var info in forced)
         {
-            if (info?.Object == null)
+            if (info.Object == null || info.Object.Data == null)
             {
-                if (info != null)
-                {
-                    Log.LogWarning($"Forced seeker '{info.PlayerName}' has no live PlayerControl (likely disconnected). Skipping.");
-                }
+                Log.LogWarning(
+                    $"Forced seeker '{info.PlayerName}' has no live PlayerControl (likely disconnected). Skipping."
+                );
                 continue;
             }
 
-            if (seekers.Contains(info.Object))
+            if (seekers.Any(x => x.PlayerId == info.Object.PlayerId))
             {
-                Log.LogError($"Failed to assign seeker to {info.PlayerName}, they are already assigned as a seeker.");
+                Log.LogError(
+                    $"Failed to assign seeker to {info.PlayerName}, they are already assigned as a seeker."
+                );
                 continue;
             }
 

@@ -82,5 +82,6 @@ public static class ChameleonInfection
     {
         using var movementBlock = player.BlockMovement("seeker spawn animation");
         yield return player.MyPhysics.CoAnimateCustom(HudManager.Instance.IntroPrefab.HnSSeekerSpawnAnim);
+        player.moveable = true;
     }
 }
