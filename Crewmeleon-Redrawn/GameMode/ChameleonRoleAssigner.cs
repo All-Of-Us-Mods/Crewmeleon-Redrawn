@@ -16,7 +16,16 @@ public static class ChameleonRoleAssigner
 
     public static void AssignRoles()
     {
-        var players = PlayerControl.AllPlayerControls.ToArray().ToList();
+        var players = PlayerControl.AllPlayerControls.ToArray()
+            .Where(p => p != null && p.Data != null)
+            .ToList();
+
+        if (players.Count == 0)
+        {
+            Log.LogError("AssignRoles called with zero valid players. Aborting.");
+            return;
+        }
+
         if (players.Count == 1)
         {
             players[0].RpcSetRole((RoleTypes) RoleId.Get<SeekerRole>(), false);
@@ -27,8 +36,10 @@ public static class ChameleonRoleAssigner
 
         players = players.Randomize();
         players.RemoveAll(seekers.Contains);
+
         var maxRandom = Math.Max(0, players.Count - 1);
         var randomSeekerCount = Math.Clamp(ChameleonOptions.Gameplay.SeekersCount - seekers.Count, 0, maxRandom);
+
         for (var i = 0; i < randomSeekerCount; i++)
         {
             seekers.Add(players[i]);
@@ -36,9 +47,19 @@ public static class ChameleonRoleAssigner
         }
 
         var hiders = players.Where(x => !seekers.Contains(x)).ToList();
+
+        if (hiders.Count == 0)
+        {
+            Log.LogWarning("Every player ended up as a seeker (0 hiders). Check SeekersCount vs lobby size.");
+        }
+
         AssignTeamRoles(hiders, (RoleTypes) RoleId.Get<HiderRole>());
         AssignTeamRoles(seekers, (RoleTypes) RoleId.Get<SeekerRole>());
-        Logger.GlobalInstance.Info($"Crewmeleon RoleGen: Target seekers: {ChameleonOptions.Gameplay.SeekersCount}, Forced: {seekers.Count}, Random: {randomSeekerCount}, Total players: {players.Count + seekers.Count}");
+
+        Log.LogMessage($"Crewmeleon RoleGen: Target seekers: {ChameleonOptions.Gameplay.SeekersCount}, " +
+                        $"Forced: {seekers.Count - randomSeekerCount}, Random: {randomSeekerCount}, " +
+                        $"Total seekers: {seekers.Count}, Total hiders: {hiders.Count}, " +
+                        $"Total players: {players.Count + (seekers.Count - randomSeekerCount)}");
     }
 
     private static List<PlayerControl> GetForcedSeekers()
@@ -53,7 +74,15 @@ public static class ChameleonRoleAssigner
         var seekers = new List<PlayerControl>();
         foreach (var info in forced)
         {
-            if (info == null)  continue;
+            if (info?.Object == null)
+            {
+                if (info != null)
+                {
+                    Log.LogWarning($"Forced seeker '{info.PlayerName}' has no live PlayerControl (likely disconnected). Skipping.");
+                }
+                continue;
+            }
+
             if (seekers.Contains(info.Object))
             {
                 Log.LogError($"Failed to assign seeker to {info.PlayerName}, they are already assigned as a seeker.");
@@ -71,6 +100,12 @@ public static class ChameleonRoleAssigner
     {
         foreach (var player in players)
         {
+            if (player == null || player.Data == null)
+            {
+                Log.LogWarning("Skipped assigning role to a null or stale PlayerControl.");
+                continue;
+            }
+
             player.RpcSetRole(role, false);
             Log.LogMessage($"Assigned {role.ToDisplayString()} role to {player.Data.PlayerName}.");
         }
