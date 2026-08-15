@@ -1,4 +1,5 @@
 using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Networking;
 using CrewmeleonRedrawn.States;
 using HarmonyLib;
 
@@ -13,6 +14,9 @@ namespace CrewmeleonRedrawn.Patches;
 [HarmonyPatch(typeof(PlayerPhysics))]
 public static class PlayerPhysicsPatch
 {
+    private const float MovingThresholdSqr = 0.0001f;
+    private static bool _wasMoving;
+
     [HarmonyPatch(nameof(PlayerPhysics.SpeedMod), MethodType.Getter)]      [HarmonyPrefix]
     public static bool SpeedModPatch(PlayerPhysics __instance, ref float __result) =>
         !TryGetSpeedMod(__instance, out __result);
@@ -35,5 +39,20 @@ public static class PlayerPhysicsPatch
         speedMod = ChameleonGameModeManager.Instance!.GetPlayerSpeed(player);
         if (player.Data && player.Data.IsDead) speedMod *= physics.GhostSpeed / physics.Speed;
         return true;
+    }
+
+    [HarmonyPatch(nameof(PlayerPhysics.FixedUpdate))]
+    [HarmonyPostfix]
+    public static void FixedUpdatePatch(PlayerPhysics __instance)
+    {
+        var player = __instance.myPlayer;
+        if (!player || !player.AmOwner)
+            return;
+
+        var isMoving = __instance.Velocity.sqrMagnitude > MovingThresholdSqr;
+        if (_wasMoving && !isMoving && player.CanMove() && ChameleonGameModeManager.Instance)
+            player.RpcResyncTransform(player.cosmetics.FlipX);
+
+        _wasMoving = isMoving;
     }
 }

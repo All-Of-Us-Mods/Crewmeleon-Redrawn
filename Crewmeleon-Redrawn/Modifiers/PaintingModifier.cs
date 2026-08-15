@@ -1,4 +1,5 @@
 using CrewmeleonRedrawn.Components;
+using CrewmeleonRedrawn.Networking;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Modifiers;
 
@@ -14,7 +15,10 @@ public class PaintingModifier : BaseModifier
         base.OnActivate();
 
         if (Player.AmOwner)
+        {
+            Player.RpcResyncTransform(Player.cosmetics.FlipX);
             ZoomCameraController.Instance?.ToggleDisplay(true);
+        }
 
         CustomButtonUtilities.RefreshActionButtonsDeferred(Player);
     }

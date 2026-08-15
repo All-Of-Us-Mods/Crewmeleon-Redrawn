@@ -12,4 +12,5 @@ public enum CrewmeleonRpc : uint
     SplatKill,
     UpdateTimerState,
     SyncTauntTimer,
+    SyncFacing,
 }

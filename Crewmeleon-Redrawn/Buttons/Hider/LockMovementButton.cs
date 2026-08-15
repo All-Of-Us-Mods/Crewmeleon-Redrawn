@@ -1,5 +1,6 @@
 using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Modifiers;
+using CrewmeleonRedrawn.Networking;
 using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;
@@ -49,6 +50,9 @@ public class LockMovementButton : CustomActionButton
     protected override void OnClick()
     {
         IsLocked = !IsLocked;
+
+        if (IsLocked)
+            PlayerControl.LocalPlayer.RpcResyncTransform(PlayerControl.LocalPlayer.cosmetics.FlipX);
         
         OverrideName(IsLocked ? UnlockText : LockText);
         OverrideSprite(IsLocked ? CrewmeleonAssets.UnlockButton.LoadAsset() : CrewmeleonAssets.LockButton.LoadAsset());
