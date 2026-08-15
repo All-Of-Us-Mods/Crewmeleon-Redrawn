@@ -48,8 +48,9 @@ public readonly struct BrushStamp(Color32 color, byte radius, byte opacity, byte
 /// <summary>
 /// struct containing the path along with the brush settings that were used for that stroke.
 /// </summary>
-public readonly struct PaintStroke(BrushStamp brush, Vector2Int[] points)
+public readonly struct PaintStroke(uint id, BrushStamp brush, Vector2Int[] points)
 {
+    public uint Id => id;
     public BrushStamp Brush => brush;
     public Vector2Int[] Points => points;
 }
@@ -76,4 +77,10 @@ public readonly struct StrokeChunk(uint strokeId, uint chunkIndex, uint chunkCou
     public bool IsFirst => chunkIndex == 0;
     public BrushStamp Brush => brush;
     public Vector2Int[] Points => points;
+}
+
+public readonly struct StrokeUndoRequest(uint sequenceId, uint strokeId)
+{
+    public uint SequenceId => sequenceId;
+    public uint StrokeId => strokeId;
 }

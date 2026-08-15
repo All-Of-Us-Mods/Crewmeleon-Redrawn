@@ -321,14 +321,13 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     // max points per stroke packet chunk.
     private const int PointsPerChunk = 120;
-    private uint _nextLocalStrokeId;
+    private uint _nextLocalSequenceId;
 
-    private void SendStroke(BrushStamp brush, Vector2Int[] points)
+    private static void SendStroke(uint strokeId, BrushStamp brush, Vector2Int[] points)
     {
         if (points.Length == 0) return;
 
         var local = PlayerControl.LocalPlayer;
-        var strokeId = _nextLocalStrokeId++;
         var chunkCount = (points.Length + PointsPerChunk - 1) / PointsPerChunk;
 
         for (var chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
@@ -362,9 +361,10 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         TrimHistory();
 
-        _strokes.Add(new PaintStroke(_pendingBrush, points));
+        var strokeId = _nextLocalSequenceId++;
+        _strokes.Add(new PaintStroke(strokeId, _pendingBrush, points));
         _undoCache.Add(undo);
-        SendStroke(_pendingBrush, points);
+        SendStroke(strokeId, _pendingBrush, points);
     }
 
     private sealed class RemoteStrokeAssembly(uint chunkCount)
@@ -378,14 +378,15 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     }
 
     private readonly Dictionary<uint, RemoteStrokeAssembly> _remoteStrokes = [];
-    private uint _nextRemoteStrokeId;
+    private readonly Dictionary<uint, uint> _remoteUndos = [];
+    private uint _nextRemoteSequenceId;
 
     public void ReceiveRemoteStrokeChunk(StrokeChunk chunk)
     {
         EnsureInitialized();
 
         if (chunk.ChunkCount == 0 || chunk.ChunkIndex >= chunk.ChunkCount
-                                  || chunk.StrokeId < _nextRemoteStrokeId)
+                                  || chunk.StrokeId < _nextRemoteSequenceId)
             return;
 
         if (!_remoteStrokes.TryGetValue(chunk.StrokeId, out var stroke))
@@ -410,13 +411,32 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             stroke.HasBrush = true;
         }
 
-        ApplyCompletedRemoteStrokes();
+        ApplyCompletedRemoteActions();
     }
 
-    private void ApplyCompletedRemoteStrokes()
+    public void ReceiveRemoteUndo(StrokeUndoRequest request)
     {
-        while (_remoteStrokes.TryGetValue(_nextRemoteStrokeId, out var stroke) && stroke.IsComplete)
+        EnsureInitialized();
+
+        if (request.SequenceId < _nextRemoteSequenceId || _remoteUndos.ContainsKey(request.SequenceId)) return;
+
+        _remoteUndos.Add(request.SequenceId, request.StrokeId);
+        ApplyCompletedRemoteActions();
+    }
+
+    private void ApplyCompletedRemoteActions()
+    {
+        while (true)
         {
+            if (_remoteUndos.Remove(_nextRemoteSequenceId, out var undoneStrokeId))
+            {
+                _nextRemoteSequenceId++;
+                UndoStroke(undoneStrokeId);
+                continue;
+            }
+
+            if (!_remoteStrokes.TryGetValue(_nextRemoteSequenceId, out var stroke) || !stroke.IsComplete) return;
+
             var pointCount = 0;
             foreach (var chunk in stroke.Chunks) pointCount += chunk.Length;
 
@@ -428,9 +448,10 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
                 offset += chunk.Length;
             }
 
-            _remoteStrokes.Remove(_nextRemoteStrokeId);
-            _nextRemoteStrokeId++;
-            ApplyStroke(new PaintStroke(stroke.Brush, points));
+            var strokeId = _nextRemoteSequenceId;
+            _remoteStrokes.Remove(strokeId);
+            _nextRemoteSequenceId++;
+            ApplyStroke(new PaintStroke(strokeId, stroke.Brush, points));
         }
     }
 
@@ -460,16 +481,22 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
     {
         if (_strokes.Count == 0) return;
 
-        UndoStroke();
-        Rpc<RpcUndoStroke>.Instance.Send(PlayerControl.LocalPlayer, true);
+        var strokeId = _strokes[^1].Id;
+        UndoStroke(strokeId);
+
+        var request = new StrokeUndoRequest(_nextLocalSequenceId++, strokeId);
+        Rpc<RpcUndoStroke>.Instance.Send(PlayerControl.LocalPlayer, request, true);
     }
 
     /// <summary>drops the last stroke by putting back the pixels it covered</summary>
-    public void UndoStroke()
+    private void UndoStroke(uint strokeId)
     {
         EnsureInitialized();
 
-        if (!OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value || _strokes.Count == 0) return;
+        if (!OptionGroupSingleton<GameplayOptions>.Instance.AllowUndo.Value
+            || _strokes.Count == 0
+            || _strokes[^1].Id != strokeId)
+            return;
 
         _strokes.RemoveAt(_strokes.Count - 1);
 
