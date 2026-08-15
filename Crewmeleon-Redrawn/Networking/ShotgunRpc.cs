@@ -3,6 +3,7 @@ using BepInEx.Unity.IL2CPP.Utils.Collections;
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Components;
 using CrewmeleonRedrawn.GameMode;
+using MiraAPI.GameModes;
 using MiraAPI.Networking;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
@@ -54,7 +55,8 @@ public static class ShotgunRpc
                 continue;
             }
 
-            shooter.CustomMurder(victim, MurderResultFlags.Succeeded, teleportMurderer: false);
+            if (ChameleonOptions.Gameplay.InfectionMode) ChameleonInfection.Infect(victim);
+            else shooter.CustomMurder(victim, MurderResultFlags.Succeeded, teleportMurderer: false);
             SplatterComponent.CreateSplatter(victim.GetTruePosition(), Palette.PlayerColors[victim.cosmetics.ColorId], splatterSize);
         }
     }
@@ -83,7 +85,7 @@ public static class ShotgunRpc
 
         if (shooter.AmOwner)
         {
-            Coroutines.Start(HudManager.Instance.PlayerCam.CoShakeScreen(0.5f, 1).WrapToManaged());   
+            Coroutines.Start(HudManager.Instance.PlayerCam.CoShakeScreen(0.5f, 1).WrapToManaged());
         }
         
         yield return shotgun!.CoFlashMuzzle();
