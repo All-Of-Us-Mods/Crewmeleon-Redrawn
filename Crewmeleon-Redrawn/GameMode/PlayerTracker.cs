@@ -29,11 +29,6 @@ public class PlayerTracker
         _aspectPosition = _tracker.gameObject.GetComponent<AspectPosition>();
         _gridArrange = _tracker.gameObject.AddComponent<GridArrange>();
         _gridArrange!.Alignment = GridArrange.StartAlign.Right;
-        for (int i = 0; i < 100; i++)
-        {
-            UnityEngine.GameObject.Instantiate(_tracker.crewmates.prefab, _tracker.transform)
-                .transform.localScale = _tracker.crewmateScale;
-        }
         _hidersLabel = Helpers.CreateTextLabel("HidersLabel", hud.transform, _aspectPosition.Alignment,
             _aspectPosition.DistanceFromEdge + new Vector3(0.5f, 1.2f), textAlignment: TextAlignmentOptions.Left);
         _hidersLabel.color = Palette.CrewmateBlue;
