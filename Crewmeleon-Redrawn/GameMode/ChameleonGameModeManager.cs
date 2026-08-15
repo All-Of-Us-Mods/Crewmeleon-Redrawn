@@ -99,6 +99,8 @@ public class ChameleonGameModeManager(nint cppPtr) : MonoBehaviour(cppPtr)
         popup.text.GetComponent<TextTranslatorTMP>().DestroyImmediate();
         popup.text.text = infected ? "HAS BEEN INFECTED" : "HAS BEEN KILLED";
         popup.Show(player, _deadPlayerCount);
+
+        if (infected) PlayerTracker.OnInfected();
     }
     
     public float GetPlayerSpeed(PlayerControl pc) => pc.Data.Role is SeekerRole ? ChameleonOptions.Gameplay.SeekerSpeed.Value :

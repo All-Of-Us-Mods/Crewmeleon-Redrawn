@@ -4,6 +4,8 @@ using Reactor.Utilities.Extensions;
 using Rewired.Utils;
 using TMPro;
 using UnityEngine;
+using Action = Il2CppSystem.Action;
+using Object = System.Object;
 
 namespace CrewmeleonRedrawn.GameMode;
 
@@ -27,13 +29,27 @@ public class PlayerTracker
         _aspectPosition = _tracker.gameObject.GetComponent<AspectPosition>();
         _gridArrange = _tracker.gameObject.AddComponent<GridArrange>();
         _gridArrange!.Alignment = GridArrange.StartAlign.Right;
-        _hidersLabel = Helpers.CreateTextLabel("HidersLabel", hud.transform, AspectPosition.EdgeAlignments.Left,
-            new Vector3(0.5f, 1.23f, 0), textAlignment: TextAlignmentOptions.Left);
+        for (int i = 0; i < 100; i++)
+        {
+            UnityEngine.GameObject.Instantiate(_tracker.crewmates.prefab, _tracker.transform)
+                .transform.localScale = _tracker.crewmateScale;
+        }
+        _hidersLabel = Helpers.CreateTextLabel("HidersLabel", hud.transform, _aspectPosition.Alignment,
+            _aspectPosition.DistanceFromEdge + new Vector3(0.5f, 1.2f), textAlignment: TextAlignmentOptions.Left);
         _hidersLabel.color = Palette.CrewmateBlue;
-        _seekersLabel = Helpers.CreateTextLabel("SeekersLabel", hud.transform, AspectPosition.EdgeAlignments.Top,
-            new Vector3(1.5f, 1.23f, 0), textAlignment: TextAlignmentOptions.Right);
+        _seekersLabel = Helpers.CreateTextLabel("SeekersLabel", hud.transform, AspectPosition.EdgeAlignments.Left,
+            new Vector3(1f, 1.73f, 0), textAlignment: TextAlignmentOptions.Right);
         _seekersLabel.color = Palette.ImpostorRoleRed;
         _allTrackedPlayers = PlayerControl.AllPlayerControls.ToArray().Where(x => x.Data && x.Data.Role && !x.Data.Role.IsImpostor).ToList();
+        _tracker.StartCoroutine(Effects.ActionAfterDelay(0.05f, new System.Action(() =>
+        {
+            float z = 0;
+            foreach (var sprite in _gridArrange.cells)
+            {
+                sprite.transform.localPosition += new Vector3(0, 0, z);
+                z -= 0.1f;
+            }
+        })));
     }
 
     public void Update()
@@ -52,8 +68,8 @@ public class PlayerTracker
         _aspectPosition.AdjustPosition();
         
         //Grid logic
-        _gridArrange.MaxColumns = MaxPlayers / 2;
-        _gridArrange.CellSize = new Vector2(TrackerLength / _gridArrange.cells.Count, -0.75f);
+        _gridArrange.MaxColumns = Math.Clamp(MaxPlayers / 2, 0, 8);
+        _gridArrange.CellSize = new Vector2(Math.Clamp(TrackerLength / _gridArrange.cells.Count, 0.25f, 0.4f), Math.Clamp(TrackerLength / _gridArrange.cells.Count, 0.25f, 0.75f) / -2f);
         _gridArrange.ArrangeChilds();
         
         //Percentage logic
@@ -63,5 +79,12 @@ public class PlayerTracker
         {
             _tracker.crewmateSprites[index].SetKilled(_tracker.slashAnimations.ToArray().Random());
         }
+    }
+
+    public void OnInfected()
+    {
+        var firstEntry = _tracker.crewmateSprites.ToArray().First();
+        _tracker.crewmateSprites.Remove(firstEntry);
+        firstEntry.gameObject.Destroy();
     }
 }
