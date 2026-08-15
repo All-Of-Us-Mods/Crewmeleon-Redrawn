@@ -27,8 +27,8 @@ public static class ChameleonRoleAssigner
 
         players = players.Randomize();
         players.RemoveAll(seekers.Contains);
-
-        var randomSeekerCount = Math.Clamp(ChameleonOptions.Gameplay.SeekersCount - seekers.Count, 0, players.Count - 1);
+        var maxRandom = Math.Max(0, players.Count - 1);
+        var randomSeekerCount = Math.Clamp(ChameleonOptions.Gameplay.SeekersCount - seekers.Count, 0, maxRandom);
         for (var i = 0; i < randomSeekerCount; i++)
         {
             seekers.Add(players[i]);
@@ -38,6 +38,7 @@ public static class ChameleonRoleAssigner
         var hiders = players.Where(x => !seekers.Contains(x)).ToList();
         AssignTeamRoles(hiders, (RoleTypes) RoleId.Get<HiderRole>());
         AssignTeamRoles(seekers, (RoleTypes) RoleId.Get<SeekerRole>());
+        Logger.GlobalInstance.Info($"Crewmeleon RoleGen: Target seekers: {ChameleonOptions.Gameplay.SeekersCount}, Forced: {seekers.Count}, Random: {randomSeekerCount}, Total players: {players.Count + seekers.Count}");
     }
 
     private static List<PlayerControl> GetForcedSeekers()
