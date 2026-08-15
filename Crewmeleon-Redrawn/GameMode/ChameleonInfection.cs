@@ -1,25 +1,30 @@
 using System.Collections;
 using AmongUs.GameOptions;
 using BepInEx.Unity.IL2CPP.Utils;
+using BepInEx.Unity.IL2CPP.Utils.Collections;
 using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.States;
 using HarmonyLib;
 using MiraAPI.Roles;
 using Reactor.Networking.Attributes;
+using Reactor.Utilities;
 using Object = UnityEngine.Object;
 
-namespace CrewmeleonRedrawn.Networking;
+namespace CrewmeleonRedrawn.GameMode;
 
-public static class InfectionRpc
+public static class ChameleonInfection
 {
-    [MethodRpc((uint)CrewmeleonRpc.Infect)]
-    public static void RpcInfect(PlayerControl target)
+    public static void Infect(PlayerControl target)
     {
         var seekerRole = RoleId.Get<SeekerRole>();
         ChangeRole(target, seekerRole);
         target.StartCoroutine(PlaySeekerAnimation(target));
         ChameleonGameModeManager.Instance!.NotifyOfDeath(target, infected: true);
+        if (target.AmOwner)
+        {
+            Coroutines.Start(HudManager.Instance.PlayerCam.CoShakeScreen(0.5f, 1).WrapToManaged());
+        }
     }
     
     private static void ChangeRole(PlayerControl player, ushort newRoleType)
