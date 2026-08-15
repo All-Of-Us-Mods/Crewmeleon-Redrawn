@@ -68,10 +68,12 @@ public readonly struct StrokeUndo(int x, int y, int width, int height, Color32[]
 /// <summary>
 /// strokes are chunked to avoid one large packet being sent
 /// </summary>
-public readonly struct StrokeChunk(bool isFirst, bool isFinal, BrushStamp brush, Vector2Int[] points)
+public readonly struct StrokeChunk(uint strokeId, uint chunkIndex, uint chunkCount, BrushStamp brush, Vector2Int[] points)
 {
-    public bool IsFirst => isFirst;
-    public bool IsFinal => isFinal;
+    public uint StrokeId => strokeId;
+    public uint ChunkIndex => chunkIndex;
+    public uint ChunkCount => chunkCount;
+    public bool IsFirst => chunkIndex == 0;
     public BrushStamp Brush => brush;
     public Vector2Int[] Points => points;
 }

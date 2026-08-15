@@ -321,22 +321,25 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
     // max points per stroke packet chunk.
     private const int PointsPerChunk = 120;
+    private uint _nextLocalStrokeId;
 
-    private static void SendStroke(BrushStamp brush, Vector2Int[] points)
+    private void SendStroke(BrushStamp brush, Vector2Int[] points)
     {
+        if (points.Length == 0) return;
+
         var local = PlayerControl.LocalPlayer;
+        var strokeId = _nextLocalStrokeId++;
+        var chunkCount = (points.Length + PointsPerChunk - 1) / PointsPerChunk;
 
-        Rpc<RpcSendStroke>.Instance.Send(local,
-            new StrokeChunk(true, points.Length == 0, brush, []), true);
-
-        for (var offset = 0; offset < points.Length; offset += PointsPerChunk)
+        for (var chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
         {
+            var offset = chunkIndex * PointsPerChunk;
             var take = Mathf.Min(PointsPerChunk, points.Length - offset);
             var chunk = new Vector2Int[take];
             Array.Copy(points, offset, chunk, 0, take);
 
             Rpc<RpcSendStroke>.Instance.Send(local,
-                new StrokeChunk(false, offset + take >= points.Length, brush, chunk), true);
+                new StrokeChunk(strokeId, (uint)chunkIndex, (uint)chunkCount, brush, chunk), true);
         }
     }
 
@@ -364,25 +367,71 @@ public class PlayerCanvasComponent(nint cppPtr) : MonoBehaviour(cppPtr)
         SendStroke(_pendingBrush, points);
     }
 
-    private BrushStamp _remoteBrush;
-    private readonly List<Vector2Int> _remotePoints = [];
+    private sealed class RemoteStrokeAssembly(uint chunkCount)
+    {
+        public readonly Vector2Int[][] Chunks = new Vector2Int[chunkCount][];
+        public BrushStamp Brush;
+        public bool HasBrush;
+        public int ReceivedChunks;
 
-    public void BeginRemoteStroke(BrushStamp brush)
+        public bool IsComplete => HasBrush && ReceivedChunks == Chunks.Length;
+    }
+
+    private readonly Dictionary<uint, RemoteStrokeAssembly> _remoteStrokes = [];
+    private uint _nextRemoteStrokeId;
+
+    public void ReceiveRemoteStrokeChunk(StrokeChunk chunk)
     {
         EnsureInitialized();
 
-        _remoteBrush = brush;
-        _remotePoints.Clear();
+        if (chunk.ChunkCount == 0 || chunk.ChunkIndex >= chunk.ChunkCount
+                                  || chunk.StrokeId < _nextRemoteStrokeId)
+            return;
+
+        if (!_remoteStrokes.TryGetValue(chunk.StrokeId, out var stroke))
+        {
+            stroke = new RemoteStrokeAssembly(chunk.ChunkCount);
+            _remoteStrokes.Add(chunk.StrokeId, stroke);
+        }
+        else if (stroke.Chunks.Length != chunk.ChunkCount)
+        {
+            return;
+        }
+
+        var chunkIndex = (int)chunk.ChunkIndex;
+        if (stroke.Chunks[chunkIndex] != null) return;
+
+        stroke.Chunks[chunkIndex] = chunk.Points;
+        stroke.ReceivedChunks++;
+
+        if (chunk.IsFirst)
+        {
+            stroke.Brush = chunk.Brush;
+            stroke.HasBrush = true;
+        }
+
+        ApplyCompletedRemoteStrokes();
     }
 
-    public void AppendRemoteStroke(Vector2Int[] points) => _remotePoints.AddRange(points);
-
-    public void FinishRemoteStroke()
+    private void ApplyCompletedRemoteStrokes()
     {
-        if (_remotePoints.Count == 0) return;
+        while (_remoteStrokes.TryGetValue(_nextRemoteStrokeId, out var stroke) && stroke.IsComplete)
+        {
+            var pointCount = 0;
+            foreach (var chunk in stroke.Chunks) pointCount += chunk.Length;
 
-        ApplyStroke(new PaintStroke(_remoteBrush, _remotePoints.ToArray()));
-        _remotePoints.Clear();
+            var points = new Vector2Int[pointCount];
+            var offset = 0;
+            foreach (var chunk in stroke.Chunks)
+            {
+                Array.Copy(chunk, 0, points, offset, chunk.Length);
+                offset += chunk.Length;
+            }
+
+            _remoteStrokes.Remove(_nextRemoteStrokeId);
+            _nextRemoteStrokeId++;
+            ApplyStroke(new PaintStroke(stroke.Brush, points));
+        }
     }
 
     public void ApplyStroke(PaintStroke stroke)

@@ -16,8 +16,9 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
 
     public override void Write(MessageWriter writer, StrokeChunk data)
     {
-        writer.Write(data.IsFirst);
-        writer.Write(data.IsFinal);
+        writer.WritePacked(data.StrokeId);
+        writer.WritePacked(data.ChunkIndex);
+        writer.WritePacked(data.ChunkCount);
 
         // brush only goes in the first chunk, no point repeating it
         if (data.IsFirst)
@@ -38,11 +39,12 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
 
     public override StrokeChunk Read(MessageReader reader)
     {
-        var isFirst = reader.ReadBoolean();
-        var isFinal = reader.ReadBoolean();
+        var strokeId = reader.ReadPackedUInt32();
+        var chunkIndex = reader.ReadPackedUInt32();
+        var chunkCount = reader.ReadPackedUInt32();
 
         var brush = default(BrushStamp);
-        if (isFirst)
+        if (chunkIndex == 0)
         {
             brush = new BrushStamp(
                 reader.ReadColor32(),
@@ -58,7 +60,7 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
             points[i] = new Vector2Int(ReadInt16(reader), ReadInt16(reader));
         }
 
-        return new StrokeChunk(isFirst, isFinal, brush, points);
+        return new StrokeChunk(strokeId, chunkIndex, chunkCount, brush, points);
     }
 
     // byte by byte on purpose, writer.Write((short)v) picked the int overload and wrote 4 bytes
@@ -86,8 +88,6 @@ public class RpcSendStroke(CrewmeleonRedrawnPlugin plugin, uint id)
             return;
         }
 
-        if (data.IsFirst) canvas.BeginRemoteStroke(data.Brush);
-        if (data.Points.Length > 0) canvas.AppendRemoteStroke(data.Points);
-        if (data.IsFinal) canvas.FinishRemoteStroke();
+        canvas.ReceiveRemoteStrokeChunk(data);
     }
 }
