@@ -15,7 +15,7 @@ public class TauntButton : CustomActionButton
 {
     public override string Name => "Taunt";
     public override float Cooldown => 5;
-    public override LoadableAsset<Sprite> Sprite => MiraAssets.Cog;
+    public override LoadableAsset<Sprite> Sprite => CrewmeleonAssets.TauntButton;
 
     public override ButtonLocation Location =>
         CrewmeleonRedrawnPlugin.IsMobile ? ButtonLocation.BottomRight : ButtonLocation.BottomLeft;

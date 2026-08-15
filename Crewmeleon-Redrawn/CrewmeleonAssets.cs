@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CrewmeleonRedrawn;
 
-public class CrewmeleonAssets
+public static class CrewmeleonAssets
 {
     private const string SpritesPath = "Crewmeleon-Redrawn.Resources.Sprites";
     private const string SoundsPath = "Crewmeleon-Redrawn.Resources.Sounds";
@@ -14,6 +14,7 @@ public class CrewmeleonAssets
     public static readonly LoadableAsset<Sprite> PaintButton = new LoadableResourceAsset(ButtonSpritesPath + ".Paint.png");
     public static readonly LoadableAsset<Sprite> SpectateButton = new LoadableResourceAsset(ButtonSpritesPath + ".Spectate.png");
     public static readonly LoadableAsset<Sprite> PickColorButton = new LoadableResourceAsset(ButtonSpritesPath + ".PickColor.png");
+    public static readonly LoadableAsset<Sprite> TauntButton = new LoadableResourceAsset(ButtonSpritesPath + ".Taunt.png");
 
     private const string PaintingUISpritesPath = SpritesPath + ".UI.Painting";
     public static readonly LoadableAsset<Sprite> PlayerSprite = new LoadableResourceAsset(PaintingUISpritesPath + ".PlayerSprite.png");
