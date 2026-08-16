@@ -65,7 +65,14 @@ public class ChameleonGameMode : AbstractGameMode
     {
         runOriginal = false;
         if (!PlayerControl.LocalPlayer.IsHost()) return;
-        if (Helpers.GetAlivePlayers().Where(x => x.Data.Role is HiderRole && !x.Data.IsDead).ToArray().Length >
+        var alivePlayers = Helpers.GetAlivePlayers();
+        if (alivePlayers.Where(x => x.Data.Role is SeekerRole).ToArray().Length ==
+            0)
+        {
+            GameManager.Instance.RpcEndGame(GameOverReason.HideAndSeek_CrewmatesByTimer, false);
+            return;
+        }
+        if (alivePlayers.Where(x => x.Data.Role is HiderRole && !x.Data.IsDead).ToArray().Length >
             0) return;
         GameManager.Instance.RpcEndGame(GameOverReason.ImpostorsByKill, false);
     }
