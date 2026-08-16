@@ -105,6 +105,8 @@ public static class ChameleonIntro
         intro.CrewmateRules.SetActive(false);
         intro.ImpostorRules.SetActive(false);
 
+        ChameleonGameModeManager.Instance?.Timer.SetStage(TimerStage.Hiding);
+
         var hideTimer = ChameleonOptions.Gameplay.HideTime.Value;
         
         if (ChameleonGameMode.AmImpostor)

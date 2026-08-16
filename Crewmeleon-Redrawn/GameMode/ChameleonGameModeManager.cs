@@ -50,8 +50,6 @@ public class ChameleonGameModeManager(nint cppPtr) : MonoBehaviour(cppPtr)
 
         Timer.CreateTimer(hud);
         PlayerTracker.Begin(hud);
-        
-        Timer.SetStage(TimerStage.Hiding);
     }
 
     private void OnDestroy()
