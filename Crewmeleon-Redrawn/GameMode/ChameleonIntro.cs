@@ -148,11 +148,17 @@ public static class ChameleonIntro
         spriteAnim.SetTime(5);
         spriteAnim.Pause();
 
-        while (hideTimer > 0f)
+        var timer = ChameleonGameModeManager.Instance?.Timer;
+        var fallbackDeadline = Time.realtimeSinceStartup + hideTimer;
+
+        float TimeLeft() => timer is not null ? timer.GetTimeLeft() : fallbackDeadline - Time.realtimeSinceStartup;
+        bool StillHiding() => timer is null || timer.CurrentStage is TimerStage.Hiding;
+
+        while (StillHiding() && TimeLeft() > 0f)
         {
-            intro.HideAndSeekTimerText.text = Mathf.RoundToInt(hideTimer).ToString();
-            hideTimer -= Time.deltaTime;
-            if (hideTimer <= 5f && spriteAnim.Paused)
+            var timeLeft = TimeLeft();
+            intro.HideAndSeekTimerText.text = Mathf.RoundToInt(timeLeft).ToString();
+            if (timeLeft <= 5f && spriteAnim.Paused)
             {
                 spriteAnim.Resume();
             }
