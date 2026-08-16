@@ -140,7 +140,7 @@ public class SpectatingModifier : BaseModifier
     {
         var players = Helpers.GetAlivePlayers();
 
-        if (ChameleonOptions.Spectating.SpectateHiders || CustomButtonUtilities.IsInPractice())
+        if ((ChameleonOptions.Spectating.SpectateHiders || CustomButtonUtilities.IsInPractice()) && !ChameleonOptions.Gameplay.InfectionMode)
             return players;
 
         return players.Where(p => p.Data.Role.IsImpostor).ToList();
