@@ -77,11 +77,18 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
 
         if (!Input.GetMouseButtonDown(0)) return;
         if ((ChameleonGameModeManager.Instance == null 
-            || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation)
+            || ChameleonGameModeManager.Instance.Timer.CurrentStage is not TimerStage.Seeking)
             && !CustomButtonUtilities.IsInPractice()) return;
         
         if (PassiveButtonManager.Instance.currentOver != null && PassiveButtonManager.Instance.currentOver.gameObject.layer == _uiLayer) return;
-        var worldPos = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 worldPos = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
+        
+        /* todo: raycast incomplete, fix after release
+        var origin = Owner.GetTruePosition();
+        var toTarget = worldPos - origin;
+        var blockedBy = Physics2D.Raycast(origin, toTarget.normalized, toTarget.magnitude, ChameleonLayers.ShotBlockingMask);
+        if (blockedBy.collider) worldPos = blockedBy.point;
+        */
         
         // ReSharper disable once Unity.PreferNonAllocApi
         // pre-sizing array is too much of a headache to get correctly, unity already sizes the array with the specific amount of colliders hit
