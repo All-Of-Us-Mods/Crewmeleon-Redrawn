@@ -24,11 +24,19 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Compile
-        run: dotnet build -c Release
+      - name: Run the Cake script
+        uses: cake-build/cake-action@v2
+        with:
+          verbosity: Diagnostic
 
       - uses: actions/upload-artifact@v4
         with:
           name: Crewmeleon-Redrawn.dll
           path: Crewmeleon-Redrawn/bin/Release/Crewmeleon-Redrawn.dll
           retention-days: 7
+
+      - uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          draft: true
+          files: Crewmeleon-Redrawn/bin/Release/Crewmeleon-Redrawn.dll
