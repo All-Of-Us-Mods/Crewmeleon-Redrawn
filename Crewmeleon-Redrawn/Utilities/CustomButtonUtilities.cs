@@ -3,7 +3,6 @@ using MiraAPI.Hud;
 using MiraAPI.Patches;
 using MiraAPI.Utilities;
 using Reactor.Utilities;
-using Object = UnityEngine.Object;
 
 namespace CrewmeleonRedrawn.Utilities;
 
@@ -58,7 +57,7 @@ public static class CustomButtonUtilities
 
     public static bool IsInPractice()
     {
-        return Object.FindObjectOfType<TutorialManager>() != null;
+        return TutorialManager.InstanceExists;
     }
 
     /// <summary>
