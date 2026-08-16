@@ -50,17 +50,9 @@ public static class SoundUtilities
 
     private static float GetPan(Vector2 position)
     {
-        Vector2 listenerPosition;
-        if (PlayerControl.LocalPlayer)
-        {
-            listenerPosition = PlayerControl.LocalPlayer.GetTruePosition();
-        }
-        else
-        {
-            var camera = Camera.main;
-            if (!camera) return 0f;
-            listenerPosition = camera!.transform.position;
-        }
+        var camera = Camera.main;
+        if (!camera) return 0f;
+        Vector2 listenerPosition = camera!.transform.position;
 
         var offset = position - listenerPosition;
         return offset.sqrMagnitude > 0f ? Mathf.Clamp(offset.normalized.x, -1f, 1f) : 0f;
@@ -68,9 +60,6 @@ public static class SoundUtilities
     
     private static float GetFalloff(Vector2 position, float falloffStart, float falloffEnd)
     {
-        if (PlayerControl.LocalPlayer)
-            return SoundManager.GetSoundVolume(position, PlayerControl.LocalPlayer.GetTruePosition(), falloffStart, falloffEnd, 0f);
-        
         var camera = Camera.main;
         if (camera)
             return SoundManager.GetSoundVolume(position, camera!.transform.position, falloffStart, falloffEnd, 0f);
