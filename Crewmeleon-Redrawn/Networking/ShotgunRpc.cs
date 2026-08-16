@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using BepInEx.Unity.IL2CPP.Utils.Collections;
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Components;
 using CrewmeleonRedrawn.GameMode;
@@ -32,7 +31,7 @@ public static class ShotgunRpc
             || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) 
             && !CustomButtonUtilities.IsInPractice()) return;
         
-        Coroutines.Start(CoShoot(shooter));
+        Coroutines.Start(CoShoot(shooter, position));
         if (splatterSize > 0f)
         {
             SplatterComponent.CreateSplatter(position, splatterColor, splatterSize);
@@ -73,7 +72,7 @@ public static class ShotgunRpc
         shotgun.gameObject.SetActive(visible);
     }
     
-    private static IEnumerator CoShoot(PlayerControl shooter)
+    private static IEnumerator CoShoot(PlayerControl shooter, Vector2 targetPosition)
     {
         if (!shooter.GetPlayerShotgun(out var shotgun))
         {
@@ -84,10 +83,42 @@ public static class ShotgunRpc
         SoundUtilities.PlayAtPosition(CrewmeleonAssets.ShotgunFireSound.LoadAsset(), shooter.GetTruePosition(), 0.5f);
 
         if (shooter.AmOwner)
-        {
-            Coroutines.Start(HudManager.Instance.PlayerCam.CoShakeScreen(0.5f, 1).WrapToManaged());
-        }
-        
+            Coroutines.Start(CoCameraRecoil(shooter.GetTruePosition(), targetPosition, 0.55f, 0.25f, 0.5f, 1f));
+
         yield return shotgun!.CoFlashMuzzle();
+    }
+
+    private static IEnumerator CoCameraRecoil(Vector2 origin, Vector2 target, float recoilDistance, float recoilDuration, float shakeDuration, float shakeSeverity)
+    {
+        var followerCamera = HudManager.Instance.PlayerCam;
+        if (!followerCamera) yield break;
+
+        var recoilDirection = origin - target;
+        var recoil = recoilDirection.sqrMagnitude > 0f
+            ? recoilDirection.normalized * recoilDistance
+            : Vector2.zero;
+        var wait = new WaitForFixedUpdate();
+        var appliedOffset = Vector2.zero;
+        var elapsed = 0f;
+        var duration = Mathf.Max(recoilDuration, shakeDuration);
+
+        while (elapsed < duration && followerCamera)
+        {
+            var recoilStrength = elapsed < recoilDuration
+                ? 1f - Mathf.SmoothStep(0f, 1f, elapsed / recoilDuration)
+                : 0f;
+            var shakeStrength = elapsed < shakeDuration
+                ? 1f - elapsed / shakeDuration
+                : 0f;
+            var nextOffset = recoil * recoilStrength
+                + UnityEngine.Random.insideUnitCircle * shakeStrength * shakeSeverity;
+            followerCamera.Offset += nextOffset - appliedOffset;
+            appliedOffset = nextOffset;
+
+            elapsed += Time.fixedDeltaTime;
+            yield return wait;
+        }
+
+        if (followerCamera) followerCamera.Offset -= appliedOffset;
     }
 }
