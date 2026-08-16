@@ -34,7 +34,8 @@ public class HiderRole : CrewmateRole, ICustomRole
     {
         [typeof(PolusShipStatus)] =
         [
-            "blockrock"
+            "blockrock",
+            "Outside/RocksNBoxes/rockblock1"
         ]
     };
 
