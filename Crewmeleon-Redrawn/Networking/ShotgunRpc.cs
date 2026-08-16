@@ -2,7 +2,7 @@
 using CrewmeleonRedrawn.Utilities;
 using CrewmeleonRedrawn.Components;
 using CrewmeleonRedrawn.GameMode;
-using MiraAPI.GameModes;
+using CrewmeleonRedrawn.Roles;
 using MiraAPI.Networking;
 using Reactor.Networking.Attributes;
 using Reactor.Utilities;
@@ -28,7 +28,7 @@ public static class ShotgunRpc
     public static void RpcShootShotgun(this PlayerControl shooter, Vector2 position, Color32 splatterColor, float splatterSize)
     {
         if ((ChameleonGameModeManager.Instance == null 
-            || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) 
+            || ChameleonGameModeManager.Instance.Timer.CurrentStage is not TimerStage.Seeking) 
             && !CustomButtonUtilities.IsInPractice()) return;
         
         Coroutines.Start(CoShoot(shooter, position));
@@ -42,7 +42,7 @@ public static class ShotgunRpc
     public static void RpcSplatKill(this PlayerControl shooter, byte[] victimIds, float splatterSize)
     {
         if ((ChameleonGameModeManager.Instance == null 
-             || ChameleonGameModeManager.Instance.Timer.CurrentStage is TimerStage.Revelation) 
+             || ChameleonGameModeManager.Instance.Timer.CurrentStage is not TimerStage.Seeking) 
             && !CustomButtonUtilities.IsInPractice()) return;
         
         foreach (var victimId in victimIds)
@@ -53,6 +53,8 @@ public static class ShotgunRpc
                 Error($"{shooter.Data.PlayerName} shot player {victimId} but they could not be found.");
                 continue;
             }
+
+            if (victim.Data.IsDead || victim.Data.Role is SeekerRole) continue;
 
             if (ChameleonOptions.Gameplay.InfectionMode) ChameleonInfection.Infect(victim);
             else shooter.CustomMurder(victim, MurderResultFlags.Succeeded, teleportMurderer: false);

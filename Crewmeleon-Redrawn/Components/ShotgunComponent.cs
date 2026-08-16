@@ -95,6 +95,7 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             var victim = playerCollider.GetComponent<PlayerControl>();
             if (!victim || !victim.Data) continue;
             if (victim.Data.Role is SeekerRole) continue;
+            if (victimIds.Contains(victim.PlayerId)) continue;
             victimIds.Add(victim.PlayerId);
         }
 
