@@ -98,6 +98,18 @@ public class ShotgunComponent(nint cppPtr) : MonoBehaviour(cppPtr)
             victimIds.Add(victim.PlayerId);
         }
 
+        if (ShipStatus.Instance != null && ShipStatus.Instance.Type == ShipStatus.MapType.Fungle)
+        {
+            foreach (var hitCollider in Physics2D.OverlapPointAll(worldPos))
+            {
+                var mushroom = hitCollider.GetComponentInParent<Mushroom>();
+                if (!mushroom) continue;
+
+                Owner.CmdCheckSporeTrigger(mushroom);
+                break;
+            }
+        }
+
         Owner.RpcShootShotgun(worldPos, Palette.PlayerColors.Random(), victimIds.Count == 0 ? Random.RandomRange(0.05f, 0.10f) : 0f);
         if (victimIds.Count > 0) Owner.RpcSplatKill(victimIds.ToArray(), Random.RandomRange(0.06f, 0.14f));
         
