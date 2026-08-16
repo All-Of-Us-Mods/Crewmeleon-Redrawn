@@ -1,3 +1,4 @@
+using Il2CppInterop.Runtime;
 using UnityEngine;
 
 namespace CrewmeleonRedrawn.Utilities;
@@ -33,19 +34,23 @@ public static class SoundUtilities
         var slot = nextPositionalSlot;
         nextPositionalSlot = (nextPositionalSlot + 1) % PositionalSlotCount;
         
-        var source = SoundManager.Instance.PlayNamedSound(
+        var dynamics = DelegateSupport.ConvertDelegate<DynamicSound.GetDynamicsFunction>(new Action<AudioSource, float>((source, _) => UpdatePositionalSource(source, position, volume, falloffStart, falloffEnd)));
+        var source = SoundManager.Instance.PlayDynamicSound(
             $"CrewmeleonPositional{slot}",
             clip,
             false,
+            dynamics,
             SoundManager.Instance.SfxChannel);
         
-        if (source)
-        {
-            source.volume = volume * GetFalloff(position, falloffStart, falloffEnd);
-            source.panStereo = GetPan(position);
-        }
+        if (source) UpdatePositionalSource(source, position, volume, falloffStart, falloffEnd);
 
         return source;
+    }
+
+    private static void UpdatePositionalSource(AudioSource source, Vector2 position, float volume, float falloffStart, float falloffEnd)
+    {
+        source.volume = volume * GetFalloff(position, falloffStart, falloffEnd);
+        source.panStereo = GetPan(position);
     }
 
     private static float GetPan(Vector2 position)
