@@ -24,12 +24,6 @@ public class HiderRole : CrewmateRole, ICustomRole
 
     public Func<bool> VisibleInSettings => () => false;
 
-    private static readonly LayerMask[] DisabledColliders =
-    [
-        LayerMask.NameToLayer("ShortObjects"),
-        LayerMask.NameToLayer("Objects")
-    ];
-
     private static readonly Dictionary<Type, string[]> ColliderWhitelist = new()
     {
         [typeof(PolusShipStatus)] =
@@ -51,12 +45,9 @@ public class HiderRole : CrewmateRole, ICustomRole
             playerCanvas = canvas;
         }
 
-        if (!player.AmOwner || !ChameleonOptions.Gameplay.HideOnObjects.Value)
+        if (!ChameleonOptions.Gameplay.HideOnObjects.Value)
             return;
         
-        var layerMask = 0;
-        foreach (var layer in DisabledColliders) layerMask |= 1 << layer;
-
         var shipLayer = LayerMask.NameToLayer("Ship");
         foreach (var (mapType, colliderWhitelist) in ColliderWhitelist)
         {
@@ -70,12 +61,8 @@ public class HiderRole : CrewmateRole, ICustomRole
 
             break;
         }
-
-        //Player.Collider.excludeLayers = layerMask;
-        foreach (var playerControl in PlayerControl.AllPlayerControls)
-        {
-            playerControl.Collider.excludeLayers = layerMask;
-        }
+        
+        player.Collider.excludeLayers = ChameleonLayers.HideableMask;
     }
 
     public override void Deinitialize(PlayerControl targetPlayer)
