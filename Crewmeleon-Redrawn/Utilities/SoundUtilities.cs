@@ -40,9 +40,30 @@ public static class SoundUtilities
             SoundManager.Instance.SfxChannel);
         
         if (source)
+        {
             source.volume = volume * GetFalloff(position, falloffStart, falloffEnd);
+            source.panStereo = GetPan(position);
+        }
 
         return source;
+    }
+
+    private static float GetPan(Vector2 position)
+    {
+        Vector2 listenerPosition;
+        if (PlayerControl.LocalPlayer)
+        {
+            listenerPosition = PlayerControl.LocalPlayer.GetTruePosition();
+        }
+        else
+        {
+            var camera = Camera.main;
+            if (!camera) return 0f;
+            listenerPosition = camera!.transform.position;
+        }
+
+        var offset = position - listenerPosition;
+        return offset.sqrMagnitude > 0f ? Mathf.Clamp(offset.normalized.x, -1f, 1f) : 0f;
     }
     
     private static float GetFalloff(Vector2 position, float falloffStart, float falloffEnd)
