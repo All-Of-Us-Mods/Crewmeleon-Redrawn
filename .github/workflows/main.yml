@@ -29,6 +29,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: TownOfUsMira.dll
+          name: Crewmeleon-Redrawn.dll
           path: Crewmeleon-Redrawn/bin/Release/Crewmeleon-Redrawn.dll
           retention-days: 7
