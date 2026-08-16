@@ -19,14 +19,12 @@
         <PackageReference Include="AmongUs.GameLibs.Steam" Version="2026.6.5" PrivateAssets="all" />
         <PackageReference Include="Reactor" Version="2.5.1-ci.384" />
         <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34" PrivateAssets="all" />
+        <PackageReference Include="AllOfUs.MiraAPI" Version="0.4.3-gamemodes" />
     </ItemGroup>
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\**\*.*" />
         
-        <Reference Include="MiraAPI">
-            <HintPath>../packages.local\MiraAPI.dll</HintPath>
-        </Reference>
         <Reference Include="ReactUI" Private="false">
             <HintPath>../packages.local\ReactUI.dll</HintPath>
         </Reference>
