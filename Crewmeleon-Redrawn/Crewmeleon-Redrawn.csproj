@@ -19,6 +19,7 @@
         <PackageReference Include="AmongUs.GameLibs.Steam" Version="2026.6.5" PrivateAssets="all" />
         <PackageReference Include="Reactor" Version="2.5.1-ci.384" />
         <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34" PrivateAssets="all" />
+        <PackageReference Include="PerfectComms.Api" Version="4.1.7.1" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>
