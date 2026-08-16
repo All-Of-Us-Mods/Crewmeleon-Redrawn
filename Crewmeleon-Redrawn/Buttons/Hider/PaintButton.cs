@@ -1,5 +1,6 @@
 using CrewmeleonRedrawn.GameMode;
 using CrewmeleonRedrawn.Modifiers;
+using CrewmeleonRedrawn.Networking;
 using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.Hud;

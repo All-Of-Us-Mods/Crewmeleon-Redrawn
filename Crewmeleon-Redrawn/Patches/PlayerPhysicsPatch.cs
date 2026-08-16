@@ -28,31 +28,16 @@ public static class PlayerPhysicsPatch
         __result = __instance.Speed * speedMod;
         return false;
     }
-    
+
     private static bool TryGetSpeedMod(PlayerPhysics physics, out float speedMod)
     {
         speedMod = 0f;
         var player = physics.myPlayer;
         if (!player.CanMove()) return true;
         if (!ChameleonGameModeManager.Instance) return false;
+        if (player.Data && player.Data.IsDead) return false;
         
         speedMod = ChameleonGameModeManager.Instance!.GetPlayerSpeed(player);
-        if (player.Data && player.Data.IsDead) speedMod *= physics.GhostSpeed / physics.Speed;
         return true;
-    }
-
-    [HarmonyPatch(nameof(PlayerPhysics.FixedUpdate))]
-    [HarmonyPostfix]
-    public static void FixedUpdatePatch(PlayerPhysics __instance)
-    {
-        var player = __instance.myPlayer;
-        if (!player || !player.AmOwner)
-            return;
-
-        var isMoving = __instance.Velocity.sqrMagnitude > MovingThresholdSqr;
-        if (_wasMoving && !isMoving && player.CanMove() && ChameleonGameModeManager.Instance)
-            player.RpcResyncTransform(player.cosmetics.FlipX);
-
-        _wasMoving = isMoving;
     }
 }
