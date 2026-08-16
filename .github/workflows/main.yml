@@ -1,0 +1,34 @@
+name: CI
+
+on: ["workflow_dispatch"]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.cache/bepinex
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Compile
+        run: dotnet build -c Release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TownOfUsMira.dll
+          path: Crewmeleon-Redrawn/bin/Release/Crewmeleon-Redrawn.dll
+          retention-days: 7
