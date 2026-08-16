@@ -27,13 +27,19 @@ public class ChameleonTimer
 
     public bool IsActive => timerBar is not null && timerBar;
 
+    private const float SyncInterval = 2f;
+    private const float SyncTolerance = 0.5f;
+
     private HideAndSeekTimerBar? timerBar;
     private TextMeshPro? stageLabel;
 
-    private float timeLeft;
+    private float deadline;
     private float maxTime;
+    private float nextSyncAt;
     private bool paused = true;
     private string StageText => CurrentStage.ToString().ToUpperInvariant();
+
+    private float TimeLeft => Mathf.Max(0f, deadline - Time.realtimeSinceStartup);
 
     public void CreateTimer(HudManager hud)
     {
@@ -48,7 +54,7 @@ public class ChameleonTimer
         switch (stage)
         {
             case TimerStage.Hiding:
-                timeLeft = maxTime = OptionGroupSingleton<GameplayOptions>.Instance.HideTime.Value;
+                StartCountdown(OptionGroupSingleton<GameplayOptions>.Instance.HideTime.Value);
                 break;
             case TimerStage.Seeking:
                 SetupSeekingStage();
@@ -62,15 +68,38 @@ public class ChameleonTimer
             stageLabel.text = StageText;
     }
 
+    public void SyncRemaining(TimerStage stage, float remaining)
+    {
+        if (stage != CurrentStage)
+        {
+            SetStage(stage);
+        }
+
+        if (Mathf.Abs(TimeLeft - remaining) <= SyncTolerance) return;
+
+        deadline = Time.realtimeSinceStartup + remaining;
+        maxTime = Mathf.Max(maxTime, remaining);
+    }
+
     public void Update()
     {
         if (timerBar is null || !timerBar || paused)
             return;
 
-        timeLeft -= Time.deltaTime;
+        var timeLeft = TimeLeft;
         timerBar.UpdateTimer(timeLeft, maxTime);
 
-        if (timeLeft > 0) return;
+        if (timeLeft > 0)
+        {
+            if (AmongUsClient.Instance.AmHost && Time.realtimeSinceStartup >= nextSyncAt)
+            {
+                nextSyncAt = Time.realtimeSinceStartup + SyncInterval;
+                PlayerControl.LocalPlayer.RpcSyncTimer(CurrentStage, timeLeft);
+            }
+
+            return;
+        }
+
         paused = true;
 
         if (!AmongUsClient.Instance.AmHost) return;
@@ -88,11 +117,18 @@ public class ChameleonTimer
         }
     }
 
-    public float GetTimeLeft() => timeLeft;
+    public float GetTimeLeft() => TimeLeft;
+
+    private void StartCountdown(float duration)
+    {
+        maxTime = duration;
+        deadline = Time.realtimeSinceStartup + duration;
+        nextSyncAt = Time.realtimeSinceStartup + SyncInterval;
+    }
 
     private void SetupSeekingStage()
     {
-        timeLeft = maxTime = ChameleonOptions.Gameplay.SeekTime.Value;
+        StartCountdown(ChameleonOptions.Gameplay.SeekTime.Value);
 
         SetBarColor(Palette.ImpostorRed);
 
@@ -119,8 +155,7 @@ public class ChameleonTimer
         // give each hider a revelation period
         if (ChameleonOptions.Gameplay.RevelationTimePerPlayer.Value > 0 && hiders.Count > 0)
         {
-            maxTime = hiders.Count * ChameleonOptions.Gameplay.RevelationTimePerPlayer;
-            timeLeft = maxTime;
+            StartCountdown(hiders.Count * ChameleonOptions.Gameplay.RevelationTimePerPlayer);
 
             SetBarColor(Color.yellow);
 
@@ -128,8 +163,7 @@ public class ChameleonTimer
             return;
         }
 
-        maxTime = 0;
-        timeLeft = 0;
+        StartCountdown(0);
     }
 
     private void SetBarColor(Color color)

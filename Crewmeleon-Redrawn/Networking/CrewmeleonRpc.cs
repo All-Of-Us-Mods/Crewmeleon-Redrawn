@@ -13,4 +13,5 @@ public enum CrewmeleonRpc : uint
     UpdateTimerState,
     SyncTauntTimer,
     SyncFacing,
+    SyncTimer,
 }

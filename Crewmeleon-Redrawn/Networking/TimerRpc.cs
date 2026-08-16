@@ -28,6 +28,19 @@ public static class TimerRpc
         }
     }
     
+    [MethodRpc((uint)CrewmeleonRpc.SyncTimer)]
+    public static void RpcSyncTimer(this PlayerControl source, TimerStage stage, float timeLeft)
+    {
+        if (!source.IsHost())
+        {
+            Error("Only host can sync the timer.");
+            return;
+        }
+
+        if (ChameleonGameModeManager.Instance)
+            ChameleonGameModeManager.Instance!.Timer.SyncRemaining(stage, timeLeft);
+    }
+
     [MethodRpc((uint)CrewmeleonRpc.SyncTauntTimer)]
     public static void RpcUpdateTauntTimer(this PlayerControl source)
     {
