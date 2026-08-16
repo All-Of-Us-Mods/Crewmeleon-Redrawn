@@ -59,14 +59,21 @@ public class PlayerTracker
         var aliveHiders = alivePlayers.Where(x => x.Data && x.Data.Role && x.Data.Role is HiderRole);
         _hidersLabel.text = $"Hiders: {aliveHiders.Count()}";
         _seekersLabel.text = $"Seekers: {alivePlayers.Count(x => x.Data && x.Data.Role && x.Data.Role.IsImpostor)}";
-        _hidersLabel.transform.position = new Vector3(_tracker.gameObject.transform.position.x + .75f, _tracker.crewmateSprites.ToArray().Last().transform.position.y - 1.5f, -50);
-        _seekersLabel.transform.position = new Vector3(_tracker.gameObject.transform.position.x + .75f, _tracker.crewmateSprites.ToArray().Last().transform.position.y - 1, -50);
+        var lastSprite = _tracker.crewmateSprites.ToArray().LastOrDefault();
+        if (lastSprite)
+        {
+            var labelX = _tracker.gameObject.transform.position.x + .75f;
+            var lastSpriteY = lastSprite.transform.position.y;
+            _hidersLabel.transform.position = new Vector3(labelX, lastSpriteY - 1.5f, -50);
+            _seekersLabel.transform.position = new Vector3(labelX, lastSpriteY - 1, -50);
+        }
         
         //Positioning logic
         _aspectPosition.DistanceFromEdge = new Vector3(0.25f, 0.35f, 0f);
         _aspectPosition.AdjustPosition();
         
         //Grid logic
+        PruneDestroyedCells();
         _gridArrange.MaxColumns = Math.Clamp(MaxPlayers / 2, 0, 8);
         _gridArrange.CellSize = new Vector2(Math.Clamp(TrackerLength / _gridArrange.cells.Count, 0.25f, 0.4f), Math.Clamp(TrackerLength / _gridArrange.cells.Count, 0.25f, 0.75f) / -2f);
         _gridArrange.ArrangeChilds();
@@ -82,8 +89,26 @@ public class PlayerTracker
 
     public void OnInfected()
     {
-        var firstEntry = _tracker.crewmateSprites.ToArray().First();
+        var firstEntry = _tracker.crewmateSprites.ToArray().FirstOrDefault();
+        if (!firstEntry) return;
+
         _tracker.crewmateSprites.Remove(firstEntry);
+        foreach (var cell in _gridArrange.cells.ToArray())
+        {
+            if (!cell || cell.transform != firstEntry.transform) continue;
+
+            _gridArrange.cells.Remove(cell);
+            break;
+        }
+
         firstEntry.gameObject.Destroy();
+    }
+
+    private void PruneDestroyedCells()
+    {
+        foreach (var cell in _gridArrange.cells.ToArray())
+        {
+            if (!cell) _gridArrange.cells.Remove(cell);
+        }
     }
 }
