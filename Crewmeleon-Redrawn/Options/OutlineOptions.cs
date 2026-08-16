@@ -9,7 +9,7 @@ public class OutlineOptions : AbstractOptionGroup<ChameleonGameMode>
     public override string GroupName => "Outline";
     public override uint GroupPriority => 4;
     public ModdedEnumOption<OutlineStrength> OutlineStrengthOption { get; } =
-        new("Outline Strength", OutlineStrength.Strong);
+        new("Outline Strength", OutlineStrength.Strong, ["Very Subtle", "Subtle", "Strong", "Disabled"]);
 
     public enum OutlineStrength
     {
