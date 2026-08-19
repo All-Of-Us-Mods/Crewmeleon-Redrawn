@@ -1,13 +1,17 @@
 ﻿using CrewmeleonRedrawn.GameMode;
+using CrewmeleonRedrawn.Roles;
 using CrewmeleonRedrawn.Utilities;
 using MiraAPI.GameOptions;
 using MiraAPI.Utilities;
 using Reactor.Networking.Attributes;
+using UnityEngine;
 
 namespace CrewmeleonRedrawn.Networking;
 
 public static class TimerRpc
 {
+    private const float MinimumTauntVoteDistance = 3f;
+
     [MethodRpc((uint)CrewmeleonRpc.UpdateTimerState)]
     public static void RpcUpdateTimerState(this PlayerControl source, TimerStage stage)
     {
@@ -62,12 +66,60 @@ public static class TimerRpc
             ChameleonGameModeManager.Instance!.TauntTimer.ResetTimer();
 
             var tauntSfx = CrewmeleonAssets.AutomatedTauntSound.LoadAsset();
-            foreach (var playerControl in Helpers.GetAlivePlayers().Where(x => !x.AmOwner))
-                SoundUtilities.PlayAtPosition(tauntSfx, playerControl.GetTruePosition(), 0.1f);
+            if (TryGetHiderMajority(out var position))
+                SoundUtilities.PlayAtPosition(tauntSfx, position, 0.1f);
         }
         else
         {
             Error("Cannot update taunt timer state because Crewmeleon gamemode is not initialized.");
         }
+    }
+
+    private static bool TryGetHiderMajority(out Vector2 position)
+    {
+        position = default;
+
+        var camera = Camera.main;
+        var localPlayer = PlayerControl.LocalPlayer;
+        if (!camera && !localPlayer) return false;
+
+        var listenerPosition = camera
+            ? (Vector2)camera!.transform.position
+            : localPlayer!.GetTruePosition();
+        var directionVotes = Vector2.zero;
+        var weightedDistance = 0f;
+        var totalWeight = 0f;
+        var closestOffset = Vector2.zero;
+        var closestDistance = float.MaxValue;
+        var voteCount = 0;
+
+        foreach (var hider in Helpers.GetAlivePlayers().Where(x => x.Data.Role is HiderRole))
+        {
+            var offset = hider.GetTruePosition() - listenerPosition;
+            if (offset.sqrMagnitude <= 0f) continue;
+
+            var distance = offset.magnitude;
+            var weight = 1f / Mathf.Max(distance, MinimumTauntVoteDistance);
+            directionVotes += offset.normalized * weight;
+            weightedDistance += distance * weight;
+            totalWeight += weight;
+            voteCount++;
+
+            if (distance >= closestDistance) continue;
+            closestOffset = offset;
+            closestDistance = distance;
+        }
+
+        if (voteCount == 0)
+        {
+            position = listenerPosition;
+            return true;
+        }
+
+        var majorityDirection = directionVotes.sqrMagnitude > 0.0001f
+            ? directionVotes.normalized
+            : closestOffset.normalized;
+        position = listenerPosition + majorityDirection * (weightedDistance / totalWeight);
+        return true;
     }
 }
